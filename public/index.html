@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- 모바일에서도 화면 크기에 맞게 표시 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>We Go High | 풋살 경기 기록</title>
+
+    <!-- =====================================================
+         CSS 연결
+         ===================================================== -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         전체 앱 영역
+         ===================================================== -->
+    <div class="app-container">
+
+
+  <!-- =================================================
+     왼쪽 사이드바
+     ================================================= -->
+<aside class="sidebar">
+
+  <div class="team-logo">
+
+    <div class="logo-circle">
+
+        <img
+            src="images/wgh-logo.png"
+            alt="We Go High 로고"
+            class="wgh-logo">
+
+    </div>
+
+    <h1>We Go High</h1>
+
+    <p>WOMEN'S FUTSAL CLUB</p>
+
+</div>
+
+
+            <!-- 메뉴 -->
+            <nav class="side-menu">
+
+                <a href="#" class="menu-item active">
+                    <span class="menu-icon">⌂</span>
+                    <span>홈</span>
+                </a>
+
+
+                <a href="#matches" class="menu-item">
+                    <span class="menu-icon">▣</span>
+                    <span>경기 기록</span>
+                </a>
+
+
+                <a href="#players" class="menu-item">
+                    <span class="menu-icon">♙</span>
+                    <span>선수 기록</span>
+                </a>
+
+
+                <a href="#stats" class="menu-item">
+                    <span class="menu-icon">▥</span>
+                    <span>통계</span>
+                </a>
+
+
+                <a href="#team" class="menu-item">
+                    <span class="menu-icon">♧</span>
+                    <span>팀 소개</span>
+                </a>
+
+            </nav>
+
+
+            <!-- 사이드바 하단 장식 -->
+            <div class="sidebar-message">
+
+                <span>We</span>
+                <span>Go</span>
+                <span>High ♡</span>
+
+                <small>
+                    WOMEN'S<br>
+                    FUTSAL CLUB
+                </small>
+
+            </div>
+
+        </aside>
+
+
+
+        <!-- =================================================
+             오른쪽 메인 화면
+             ================================================= -->
+        <main class="main-content">
+
+
+            <!-- =================================================
+                 메인 비주얼
+                 ================================================= -->
+            <section class="hero">
+
+                <!-- 나중에 CSS에서 실제 풋살장 이미지를 배경으로 넣음 -->
+
+            <div class="hero-title">
+
+                <img
+        src="images/we-go-high.png"
+        alt="We Go High"
+        class="hero-title-image"
+    >
+
+            </div>
+
+
+                    <div class="hero-subtitle">
+                        WOMEN'S FUTSAL CLUB
+                    </div>
+
+                </div>
+
+
+                <!-- 오른쪽 문구 -->
+                <div class="hero-message">
+
+                    같이 뛰는<br>
+                    지금이<br>
+                    더 높이.
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- 핑크 풋살공 영역 -->
+                <div class="hero-ball">
+
+    <img
+        src="images/pink-ball.png"
+        alt="핑크 풋살공"
+    >
+
+</div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 전적 통계
+                 ================================================= -->
+            <section
+                class="stats-section"
+                id="stats"
+            >
+
+                <!-- 전체 경기 -->
+                <div class="stat-card">
+
+                    <span class="stat-label">
+                        전체 경기
+                    </span>
+
+                    <!-- app.js에서 실제 DB 데이터 입력 -->
+                    <strong id="totalMatches">
+                        0
+                    </strong>
+
+                    <small>경기</small>
+
+                </div>
+
+
+                <!-- 승 -->
+                <div class="stat-card win-card">
+
+                    <span class="stat-label">
+                        승
+                    </span>
+
+                    <strong id="wins">
+                        0
+                    </strong>
+
+                    <small>경기</small>
+
+                </div>
+
+
+                <!-- 무 -->
+                <div class="stat-card draw-card">
+
+                    <span class="stat-label">
+                        무
+                    </span>
+
+                    <strong id="draws">
+                        0
+                    </strong>
+
+                    <small>경기</small>
+
+                </div>
+
+
+                <!-- 패 -->
+                <div class="stat-card lose-card">
+
+                    <span class="stat-label">
+                        패
+                    </span>
+
+                    <strong id="losses">
+                        0
+                    </strong>
+
+                    <small>경기</small>
+
+                </div>
+
+
+                <!-- 승률 -->
+                <div class="stat-card win-rate-card">
+
+                    <span class="stat-label">
+                        승률
+                    </span>
+
+                    <div class="rate-circle">
+
+                        <strong id="winRate">
+                            0%
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- 득점 / 실점 -->
+                <div class="stat-card score-card">
+
+                    <span class="ball-icon">
+                        ⚽
+                    </span>
+
+                    <span class="stat-label">
+                        득점 / 실점
+                    </span>
+
+                    <strong>
+
+                        <span id="totalGoals">
+                            0
+                        </span>
+
+                        /
+
+                        <span id="totalGoalsAgainst">
+                            0
+                        </span>
+
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 최근 경기 기록
+                 ================================================= -->
+            <section
+                class="match-section"
+                id="matches"
+            >
+
+                <div class="section-header">
+
+                    <h2>
+                        ⚽ 최근 경기 기록
+                    </h2>
+
+
+                    <div class="section-actions">
+
+                        <button
+                            type="button"
+                            class="text-button"
+                        >
+                            전체보기 ›
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="add-match-button"
+                            id="addMatchButton"
+                        >
+                            ＋ 경기 기록 추가
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!--
+                    app.js에서 /api/matches 데이터를 받아서
+                    경기 카드가 이곳에 자동으로 생성됨
+                -->
+                <div
+                    class="match-list"
+                    id="matchList"
+                >
+
+                    <div class="loading-message">
+
+                        경기 기록을 불러오는 중...
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 하단 정보
+                 ================================================= -->
+            <section class="bottom-grid">
+
+
+                <!-- 다음 경기 -->
+                <article class="next-match-card">
+
+                    <div class="card-title-row">
+
+                        <h2>
+                            🗓 다음 경기
+                        </h2>
+
+                        <span class="schedule-badge">
+                            예정
+                        </span>
+
+                    </div>
+
+
+                    <!--
+                        다음 경기 기능은 추후 DB와 연결
+                    -->
+                    <div class="next-match-content">
+
+                        <div class="next-date">
+
+                            <small>
+                                NEXT MATCH
+                            </small>
+
+                            <strong>
+                                준비 중
+                            </strong>
+
+                        </div>
+
+
+                        <div class="next-teams">
+
+                            <div class="team">
+
+                                <div class="mini-shirt blue-shirt">
+                                    23
+                                </div>
+
+                                <strong>
+                                    WGH
+                                </strong>
+
+                            </div>
+
+
+                            <span class="vs">
+                                VS
+                            </span>
+
+
+                            <div class="team">
+
+                                <div class="mini-shirt white-shirt">
+                                    ?
+                                </div>
+
+                                <strong>
+                                    상대팀
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+
+                <!-- 팀 공지 -->
+                <article
+                    class="notice-card"
+                    id="team"
+                >
+
+                    <div class="card-title-row">
+
+                        <h2>
+                            📣 팀 공지
+                        </h2>
+
+                    </div>
+
+
+                    <div class="notice-list">
+
+
+                        <div class="notice-item">
+
+                            <span class="notice-type">
+                                공지
+                            </span>
+
+                            <p>
+                                WGH 풋살 경기 기록 앱에 오신 것을 환영합니다.
+                            </p>
+
+                        </div>
+
+
+                        <div class="notice-item">
+
+                            <span class="notice-type recruit">
+                                모집
+                            </span>
+
+                            <p>
+                                새로운 선수 기록을 등록해보세요 ⚽
+                            </p>
+
+                        </div>
+
+
+                        <div class="notice-item">
+
+                            <span class="notice-type schedule">
+                                일정
+                            </span>
+
+                            <p>
+                                경기 기록을 추가하면 전적에 자동 반영됩니다.
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 선수 기록
+                 나중에 player / match_player DB와 연결
+                 ================================================= -->
+            <section
+                class="player-section"
+                id="players"
+            >
+
+                <div class="section-header">
+
+                    <h2>
+                        👟 선수 기록
+                    </h2>
+
+                </div>
+
+
+                <div id="playerList">
+
+                    <p class="coming-soon">
+                        선수별 출전 · 득점 · 도움 기록을 준비하고 있습니다.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+    </div>
+
+
+    <!-- =====================================================
+         JavaScript 연결
+         ===================================================== -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>

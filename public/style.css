@@ -1,0 +1,1153 @@
+/* =========================================================
+   WGH FUTSAL APP
+   메인 스타일
+   ========================================================= */
+
+
+/* =========================================================
+   1. 기본 설정
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: #eef3f8;
+    color: #151922;
+}
+
+button,
+a {
+    font-family: inherit;
+}
+
+button {
+    border: 0;
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   2. 전체 레이아웃
+   ========================================================= */
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   3. 왼쪽 사이드바
+   ========================================================= */
+
+.sidebar {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 190px;
+    height: 100vh;
+
+    padding: 30px 18px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #171d25 0%,
+            #11161d 60%,
+            #151b22 100%
+        );
+
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 100;
+}
+
+
+/* =========================================================
+   팀 로고
+   ========================================================= */
+
+.team-logo {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.logo-circle {
+    width: 82px;
+    height: 82px;
+
+    margin: 0 auto 15px;
+
+    border: 3px solid white;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 900;
+    font-size: 20px;
+
+    background: #0d1117;
+}
+
+.team-logo h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.team-logo p {
+    font-size: 9px;
+    color: #aab3bf;
+    letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   4. 사이드 메뉴
+   ========================================================= */
+
+.side-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    padding: 14px 15px;
+
+    border-radius: 11px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    color: #d7dde5;
+
+    transition: 0.2s;
+}
+
+.menu-item:hover {
+    background: #242c37;
+    color: white;
+}
+
+.menu-item.active {
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3679ff,
+            #2762e8
+        );
+
+    box-shadow:
+        0 8px 20px rgba(45, 108, 245, 0.25);
+}
+
+.menu-icon {
+    width: 22px;
+
+    text-align: center;
+
+    font-size: 20px;
+}
+
+
+/* =========================================================
+   5. 사이드바 하단 손글씨 느낌
+   ========================================================= */
+
+.sidebar-message {
+    margin-top: auto;
+
+    padding: 20px 8px;
+
+    color: #e1e5ea;
+
+    transform: rotate(-3deg);
+}
+
+.sidebar-message > span {
+    display: block;
+
+    font-family: cursive;
+
+    font-size: 31px;
+    line-height: 0.95;
+
+    opacity: 0.8;
+}
+
+.sidebar-message small {
+    display: block;
+
+    margin-top: 25px;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #8993a0;
+
+    transform: rotate(3deg);
+}
+
+
+/* =========================================================
+   6. 오른쪽 메인 영역
+   ========================================================= */
+
+.main-content {
+    width: calc(100% - 190px);
+
+    margin-left: 190px;
+
+    padding-bottom: 50px;
+}
+
+
+/* =========================================================
+   7. HERO 메인 이미지
+   ========================================================= */
+
+.hero {
+    position: relative;
+
+    height: 500px;
+
+    overflow: hidden;
+
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(13, 19, 29, 0.22),
+            rgba(13, 19, 29, 0.02)
+        ),
+        url("images/hero-bg.jpg");
+
+    background-size: cover;
+    background-position: center;
+
+    display: flex;
+    align-items: center;
+
+    padding: 60px 75px;
+}
+
+
+/* =========================================================
+   HERO 제목
+   ========================================================= */
+
+.hero-overlay {
+    position: relative;
+
+    z-index: 2;
+}
+
+.hero-title {
+    display: flex;
+    flex-direction: column;
+
+    color: white;
+
+    font-family:
+        "Comic Sans MS",
+        "Brush Script MT",
+        cursive;
+
+    font-weight: 900;
+
+    font-size: 95px;
+
+    line-height: 0.68;
+
+    transform: rotate(-6deg);
+
+    text-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hero-title span:nth-child(2) {
+    margin-left: 80px;
+}
+
+.hero-title span:nth-child(3) {
+    margin-left: 20px;
+}
+
+
+/* 파란색 붓터치 느낌 */
+
+.hero-subtitle {
+    display: inline-block;
+
+    margin-top: 38px;
+    margin-left: 25px;
+
+    padding: 8px 20px;
+
+    color: white;
+
+    font-size: 16px;
+    font-style: italic;
+    letter-spacing: 1px;
+
+    background: #3478f6;
+
+    transform: rotate(-3deg);
+}
+
+
+/* =========================================================
+   HERO 오른쪽 문구
+   ========================================================= */
+
+.hero-message {
+    position: absolute;
+
+    top: 100px;
+    right: 65px;
+
+    font-family: cursive;
+
+    font-size: 23px;
+    line-height: 1.4;
+
+    transform: rotate(-7deg);
+
+    color: #1b2028;
+}
+
+.hero-message span {
+    display: block;
+
+    margin-left: 55px;
+
+    font-size: 30px;
+}
+
+
+/*
+   현재 hero-bg.jpg 자체가 메인 이미지이므로
+   hero-ball은 나중에 PNG 공을 따로 띄울 때 사용
+*/
+
+.hero-ball {
+    display: none;
+}
+
+
+/* =========================================================
+   8. 통계 카드 영역
+   ========================================================= */
+
+.stats-section {
+    position: relative;
+
+    z-index: 10;
+
+    max-width: 1100px;
+
+    margin: -35px auto 0;
+
+    padding: 18px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr)
+        1.3fr
+        1.2fr;
+
+    gap: 12px;
+
+    background:
+        rgba(255, 255, 255, 0.94);
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 15px 45px
+        rgba(31, 46, 70, 0.12);
+}
+
+
+/* 통계 카드 */
+
+.stat-card {
+    min-height: 135px;
+
+    padding: 20px;
+
+    border-radius: 17px;
+
+    background: #f7f8fa;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 800;
+
+    margin-bottom: 9px;
+}
+
+.stat-card > strong {
+    font-size: 43px;
+    line-height: 1;
+}
+
+.stat-card small {
+    margin-top: 9px;
+
+    color: #7b8491;
+
+    font-size: 12px;
+}
+
+
+/* 승 */
+
+.win-card {
+    background:
+        linear-gradient(
+            180deg,
+            #edf7ff,
+            #e4f2ff
+        );
+}
+
+.win-card .stat-label {
+    color: #2774f5;
+}
+
+
+/* 무승부 */
+
+.draw-card {
+    background: #f5f5f5;
+}
+
+
+/* 패 */
+
+.lose-card {
+    background:
+        linear-gradient(
+            180deg,
+            #fff3f3,
+            #ffe9e9
+        );
+}
+
+.lose-card .stat-label {
+    color: #ef4c4c;
+}
+
+
+/* =========================================================
+   승률 원
+   ========================================================= */
+
+.win-rate-card {
+    background: white;
+}
+
+.rate-circle {
+    width: 95px;
+    height: 95px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        conic-gradient(
+            #3478f6 0% 58%,
+            #dce7ff 58% 100%
+        );
+
+    position: relative;
+}
+
+.rate-circle::before {
+    content: "";
+
+    position: absolute;
+
+    width: 72px;
+    height: 72px;
+
+    background: white;
+
+    border-radius: 50%;
+}
+
+.rate-circle strong {
+    position: relative;
+
+    z-index: 2;
+
+    font-size: 23px;
+}
+
+
+/* =========================================================
+   득점 / 실점
+   ========================================================= */
+
+.score-card {
+    background: white;
+}
+
+.ball-icon {
+    font-size: 28px;
+    margin-bottom: 7px;
+}
+
+.score-card strong {
+    font-size: 24px;
+}
+
+
+/* =========================================================
+   9. 공통 콘텐츠 영역
+   ========================================================= */
+
+.match-section,
+.bottom-grid,
+.player-section {
+    max-width: 1100px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* =========================================================
+   10. 최근 경기 기록
+   ========================================================= */
+
+.match-section {
+    margin-top: 38px;
+}
+
+.section-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+.section-header h2 {
+    font-size: 25px;
+}
+
+.section-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+}
+
+.text-button {
+    background: transparent;
+
+    color: #7b8491;
+
+    font-size: 14px;
+}
+
+
+/* 경기 추가 버튼 */
+
+.add-match-button {
+    padding: 13px 20px;
+
+    border-radius: 10px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #367bff,
+            #2864ec
+        );
+
+    font-size: 14px;
+    font-weight: 700;
+
+    box-shadow:
+        0 8px 18px
+        rgba(46, 106, 240, 0.2);
+
+    transition: 0.2s;
+}
+
+.add-match-button:hover {
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   경기 리스트
+   ========================================================= */
+
+.match-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.loading-message {
+    padding: 30px;
+
+    background: white;
+
+    border-radius: 15px;
+
+    text-align: center;
+
+    color: #8a939f;
+}
+
+
+/* 나중에 app.js가 생성할 경기 카드 */
+
+.match-card {
+    min-height: 80px;
+
+    padding: 15px 22px;
+
+    background: white;
+
+    border-radius: 15px;
+
+    display: grid;
+
+    grid-template-columns:
+        110px
+        1fr
+        160px
+        120px;
+
+    align-items: center;
+
+    gap: 20px;
+
+    box-shadow:
+        0 5px 20px
+        rgba(28, 40, 60, 0.05);
+
+    transition: 0.2s;
+}
+
+.match-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 25px
+        rgba(28, 40, 60, 0.09);
+}
+
+
+/* =========================================================
+   11. 하단 카드
+   ========================================================= */
+
+.bottom-grid {
+    margin-top: 28px;
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 18px;
+}
+
+.next-match-card,
+.notice-card {
+    min-height: 240px;
+
+    padding: 25px;
+
+    background: white;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 8px 30px
+        rgba(31, 46, 70, 0.06);
+}
+
+.card-title-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 25px;
+}
+
+.card-title-row h2 {
+    font-size: 21px;
+}
+
+
+/* 예정 표시 */
+
+.schedule-badge {
+    padding: 5px 12px;
+
+    border: 1px solid #3478f6;
+
+    border-radius: 20px;
+
+    color: #3478f6;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   다음 경기
+   ========================================================= */
+
+.next-match-content {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.next-date {
+    display: flex;
+    flex-direction: column;
+}
+
+.next-date small {
+    color: #8b94a0;
+    margin-bottom: 8px;
+}
+
+.next-date strong {
+    font-size: 23px;
+}
+
+.next-teams {
+    flex: 1;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 25px;
+}
+
+.team {
+    text-align: center;
+}
+
+.team strong {
+    display: block;
+
+    margin-top: 8px;
+}
+
+.vs {
+    color: #8c95a1;
+
+    font-weight: 700;
+}
+
+
+/* 작은 유니폼 모양 */
+
+.mini-shirt {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 900;
+}
+
+.blue-shirt {
+    color: white;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #2462df 0,
+            #2462df 8px,
+            #101821 8px,
+            #101821 14px
+        );
+}
+
+.white-shirt {
+    color: #222;
+
+    background: #f4f4f4;
+
+    border: 1px solid #cfd5dd;
+}
+
+
+/* =========================================================
+   12. 팀 공지
+   ========================================================= */
+
+.notice-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+}
+
+.notice-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.notice-item p {
+    font-size: 14px;
+}
+
+.notice-type {
+    flex-shrink: 0;
+
+    padding: 5px 9px;
+
+    border-radius: 7px;
+
+    color: white;
+
+    background: #3478f6;
+
+    font-size: 11px;
+}
+
+.notice-type.recruit {
+    color: #3478f6;
+
+    background: #eaf1ff;
+
+    border: 1px solid #3478f6;
+}
+
+.notice-type.schedule {
+    background: #4a515c;
+}
+
+
+/* =========================================================
+   13. 선수 기록
+   ========================================================= */
+
+.player-section {
+    margin-top: 28px;
+
+    padding: 25px;
+
+    background: white;
+
+    border-radius: 20px;
+}
+
+.coming-soon {
+    color: #8b94a0;
+
+    padding: 20px 0;
+}
+
+
+/* =========================================================
+   14. 반응형
+   화면이 작아졌을 때
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .stats-section,
+    .match-section,
+    .bottom-grid,
+    .player-section {
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+
+    .stats-section {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+}
+
+
+/* 태블릿 / 모바일 */
+
+@media (max-width: 800px) {
+
+    .sidebar {
+        width: 75px;
+        padding: 25px 10px;
+    }
+
+    .team-logo h1,
+    .team-logo p,
+    .menu-item span:last-child,
+    .sidebar-message {
+        display: none;
+    }
+
+    .logo-circle {
+        width: 50px;
+        height: 50px;
+
+        font-size: 12px;
+    }
+
+    .menu-item {
+        justify-content: center;
+    }
+
+    .main-content {
+        width: calc(100% - 75px);
+
+        margin-left: 75px;
+    }
+
+    .hero {
+        height: 400px;
+
+        padding: 40px;
+    }
+
+    .hero-title {
+        font-size: 65px;
+    }
+
+    .hero-message {
+        display: none;
+    }
+
+    .stats-section {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* 휴대폰 */
+
+@media (max-width: 550px) {
+
+    .hero {
+        height: 330px;
+
+        padding: 30px 20px;
+    }
+
+    .hero-title {
+        font-size: 50px;
+    }
+
+    .hero-title span:nth-child(2) {
+        margin-left: 40px;
+    }
+
+    .hero-subtitle {
+        font-size: 11px;
+    }
+
+    .stats-section {
+        margin-top: -20px;
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        padding: 12px;
+    }
+
+    .stat-card {
+        min-height: 110px;
+    }
+
+    .section-header {
+        align-items: flex-start;
+
+        gap: 15px;
+
+        flex-direction: column;
+    }
+
+    .match-card {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* =========================================================
+   WGH 이미지 최종 설정
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   왼쪽 사이드바 WGH 엠블럼
+   --------------------------------------------------------- */
+
+.logo-circle {
+    width: 100px;
+    height: 100px;
+
+    margin: 0 auto 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 실제 로고 PNG를 사용하므로 기존 원 테두리 제거 */
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+    overflow: visible;
+}
+
+
+/* 실제 WGH 로고 이미지 */
+.wgh-logo {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: contain;
+
+    /* 중요!
+       absolute를 사용하지 않고
+       logo-circle 안에 위치하게 함
+    */
+    position: static;
+}
+
+
+/* ---------------------------------------------------------
+   HERO - We Go High 손글씨 PNG
+   --------------------------------------------------------- */
+
+.hero-title {
+    position: relative;
+
+    display: block;
+
+    color: white;
+
+    /* PNG 자체 디자인을 사용하므로
+       기존 텍스트 회전 효과 제거 */
+    transform: none;
+
+    z-index: 2;
+}
+
+
+/* We Go High 실제 PNG */
+.hero-title-image {
+    width: 420px;
+    max-width: 100%;
+    height: auto;
+
+    display: block;
+
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   태블릿
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .logo-circle {
+        width: 55px;
+        height: 55px;
+    }
+
+    .hero-title-image {
+        width: 340px;
+    }
+
+}
+
+
+/* =========================================================
+   휴대폰
+   ========================================================= */
+
+@media (max-width: 550px) {
+
+    .logo-circle {
+        width: 50px;
+        height: 50px;
+    }
+
+    .hero-title-image {
+        width: 260px;
+    }
+
+}
