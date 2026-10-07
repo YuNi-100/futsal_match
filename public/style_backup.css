@@ -92,33 +92,23 @@ a {
 }
 
 .logo-circle {
-    width: 100px;
-    height: 100px;
+    width: 82px;
+    height: 82px;
 
     margin: 0 auto 15px;
+
+    border: 3px solid white;
+    border-radius: 50%;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border: none;
-    border-radius: 50%;
+    font-weight: 900;
+    font-size: 20px;
 
-    background: transparent;
-    overflow: visible;
+    background: #0d1117;
 }
-
-/* 실제 WGH 로고 이미지 */
-.wgh-logo {
-    width: 100%;
-    height: 100%;
-
-    display: block;
-    object-fit: contain;
-
-    position: static;
-}
-
 
 .team-logo h1 {
     font-size: 20px;
@@ -279,23 +269,34 @@ a {
 }
 
 .hero-title {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
 
-    width: fit-content;
-    display: block;
+    color: white;
 
-    z-index: 2;
+    font-family:
+        "Comic Sans MS",
+        "Brush Script MT",
+        cursive;
+
+    font-weight: 900;
+
+    font-size: 95px;
+
+    line-height: 0.68;
+
+    transform: rotate(-6deg);
+
+    text-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-.hero-title-image {
-    width: 750px;
-    max-width: 85vw;
-    height: auto;
+.hero-title span:nth-child(2) {
+    margin-left: 80px;
+}
 
-    display: block;
-    object-fit: contain;
+.hero-title span:nth-child(3) {
+    margin-left: 20px;
 }
 
 
@@ -751,116 +752,53 @@ a {
    ========================================================= */
 
 .next-match-content {
-    width: 100%;
-
     display: flex;
-    flex-direction: column;
+
+    align-items: center;
+    justify-content: space-between;
 
     gap: 20px;
 }
 
-.next-match-summary {
-    width: 100%;
-
+.next-date {
     display: flex;
     flex-direction: column;
-
-    align-items: flex-start;
-
-    gap: 5px;
-
-    padding: 0 5px;
 }
 
-.next-match-date-row {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.next-date small {
+    color: #8b94a0;
+    margin-bottom: 8px;
 }
 
-.next-match-date-row .next-match-time {
-    transform: translateY(10px);
-}
-
-.next-match-date {
-    color: #151922;
-
-    font-size: 22px;
-    font-weight: 900;
-
-    white-space: nowrap;
-}
-
-.next-match-location {
-    color: #7b8491;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    white-space: nowrap;
+.next-date strong {
+    font-size: 23px;
 }
 
 .next-teams {
-    width: 100%;
+    flex: 1;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    gap: 50px;
-
-    flex: none;
+    gap: 25px;
 }
 
-.next-teams .team {
-    width: 100px;
-
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-
+.team {
     text-align: center;
 }
 
-.next-teams .team strong {
+.team strong {
+    display: block;
+
     margin-top: 8px;
-
-    font-size: 15px;
-    font-weight: 900;
-
-    word-break: keep-all;
 }
 
-.next-teams .vs {
+.vs {
     color: #8c95a1;
 
-    font-size: 14px;
-    font-weight: 900;
-}
-
-.next-match-time {
-    align-self: center;
-
-    padding: 7px 16px;
-
-    border-radius: 20px;
-
-    background: #f2f6ff;
-
-    color: #3478f6;
-
-    font-size: 13px;
-    font-weight: 800;
-
-    white-space: nowrap;
-}
-
-#nextMatchTime,
-#nextMatchLocation {
-    white-space: nowrap;
+    font-weight: 700;
 }
 
 
@@ -1105,6 +1043,77 @@ a {
 }
 
 /* =========================================================
+   WGH 이미지 최종 설정
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   왼쪽 사이드바 WGH 엠블럼
+   --------------------------------------------------------- */
+
+.logo-circle {
+    width: 100px;
+    height: 100px;
+
+    margin: 0 auto 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 실제 로고 PNG를 사용하므로 기존 원 테두리 제거 */
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+    overflow: visible;
+}
+
+
+/* 실제 WGH 로고 이미지 */
+.wgh-logo {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: contain;
+
+    /* 중요!
+       absolute를 사용하지 않고
+       logo-circle 안에 위치하게 함
+    */
+    position: static;
+}
+
+/* ---------------------------------------------------------
+   HERO - We Go High 가로형 손글씨 PNG
+   --------------------------------------------------------- */
+
+/* PC */
+.hero-title {
+    position: relative;
+
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: fit-content;
+    display: block;
+
+    z-index: 2;
+}
+
+.hero-title-image {
+    width: 750px;
+    max-width: 85vw;
+    height: auto;
+
+    display: block;
+    object-fit: contain;
+}
+
+
+/* =========================================================
    태블릿
    ========================================================= */
 
@@ -1148,7 +1157,6 @@ a {
         max-width: 95%;
     }
 }
-
 
 /* =========================================================
    15. 경기 기록 추가 팝업
@@ -1717,302 +1725,141 @@ body.modal-open {
 
     text-align: center;
 }
-
 /* =========================================================
-   선수 기록 카드
+   다음 경기 카드 - 최종 레이아웃
    ========================================================= */
 
-/* 선수 카드 전체 영역 */
-#playerList {
-    display: grid;
+.next-match-content {
+    width: 100%;
 
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 18px;
-
-    margin-top: 20px;
-}
-
-
-/* 선수 한 명 카드 */
-.player-item {
-    background: #ffffff;
-
-    border: 1px solid #e7ebf0;
-    border-radius: 18px;
-
-    padding: 22px 18px;
-
-    text-align: center;
-
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-
-/* 선수 기본 정보 */
-.player-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
+
+    gap: 20px;
 }
 
 
-/* 등번호 */
-.player-number {
-    width: 52px;
-    height: 52px;
+/* ---------------------------------------------------------
+   날짜 / 장소
+   --------------------------------------------------------- */
+
+.next-match-summary {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 5px;
+
+    padding: 0 5px;
+}
+/* 날짜 + 경기시간 한 줄 정렬 */
+.next-match-date-row {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.next-match-date-row .next-match-time {
+    transform: translateY(10px);
+}
+
+/* 경기 날짜 */
+.next-match-date {
+    color: #151922;
+
+    font-size: 22px;
+    font-weight: 900;
+
+    white-space: nowrap;
+}
+
+
+/* 경기 장소 */
+.next-match-location {
+    color: #7b8491;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   WGH VS 상대팀
+   --------------------------------------------------------- */
+
+.next-teams {
+    width: 100%;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    margin-bottom: 10px;
+    gap: 50px;
 
-    border-radius: 50%;
-
-    background: #3478f6;
-
-    color: #ffffff;
-
-    font-size: 20px;
-    font-weight: 900;
-}
-
-/* 선수 이름 */
-.player-name {
-    color: #111827;
-
-    font-size: 17px;
-    font-weight: 900;
+    flex: none;
 }
 
 
-/* 포지션 */
-.player-position {
-    margin-top: 4px;
+.next-teams .team {
+    width: 100px;
 
-    color: #6b7280;
-
-    font-size: 13px;
-    font-weight: 700;
-}
-
-
-/* 출전 / 득점 / 도움 */
-.player-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-
-    margin-top: 18px;
-    padding-top: 14px;
-
-    border-top: 1px solid #edf0f4;
-}
-
-
-/* 기록 하나 */
-.player-stat {
     display: flex;
     flex-direction: column;
 
-    gap: 3px;
-}
-
-
-/* 출전 / 득점 / 도움 글자 */
-.player-stat span {
-    color: #374151;
-
-    font-size: 12px;
-    font-weight: 800;
-}
-
-
-/* 기록 숫자 */
-.player-stat strong {
-    color: #aeb7c7;
-
-    font-size: 19px;
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   태블릿
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-    #playerList {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-}
-
-
-/* =========================================================
-   모바일
-   ========================================================= */
-
-@media (max-width: 520px) {
-
-    #playerList {
-        grid-template-columns:
-            1fr;
-    }
-}
-
-/* =========================================================
-   경기 등록 팝업 - 참가 선수 / 개인 기록
-   ========================================================= */
-
-/* 참가 선수 전체 영역 */
-.match-player-section {
-    margin-top: 22px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
-}
-
-
-/* 제목 */
-.match-player-title {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.match-player-title strong {
-    font-size: 15px;
-    color: #111827;
-}
-
-.match-player-title span {
-    font-size: 12px;
-    color: #9ca3af;
-}
-
-
-/* 선수 목록 */
-.match-player-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-
-/* 선수 한 줄 */
-.match-player-row {
-    display: grid;
-    grid-template-columns: minmax(150px, 1fr) 105px 105px;
-    align-items: center;
-    gap: 12px;
-
-    padding: 10px 12px;
-
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-}
-
-
-/* 체크박스 + 등번호 + 이름 */
-.match-player-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    cursor: pointer;
-}
-
-
-/* 체크박스 */
-.match-player-checkbox {
-    width: 17px;
-    height: 17px;
-
-    cursor: pointer;
-}
-
-
-/* 등번호 */
-.match-player-number {
-    min-width: 24px;
-
-    color: #3478f6;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-
-/* 선수 이름 */
-.match-player-name {
-    color: #111827;
-    font-size: 14px;
-    font-weight: 800;
-}
-
-
-/* 득점 / 도움 */
-.match-player-record {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    color: #6b7280;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-
-/* 득점 / 도움 숫자 입력칸 */
-.match-player-record input {
-    width: 48px;
-    height: 34px;
-
-    padding: 4px;
 
     text-align: center;
+}
 
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
 
-    background: #ffffff;
+.next-teams .team strong {
+    margin-top: 8px;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    word-break: keep-all;
+}
+
+
+/* VS */
+.next-teams .vs {
+    color: #8c95a1;
+
+    font-size: 14px;
+    font-weight: 900;
+}
+
+
+/* ---------------------------------------------------------
+   경기 시간
+   --------------------------------------------------------- */
+
+.next-match-time {
+    align-self: center;
+
+    padding: 7px 16px;
+
+    border-radius: 20px;
+
+    background: #f2f6ff;
+
+    color: #3478f6;
 
     font-size: 13px;
+    font-weight: 800;
+
+    white-space: nowrap;
 }
 
 
-/* 비활성화 상태 */
-.match-player-record input:disabled {
-    background: #f1f3f5;
-    color: #adb5bd;
-    cursor: not-allowed;
-}
-
-
-/* 모바일 */
-@media (max-width: 600px) {
-
-    .match-player-title {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .match-player-row {
-        grid-template-columns: 1fr 90px 90px;
-        gap: 6px;
-    }
-
-    .match-player-record {
-        gap: 4px;
-    }
-
-    .match-player-record input {
-        width: 42px;
-    }
+#nextMatchTime,
+#nextMatchLocation {
+    white-space: nowrap;
 }

@@ -124,18 +124,11 @@
             </div>
 
 
-                    <div class="hero-subtitle">
-                        WOMEN'S FUTSAL CLUB
-                    </div>
-
-                </div>
-
-
                 <!-- 오른쪽 문구 -->
                 <div class="hero-message">
 
                     같이 뛰는<br>
-                    지금이<br>
+                    지금!<br>
                     더 높이.
 
                     <span>↗</span>
@@ -299,6 +292,7 @@
                         <button
                             type="button"
                             class="text-button"
+                            id="viewAllButton"
                         >
                             전체보기 ›
                         </button>
@@ -347,72 +341,111 @@
                 <!-- 다음 경기 -->
                 <article class="next-match-card">
 
-                    <div class="card-title-row">
+                <div class="card-title-row">
 
-                        <h2>
-                            🗓 다음 경기
-                        </h2>
+          <!-- 다음 경기 제목 + 예정 표시 -->
+              <div class="next-match-title">
 
-                        <span class="schedule-badge">
-                            예정
-                        </span>
+                <h2>
+            🗓 다음 경기
+                </h2>
 
-                    </div>
+                <span class="schedule-badge">
+            예정
+             </span>
+
+            </div>
+
+
+    <!-- 경기 일정 등록 버튼 -->
+    <button
+        type="button"
+        class="schedule-add-button"
+        id="scheduleAddButton"
+    >
+        ＋ 일정 등록
+    </button>
+
+</div>
+
 
 
                     <!--
-                        다음 경기 기능은 추후 DB와 연결
-                    -->
+                        다음 경기 기능- -->
                     <div class="next-match-content">
 
-                        <div class="next-date">
+    <!-- 날짜 / 장소 -->
+<!-- 날짜 / 시간 / 장소 -->
+<div class="next-match-summary">
 
-                            <small>
-                                NEXT MATCH
-                            </small>
+    <!-- 날짜 + 시간 -->
+    <div class="next-match-date-row">
 
-                            <strong>
-                                준비 중
-                            </strong>
+        <strong
+            class="next-match-date"
+            id="nextMatchDate"
+        >
+            일정 없음
+        </strong>
 
-                        </div>
+        <div
+            class="next-match-time"
+            id="nextMatchTime"
+        >
+            ⏰ 시간 미정
+        </div>
+
+    </div>
+
+    <!-- 장소 -->
+    <span
+        class="next-match-location"
+        id="nextMatchLocation"
+    >
+        📍 장소 미정
+    </span>
+
+</div>
 
 
-                        <div class="next-teams">
+<!-- WGH VS 상대팀 -->
+<div class="next-teams">
 
-                            <div class="team">
+    <!-- WGH -->
+    <div class="team">
 
-                                <div class="mini-shirt blue-shirt">
-                                    23
-                                </div>
+        <div class="mini-shirt blue-shirt">
+            23
+        </div>
 
-                                <strong>
-                                    WGH
-                                </strong>
+        <strong>
+            WGH
+        </strong>
 
-                            </div>
-
-
-                            <span class="vs">
-                                VS
-                            </span>
+    </div>
 
 
-                            <div class="team">
+    <span class="vs">
+        VS
+    </span>
 
-                                <div class="mini-shirt white-shirt">
-                                    ?
-                                </div>
 
-                                <strong>
-                                    상대팀
-                                </strong>
+    <!-- 상대팀 -->
+    <div class="team">
 
-                            </div>
+        <div class="mini-shirt white-shirt">
+            ?
+        </div>
 
-                        </div>
+        <strong id="nextMatchOpponent">
+            상대팀
+        </strong>
 
-                    </div>
+    </div>
+
+</div>
+
+</div>
 
                 </article>
 
@@ -509,6 +542,15 @@
 
                 </div>
 
+                <div id="playerList">
+
+    <!--
+        선수 목록은 app.js에서
+        /api/players 데이터를 불러와 자동으로 생성
+    -->
+
+</div>
+
             </section>
 
 
@@ -516,10 +558,396 @@
 
     </div>
 
+        <!-- =====================================================
+         경기 기록 추가 팝업
+         ===================================================== -->
+    <div class="match-modal" id="matchModal">
+
+        <!-- 팝업 바깥의 어두운 배경 -->
+        <div class="modal-overlay" id="modalOverlay"></div>
+
+
+        <!-- 실제 팝업 -->
+        <div class="modal-content">
+
+            <!-- 팝업 상단 -->
+            <div class="modal-header">
+
+                <div>
+                    <span class="modal-label">WGH MATCH RECORD</span>
+                    <h2>⚽ 경기 기록 추가</h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    id="modalCloseButton"
+                    aria-label="닫기"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <!-- 경기 등록 폼 -->
+            <form id="matchForm">
+
+                <!-- 경기 날짜 -->
+                <div class="form-group">
+
+                    <label for="matchDate">
+                        경기 날짜
+                    </label>
+
+                    <input
+                        type="date"
+                        id="matchDate"
+                        name="match_date"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- 상대팀 -->
+                <div class="form-group">
+
+                    <label for="opponent">
+                        상대팀
+                    </label>
+
+                    <input
+                        type="text"
+                        id="opponent"
+                        name="opponent"
+                        placeholder="상대팀 이름을 입력하세요"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- 경기 장소 -->
+                <div class="form-group">
+
+                    <label for="location">
+                        경기 장소
+                    </label>
+
+                    <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        placeholder="경기 장소를 입력하세요"
+                    >
+
+                </div>
+
+
+                <!-- 점수 -->
+                <div class="score-input-area">
+
+                    <div class="form-group">
+
+                        <label for="ourScore">
+                            WGH 점수
+                        </label>
+
+                        <input
+                            type="number"
+                            id="ourScore"
+                            name="our_score"
+                            value="0"
+                            min="0"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="score-vs">
+                        VS
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="opponentScore">
+                            상대팀 점수
+                        </label>
+
+                        <input
+                            type="number"
+                            id="opponentScore"
+                            name="opponent_score"
+                            value="0"
+                            min="0"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!--
+                    승 / 무 / 패는 입력하지 않음
+
+                    WGH 점수와 상대팀 점수를 비교해서
+                    app.js에서 자동으로 계산할 예정
+                -->
+
+
+                <!-- 메모 -->
+                <div class="form-group">
+
+                    <label for="memo">
+                        메모
+                    </label>
+
+                    <textarea
+                        id="memo"
+                        name="memo"
+                        rows="4"
+                        placeholder="경기에 대한 메모를 입력하세요"
+                    ></textarea>
+
+                </div>
+
+    <!-- =====================================================
+     참가 선수 / 개인 기록
+     app.js에서 DB 선수 목록을 자동으로 생성
+     ===================================================== -->
+<div class="match-player-section">
+
+    <div class="match-player-title">
+        <strong>👟 참가 선수 / 개인 기록</strong>
+
+        <span>
+            참가한 선수를 선택해주세요.
+        </span>
+    </div>
+
+    <!--
+        app.js에서 /api/players를 불러와
+        선수 선택 항목이 이곳에 자동으로 생성됨
+    -->
+    <div
+        class="match-player-list"
+        id="matchPlayerList"
+    >
+        <p class="match-player-loading">
+            선수 목록을 불러오는 중...
+        </p>
+    </div>
+
+</div>
+
+
+                <!-- 하단 버튼 -->
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        id="cancelButton"
+                    >
+                        취소
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="save-match-button"
+                    >
+                        경기 등록
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+<!-- =====================================================
+     다음 경기 일정 등록 모달
+     ===================================================== -->
+
+<div class="match-modal" id="scheduleModal">
+
+    <!-- 모달 뒤 어두운 배경 -->
+    <div
+        class="modal-overlay"
+        id="scheduleModalOverlay">
+    </div>
+
+
+    <!-- 모달 본체 -->
+    <div class="modal-content">
+
+        <!-- 상단 제목 -->
+        <div class="modal-header">
+
+            <h2>
+                🗓 경기 일정 등록
+            </h2>
+
+            <button
+                type="button"
+                class="modal-close-button"
+                id="scheduleModalCloseButton"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- 일정 등록 폼 -->
+        <form id="scheduleForm">
+
+            <!-- 경기 날짜 -->
+            <div class="form-group">
+
+                <label for="scheduleDate">
+                    경기 날짜 *
+                </label>
+
+                <input
+                    type="date"
+                    id="scheduleDate"
+                    required
+                >
+                <!-- 선택한 날짜의 요일 표시 -->
+            <div
+        class="schedule-date-display"
+        id="scheduleDateDisplay"
+            ></div>
+
+                
+
+            </div>
+
+
+        
+<!-- 경기 시간 -->
+<div class="form-group">
+
+    <label>
+        경기 시간 *
+    </label>
+
+    <div class="schedule-time-row">
+
+        <!-- 시작 시간 -->
+        <input
+            type="text"
+            id="scheduleStartTime"
+            placeholder="20:00"
+            maxlength="5"
+            inputmode="numeric"
+            required
+        >
+
+        <span class="time-separator">
+            ~
+        </span>
+
+        <!-- 종료 시간 -->
+        <input
+            type="text"
+            id="scheduleEndTime"
+            placeholder="21:30"
+            maxlength="5"
+            inputmode="numeric"
+            required
+        >
+
+    </div>
+
+</div>
+            <!-- 상대팀 -->
+            <div class="form-group">
+
+                <label for="scheduleOpponent">
+                    상대팀 *
+                </label>
+
+                <input
+                    type="text"
+                    id="scheduleOpponent"
+                    placeholder="예: 마포FC"
+                    required
+                >
+
+            </div>
+
+
+            <!-- 경기 장소 -->
+            <div class="form-group">
+
+                <label for="scheduleLocation">
+                    경기 장소
+                </label>
+
+                <input
+                    type="text"
+                    id="scheduleLocation"
+                    placeholder="예: 효자풋살장"
+                >
+
+            </div>
+
+
+            <!-- 메모 -->
+            <div class="form-group">
+
+                <label for="scheduleMemo">
+                    메모
+                </label>
+
+                <textarea
+                    id="scheduleMemo"
+                    rows="3"
+                    placeholder="경기 관련 메모를 입력해주세요."
+                ></textarea>
+
+            </div>
+
+
+            <!-- 하단 버튼 -->
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-button"
+                    id="scheduleCancelButton"
+                >
+                    취소
+                </button>
+
+                <button
+                    type="submit"
+                    class="save-match-button"
+                >
+                    일정 저장
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 
     <!-- =====================================================
          JavaScript 연결
          ===================================================== -->
+
+
     <script src="app.js"></script>
 
 </body>
