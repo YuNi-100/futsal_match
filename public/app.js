@@ -115,6 +115,15 @@ scheduleDateInput.addEventListener("click", function () {
 
 });
 
+matchDate.addEventListener("click", function () {
+
+    // 브라우저가 showPicker를 지원하는 경우
+    if (typeof matchDate.showPicker === "function") {
+        matchDate.showPicker();
+    }
+
+});
+
 // =========================================================
 // 선택한 경기 날짜 → "10월 21일 (수)" 표시
 // =========================================================
