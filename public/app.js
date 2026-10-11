@@ -397,6 +397,7 @@ const scheduleData = {
 
         // 등록 성공
         alert("경기 일정이 등록되었습니다.");
+        await loadNextMatch();
 
 
         // 입력창 초기화
@@ -1149,121 +1150,86 @@ document.addEventListener("click", async function (event) {
 // 다음 경기 일정 불러오기
 // =========================================================
 
-async function loadNextMatch() {
+// 전체 일정 조회 및 펼치기 상태
+let allUpcomingSchedules = [];
+let showAllSchedules = false;
 
-    try {
+function formatScheduleDate(value) {
+    const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    return `${month}월 ${day}일 (${weekdays[date.getDay()]})`;
+}
 
-        // 서버에서 가장 가까운 다음 경기 1개 가져오기
-        const response = await fetch("/api/schedules/next");
+function renderUpcomingSchedules() {
+    const first = allUpcomingSchedules[0];
+    const button = document.getElementById("scheduleViewAllButton");
+    const list = document.getElementById("additionalScheduleList");
 
-        const result = await response.json();
-
-
-        // -------------------------------------------------
-        // API 오류
-        // -------------------------------------------------
-        if (!response.ok || !result.success) {
-
-            throw new Error(
-                result.message || "다음 경기 조회 실패"
-            );
-
-        }
-
-
-        // -------------------------------------------------
-        // 예정된 경기가 없는 경우
-        // -------------------------------------------------
-        if (!result.data) {
-
-            document.getElementById("nextMatchDate").textContent =
-                "예정 없음";
-
-            document.getElementById("nextMatchOpponent").textContent =
-                "상대팀";
-
-            document.getElementById("nextMatchTime").textContent =
-                "시간 미정";
-
-            document.getElementById("nextMatchLocation").textContent =
-                "📍 장소 미정";
-
-            return;
-        }
-
-
-        // -------------------------------------------------
-        // 서버에서 받은 경기 데이터
-        // -------------------------------------------------
-        const schedule = result.data;
-
-
-        const [year, month, day] =
-    schedule.match_date.split("-");
-
-
-// 요일 계산
-const dateObject = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day)
-);
-
-const weekdays = [
-    "일",
-    "월",
-    "화",
-    "수",
-    "목",
-    "금",
-    "토"
-];
-
-const weekday =
-    weekdays[dateObject.getDay()];
-
-
-// 예: 10월 14일 (수)
-const formattedDate =
-    `${Number(month)}월 ${Number(day)}일 (${weekday})`;
-
-        // 시간
-        // "20:00:00" → "20:00"
-        const startTime =
-            schedule.start_time.slice(0, 5);
-
-        const endTime =
-            schedule.end_time.slice(0, 5);
-
-
-        // -------------------------------------------------
-        // 화면에 표시
-        // -------------------------------------------------
-
-        document.getElementById("nextMatchDate").textContent =
-            formattedDate;
-
-        document.getElementById("nextMatchOpponent").textContent =
-            schedule.opponent;
-
-        document.getElementById("nextMatchTime").textContent =
-            `⏰ ${startTime} ~ ${endTime}`;
-
-        document.getElementById("nextMatchLocation").textContent =
-            schedule.location
-                ? `📍 ${schedule.location}`
-                : "📍 장소 미정";
-
-
-    } catch (error) {
-
-        console.error(
-            "❌ 다음 경기 불러오기 오류:",
-            error
-        );
-
+    if (!first) {
+        document.getElementById("nextMatchDate").textContent = "예정 없음";
+        document.getElementById("nextMatchOpponent").textContent = "상대팀";
+        document.getElementById("nextMatchTime").textContent = "시간 미정";
+        document.getElementById("nextMatchLocation").textContent = "📍 장소 미정";
+        button.hidden = true;
+        list.hidden = true;
+        list.replaceChildren();
+        return;
     }
 
+    document.getElementById("nextMatchDate").textContent = formatScheduleDate(first.match_date);
+    document.getElementById("nextMatchOpponent").textContent = first.opponent;
+    document.getElementById("nextMatchTime").textContent = `⏰ ${first.start_time.slice(0, 5)} ~ ${first.end_time.slice(0, 5)}`;
+    document.getElementById("nextMatchLocation").textContent = first.location ? `📍 ${first.location}` : "📍 장소 미정";
+
+    button.hidden = allUpcomingSchedules.length <= 1;
+    button.textContent = showAllSchedules ? "접기 ↑" : "전체보기 ›";
+    button.setAttribute("aria-expanded", String(showAllSchedules));
+    list.hidden = !showAllSchedules || allUpcomingSchedules.length <= 1;
+    list.replaceChildren();
+
+    if (!showAllSchedules) return;
+
+    allUpcomingSchedules.slice(1).forEach(schedule => {
+        const item = document.createElement("div");
+        item.className = "additional-schedule-item";
+        const heading = document.createElement("div");
+        heading.className = "additional-schedule-heading";
+        const date = document.createElement("strong");
+        date.className = "additional-schedule-date";
+        date.textContent = formatScheduleDate(schedule.match_date);
+        const time = document.createElement("span");
+        time.className = "additional-schedule-time";
+        time.textContent = `${schedule.start_time.slice(0, 5)} ~ ${schedule.end_time.slice(0, 5)}`;
+        heading.append(date, time);
+        const opponent = document.createElement("div");
+        opponent.className = "additional-schedule-opponent";
+        opponent.textContent = `WGH  VS  ${schedule.opponent}`;
+        const location = document.createElement("div");
+        location.className = "additional-schedule-location";
+        location.textContent = schedule.location ? `📍 ${schedule.location}` : "📍 장소 미정";
+        item.append(heading, opponent, location);
+        list.appendChild(item);
+    });
+}
+
+document.getElementById("scheduleViewAllButton").addEventListener("click", () => {
+    showAllSchedules = !showAllSchedules;
+    renderUpcomingSchedules();
+});
+
+async function loadNextMatch() {
+    try {
+        const response = await fetch("/api/schedules");
+        const result = await response.json();
+        if (!response.ok || !result.success || !Array.isArray(result.data)) {
+            throw new Error(result.message || "경기 일정 조회 실패");
+        }
+        allUpcomingSchedules = result.data;
+        renderUpcomingSchedules();
+    } catch (error) {
+        console.error("경기 일정 불러오기 오류:", error);
+    }
 }
 
 // =========================================================
