@@ -2016,3 +2016,17 @@ body.modal-open {
         width: 42px;
     }
 }
+/* =========================================================
+   다음 경기 전체보기 / 접기
+   ========================================================= */
+.next-match-card .card-title-row { gap: 10px; flex-wrap: wrap; }
+.schedule-view-all-button { margin-left: auto; padding: 6px 4px; background: transparent; color: #7b8491; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.schedule-view-all-button:hover { color: #3478f6; }
+.additional-schedule-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.additional-schedule-list[hidden], .schedule-view-all-button[hidden] { display: none; }
+.additional-schedule-item { padding: 15px; border: 1px solid #e7ebf0; border-radius: 13px; background: #f8faff; }
+.additional-schedule-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.additional-schedule-date { font-weight: 900; font-size: 15px; }
+.additional-schedule-time { color: #3478f6; font-size: 12px; font-weight: 800; }
+.additional-schedule-opponent { margin-top: 10px; font-weight: 800; font-size: 14px; }
+.additional-schedule-location { margin-top: 6px; color: #7b8491; font-size: 12px; }
