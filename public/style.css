@@ -2030,3 +2030,97 @@ body.modal-open {
 .additional-schedule-time { color: #3478f6; font-size: 12px; font-weight: 800; }
 .additional-schedule-opponent { margin-top: 10px; font-weight: 800; font-size: 14px; }
 .additional-schedule-location { margin-top: 6px; color: #7b8491; font-size: 12px; }
+
+
+/* =========================================================
+   WGH 추가 경기 일정 - 카드 내부 배치
+   ========================================================= */
+
+/* 시간과 장소를 오른쪽에 세로 배치 */
+.additional-schedule-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    min-width: 0;
+}
+
+/* 장소 위치 및 긴 글자 처리 */
+.additional-schedule-info .additional-schedule-location {
+    margin-top: 0;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* 메모 영역 */
+.additional-schedule-memo {
+    margin-top: 12px;
+    padding: 10px 12px;
+
+    background: #f0f3f8;
+    border-radius: 8px;
+
+    color: #606b79;
+    font-size: 12px;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.additional-schedule-memo[hidden] {
+    display: none;
+}
+
+/* 수정·삭제 버튼 위치 */
+.additional-schedule-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+/* =========================================
+   WGH 추가 경기 카드 디자인 마무리
+   ========================================= */
+
+/* 날짜와 시간 상단 정렬 */
+.additional-schedule-heading {
+    align-items: flex-start;
+}
+
+/* 상대팀과 메모 간격 */
+.additional-schedule-opponent {
+    margin-top: 12px;
+}
+
+/* 메모 크기 조정 */
+.additional-schedule-memo {
+    margin-top: 14px;
+    padding: 9px 12px;
+}
+
+/* 오른쪽 아래 수정 버튼 영역 */
+.additional-schedule-actions {
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+/* 수정 버튼 */
+.edit-schedule-button, 
+.delete-schedule-button {
+    padding: 4px 6px;
+    background: transparent;
+    color: #7b8491;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.edit-schedule-button:hover, 
+.delete-schedule-button:hover {
+    color: #3478f6;
+    background: #edf4ff;
+}

@@ -40,6 +40,14 @@ const matchDate = document.getElementById("matchDate");
 // 다음 경기 일정 모달 요소
 // =========================================================
 
+// =========================================================
+// 현재 수정 중인 경기 일정 ID
+// null = 새로운 일정 등록
+// 숫자 = 기존 일정 수정
+// =========================================================
+
+let editingScheduleId = null;
+
 const scheduleAddButton =
     document.getElementById("scheduleAddButton");
 
@@ -288,6 +296,8 @@ scheduleAddButton.addEventListener("click", function () {
     // 기존 입력값 초기화
     scheduleForm.reset();
 
+    editingScheduleId = null;
+
     // 이전에 표시된 날짜/요일 초기화
     scheduleDateDisplay.textContent = "";
 
@@ -375,18 +385,33 @@ const scheduleData = {
 
     try {
 
-        // 서버로 일정 등록 요청
-        const response = await fetch("/api/schedules", {
+      // =========================================================
+// 경기 일정 등록 / 수정 자동 구분
+// =========================================================
 
-            method: "POST",
+// 수정 중이면 기존 일정 API 사용
+// 새 일정이면 등록 API 사용
+const url = editingScheduleId !== null
+    ? `/api/schedules/${editingScheduleId}`
+    : "/api/schedules";
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+// 수정은 PUT, 등록은 POST
+const method = editingScheduleId !== null
+    ? "PUT"
+    : "POST";
 
-            body: JSON.stringify(scheduleData)
+// 서버에 저장 요청
+const response = await fetch(url, {
 
-        });
+    method: method,
+
+    headers: {
+        "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify(scheduleData)
+
+});
 
 
         const result = await response.json();
@@ -415,6 +440,8 @@ const scheduleData = {
 
         // 팝업 닫기
         closeScheduleModal();
+
+        editingScheduleId = null;
 
 
     } catch (error) {
@@ -1156,6 +1183,112 @@ document.addEventListener("click", async function (event) {
 });
 
 // =========================================================
+// 다음 경기 일정 수정 버튼 클릭
+// =========================================================
+
+
+ // =========================================================
+ // 다음 경기 일정 수정 / 삭제 버튼 클릭
+ // =========================================================
+
+document.addEventListener("click", async function (event) {
+
+    // =====================================================
+    // 1. 경기 일정 삭제 버튼 클릭
+    // =====================================================
+
+    const deleteButton = event.target.closest(".delete-schedule-button");
+
+    if (deleteButton) {
+
+        const scheduleId = Number(deleteButton.dataset.id);
+
+        // 삭제 전 확인창
+        const confirmed = confirm(
+            "이 경기 일정을 삭제하시겠습니까?\n삭제한 일정은 복구할 수 없습니다."
+        );
+
+        // 취소를 누르면 아무것도 삭제하지 않음
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/schedules/${scheduleId}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("경기 일정 삭제 실패");
+            }
+
+            alert("경기 일정이 삭제되었습니다.");
+
+            // 삭제 후 최신 일정 다시 불러오기
+            await loadNextMatch();
+
+        } catch (error) {
+            console.error("경기 일정 삭제 오류:", error);
+            alert("경기 일정을 삭제하지 못했습니다.");
+        }
+
+        return;
+    }
+
+
+    // =====================================================
+    // 2. 경기 일정 수정 버튼 클릭 (기존 기능 유지)
+    // =====================================================
+
+    const editButton = event.target.closest(".edit-schedule-button");
+
+    if (!editButton) {
+        return;
+    }
+
+    // 수정할 일정 ID 가져오기
+    const scheduleId = Number(editButton.dataset.id);
+
+    // 불러온 일정 중 해당 일정 찾기
+    const schedule = allUpcomingSchedules.find(
+        item => Number(item.schedule_id) === scheduleId
+    );
+
+    if (!schedule) {
+        alert("수정할 경기 일정을 찾을 수 없습니다.");
+        return;
+    }
+
+    // 현재 수정 중인 일정 ID 저장
+    editingScheduleId = scheduleId;
+
+    // 기존 데이터 입력
+    scheduleDateInput.value = schedule.match_date.slice(0, 10);
+    scheduleStartTime.value = schedule.start_time.slice(0, 5);
+    scheduleEndTime.value = schedule.end_time.slice(0, 5);
+
+    document.getElementById("scheduleOpponent").value =
+        schedule.opponent;
+
+    document.getElementById("scheduleLocation").value =
+        schedule.location || "";
+
+    document.getElementById("scheduleMemo").value =
+        schedule.memo || "";
+
+    // 날짜와 요일 표시 갱신
+    scheduleDateInput.dispatchEvent(new Event("change"));
+
+    // 팝업 열기
+    openScheduleModal();
+
+});
+
+
+// =========================================================
 // 다음 경기 일정 불러오기
 // =========================================================
 
@@ -1214,13 +1347,75 @@ function renderUpcomingSchedules() {
         const opponent = document.createElement("div");
         opponent.className = "additional-schedule-opponent";
         opponent.textContent = `WGH  VS  ${schedule.opponent}`;
-        const location = document.createElement("div");
-        location.className = "additional-schedule-location";
-        location.textContent = schedule.location ? `📍 ${schedule.location}` : "📍 장소 미정";
-        item.append(heading, opponent, location);
-        list.appendChild(item);
+// =========================================================
+// 추가 경기 일정 - 장소 / 메모 / 수정 버튼
+// =========================================================
+
+// 1. 장소: 시간 바로 아래에 표시
+const location = document.createElement("div");
+location.className = "additional-schedule-location";
+location.textContent = schedule.location
+    ? `📍 ${schedule.location}`
+    : "📍 장소 미정";
+
+// 시간과 장소를 오른쪽에 묶기
+const scheduleInfo = document.createElement("div");
+scheduleInfo.className = "additional-schedule-info";
+
+// 기존 시간 요소와 장소를 묶음
+scheduleInfo.append(time, location);
+
+// 날짜와 오른쪽 정보 배치
+heading.replaceChildren(date, scheduleInfo);
+
+// 2. 메모: 내용이 있을 때만 표시
+const memo = document.createElement("div");
+memo.className = "additional-schedule-memo";
+
+if (schedule.memo && schedule.memo.trim()) {
+    memo.textContent = `📝 ${schedule.memo}`;
+} else {
+    memo.hidden = true;
+}
+
+// 3. 수정 버튼
+const editButton = document.createElement("button");
+editButton.type = "button";
+editButton.className = "edit-schedule-button";
+editButton.textContent = "수정";
+editButton.dataset.id = schedule.schedule_id;
+
+// 4. 버튼을 오른쪽 아래에 배치
+const actions = document.createElement("div");
+actions.className = "additional-schedule-actions";
+actions.appendChild(editButton);
+
+// 경기 일정 삭제 버튼 생성
+const deleteButton = document.createElement("button");
+
+deleteButton.type = "button";
+deleteButton.className = "delete-schedule-button";
+deleteButton.textContent = "삭제";
+deleteButton.dataset.id = schedule.schedule_id;
+
+// 수정 버튼 옆에 삭제 버튼 추가
+actions.appendChild(deleteButton);
+
+// 5. 카드 완성
+item.append(heading, opponent, memo, actions);
+list.appendChild(item);
     });
 }
+
+
+
+// 수정 버튼 클릭 이벤트 처리
+document.addEventListener("click", (event) => {
+    if (event.target.classList.contains("edit-schedule-button")) {
+        editingScheduleId = parseInt(event.target.dataset.id);
+        loadScheduleForEdit(editingScheduleId);
+    }
+});
 
 document.getElementById("scheduleViewAllButton").addEventListener("click", () => {
     showAllSchedules = !showAllSchedules;

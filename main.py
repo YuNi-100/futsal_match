@@ -616,18 +616,186 @@ def create_schedule(schedule: ScheduleCreate):
 from fastapi.staticfiles import StaticFiles
 
 # =====================================================
-# 14. 예정된 전체 경기 일정 조회
-# GET /api/schedules
+# 15. 다음 경기 일정 수정 API
+# PUT /api/schedules/{schedule_id}
 # =====================================================
 
-@app.get("/api/schedules")
-def get_all_schedules():
+
+# =====================================================
+# 12. 경기 일정 수정 API
+# PUT /api/schedules/{schedule_id}
+# =====================================================
+
+@app.put("/api/schedules/{schedule_id}")
+def update_schedule(schedule_id: int, schedule: ScheduleCreate):
+
+    # 종료 시간이 시작 시간보다 늦어야 함
+    if schedule.end_time <= schedule.start_time:
+        raise HTTPException(
+            status_code=400,
+            detail="종료시간은 시작시간보다 늦어야 합니다."
+        )
+
+    # 상대팀 이름 필수
+    if not schedule.opponent.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="상대팀 이름을 입력해 주세요."
+        )
+
     connection = None
 
     try:
         connection = get_db_connection()
 
         with connection.cursor() as cursor:
+
+            # 기존 일정 수정
+            # schedule_id: 수정할 일정 번호
+            # user_id = 1: 현재 WGH 사용자
+            cursor.execute("""
+                UPDATE futsal_schedule
+                SET
+                    match_date = %s,
+                    start_time = %s,
+                    end_time = %s,
+                    opponent = %s,
+                    location = %s,
+                    memo = %s
+                WHERE schedule_id = %s
+                  AND user_id = %s
+            """, (
+                schedule.match_date,
+                schedule.start_time,
+                schedule.end_time,
+                schedule.opponent.strip(),
+                schedule.location,
+                schedule.memo,
+                schedule_id,
+                1
+            ))
+
+            # 수정할 일정이 존재하지 않는 경우
+            if cursor.rowcount == 0:
+                cursor.execute("""
+                    SELECT schedule_id
+                    FROM futsal_schedule
+                    WHERE schedule_id = %s
+                      AND user_id = %s
+                """, (schedule_id, 1))
+
+                if cursor.fetchone() is None:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="수정할 경기 일정이 없습니다."
+                    )
+
+        connection.commit()
+
+        return {
+            "success": True,
+            "message": "경기 일정이 수정되었습니다."
+        }
+
+    except HTTPException:
+        if connection:
+            connection.rollback()
+        raise
+
+    except Exception as error:
+        if connection:
+            connection.rollback()
+
+        print("경기 일정 수정 실패:", error)
+
+        raise HTTPException(
+            status_code=500,
+            detail="경기 일정 수정에 실패했습니다."
+        )
+
+    finally:
+        if connection:
+            connection.close()
+
+
+
+# =====================================================
+# 13. 경기 일정 삭제 API
+# DELETE /api/schedules/{schedule_id}
+# =====================================================
+
+@app.delete("/api/schedules/{schedule_id}")
+def delete_schedule(schedule_id: int):
+
+    connection = None
+
+    try:
+        # MySQL 데이터베이스 연결
+        connection = get_db_connection()
+
+        with connection.cursor() as cursor:
+
+            # 일정 번호와 사용자 번호가 일치하는 일정만 삭제
+            cursor.execute("""
+                DELETE FROM futsal_schedule
+                WHERE schedule_id = %s
+                  AND user_id = %s
+            """, (schedule_id, 1))
+
+            # 삭제할 일정이 존재하지 않는 경우
+            if cursor.rowcount == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail="삭제할 경기 일정을 찾을 수 없습니다."
+                )
+
+        # 삭제 확정
+        connection.commit()
+
+        return {
+            "success": True,
+            "message": "경기 일정이 삭제되었습니다."
+        }
+
+    except HTTPException:
+        if connection:
+            connection.rollback()
+        raise
+
+    except Exception as error:
+        if connection:
+            connection.rollback()
+
+        print("경기 일정 삭제 실패:", error)
+
+        raise HTTPException(
+            status_code=500,
+            detail="경기 일정 삭제에 실패했습니다."
+        )
+
+    finally:
+        if connection:
+            connection.close()
+
+
+# =====================================================
+# 14. 예정된 전체 경기 일정 조회 API
+# GET /api/schedules
+# =====================================================
+
+@app.get("/api/schedules")
+def get_all_schedules():
+
+    connection = None
+
+    try:
+        # MySQL 데이터베이스 연결
+        connection = get_db_connection()
+
+        with connection.cursor() as cursor:
+
+            # 오늘 이후의 경기 일정만 조회
+            # user_id = 1: 현재 WGH 사용자
             cursor.execute("""
                 SELECT
                     schedule_id,
@@ -645,6 +813,7 @@ def get_all_schedules():
 
             schedules = cursor.fetchall()
 
+        # 기존 app.js와 동일한 응답 구조 유지
         return {
             "success": True,
             "data": schedules
@@ -652,6 +821,7 @@ def get_all_schedules():
 
     except Exception as error:
         print("전체 경기 일정 조회 실패:", error)
+
         raise HTTPException(
             status_code=500,
             detail="경기 일정을 불러오지 못했습니다."
@@ -661,7 +831,121 @@ def get_all_schedules():
         if connection:
             connection.close()
 
-# public 폴더의 HTML, CSS, JavaScript 파일 제공
+
+# =====================================================
+# 15. 정적 파일 제공
+# HTML / CSS / JavaScript
+# 반드시 API 코드보다 아래에 배치
+# =====================================================
+
+# =====================================================
+# 16. 경기 영상 업로드 및 목록 조회 API
+# =====================================================
+
+import uuid
+import json
+from pathlib import Path
+from fastapi import UploadFile, File
+from fastapi.responses import FileResponse
+
+# 영상 저장 폴더 생성
+VIDEO_DIR = Path("uploads/videos")
+VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+
+# 업로드 영상 정보 저장 파일
+VIDEO_DB_FILE = VIDEO_DIR / "videos.json"
+
+
+# 저장된 영상 목록 읽기
+def load_videos():
+    if not VIDEO_DB_FILE.exists():
+        return []
+
+    with open(VIDEO_DB_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+# 영상 목록 저장하기
+def save_videos(videos):
+    with open(VIDEO_DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(videos, f, ensure_ascii=False, indent=2)
+
+
+# 경기 영상 업로드
+@app.post("/api/videos/upload", status_code=201)
+async def upload_match_video(file: UploadFile = File(...)):
+
+    # 영상 파일인지 확인
+    if not file.content_type or not file.content_type.startswith("video/"):
+        raise HTTPException(
+            status_code=400,
+            detail="영상 파일만 업로드할 수 있습니다."
+        )
+
+    video_id = uuid.uuid4().hex
+    extension = Path(file.filename or "").suffix.lower()
+
+    # 서버에 저장할 파일명
+    stored_name = video_id + extension
+    video_path = VIDEO_DIR / stored_name
+
+    # 영상을 나누어 저장 (큰 파일도 메모리에 한꺼번에 올리지 않음)
+    try:
+        with open(video_path, "wb") as output:
+            while chunk := await file.read(1024 * 1024):
+                output.write(chunk)
+    finally:
+        await file.close()
+
+    # 영상 목록에 등록
+    videos = load_videos()
+
+    video_info = {
+        "video_id": video_id,
+        "filename": file.filename,
+        "stored_name": stored_name,
+        "url": f"/api/videos/{video_id}"
+    }
+
+    videos.insert(0, video_info)
+    save_videos(videos)
+
+    return {
+        "success": True,
+        "message": "경기 영상이 업로드되었습니다.",
+        "data": video_info
+    }
+
+
+# 업로드된 경기 영상 목록 조회
+@app.get("/api/videos")
+def get_match_videos():
+    return {
+        "success": True,
+        "data": load_videos()
+    }
+
+
+# 업로드된 경기 영상 재생
+@app.get("/api/videos/{video_id}")
+def play_match_video(video_id: str):
+
+    videos = load_videos()
+    video = next(
+        (item for item in videos if item["video_id"] == video_id),
+        None
+    )
+
+    if video is None:
+        raise HTTPException(status_code=404, detail="영상을 찾을 수 없습니다.")
+
+    video_path = VIDEO_DIR / video["stored_name"]
+
+    if not video_path.is_file():
+        raise HTTPException(status_code=404, detail="영상 파일이 없습니다.")
+
+    return FileResponse(video_path)
+
 app.mount(
     "/",
     StaticFiles(directory="public", html=True),

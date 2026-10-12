@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We Go High | 경기 영상</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .video-page { max-width: 1100px; margin: 0 auto; padding: 50px 30px; }
+    .video-page-label { color: #3478f6; font-size: 12px; font-weight: 800; letter-spacing: 2px; }
+    .video-page-header { margin-bottom: 26px; }
+    .video-page-header h2 { margin: 10px 0; font-size: 30px; }
+    .video-page-header p, .video-muted { color: #7b8491; font-size: 14px; line-height: 1.7; }
+    .video-panel { background: #fff; border-radius: 20px; padding: 26px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(31,46,70,.06); }
+    .video-panel h3 { font-size: 20px; margin-bottom: 17px; }
+    .video-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e7ebf0; padding-bottom: 12px; }
+    .video-tab { padding: 12px 18px; border-radius: 10px; background: #f0f3f8; color: #5c6675; font-weight: 800; font-size: 14px; }
+    .video-tab.active { background: #3478f6; color: #fff; }
+    .video-player { width: 100%; aspect-ratio: 16 / 9; background: #121923; border-radius: 14px; display: block; }
+    .video-player-placeholder { display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 9; border-radius: 14px; background: #121923; color: #dce7ff; text-align: center; padding: 20px; }
+    .video-list-heading { margin: 22px 0 12px; font-size: 17px; }
+    .video-list { display: flex; flex-direction: column; gap: 9px; }
+    .video-list-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; background: #f7f9fc; padding: 15px; border: 1px solid #e6ebf2; border-radius: 11px; color: #202b3b; font-size: 14px; }
+    .video-list-item:hover, .video-list-item.selected { border-color: #3478f6; background: #edf4ff; }
+    .video-empty { background: #f7f9fc; padding: 24px; text-align: center; color: #8993a0; border-radius: 12px; font-size: 14px; }
+    .video-upload-area { padding: 30px; text-align: center; border: 2px dashed #c9d9f8; border-radius: 14px; background: #f8faff; }
+    .video-primary-button { display: inline-block; margin-top: 14px; padding: 12px 20px; border-radius: 10px; background: #3478f6; color: white; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .video-primary-button:disabled { opacity: .45; cursor: not-allowed; }
+    .video-file-name { margin-top: 12px; color: #3478f6; overflow-wrap: anywhere; font-size: 13px; }
+    .video-actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .video-note { margin-top: 14px; font-size: 12px; color: #7b8491; line-height: 1.7; }
+    .video-analysis-card { padding: 16px; border-radius: 12px; background: #f7f9fc; }
+    .video-analysis-card h4 { margin-bottom: 8px; }
+    .video-analysis-card p { font-size: 13px; line-height: 1.7; color: #6d7888; }
+    [hidden] { display: none !important; }
+    @media (max-width: 550px) { .video-page { padding: 30px 15px; } .video-panel { padding: 18px; } .video-page-header h2 { font-size: 25px; } .video-tab { padding: 10px; font-size: 12px; flex: 1; } }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+      <a href="index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+      <a href="index.html#matches" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+      <a href="index.html#players" class="menu-item"><span class="menu-icon">♙</span><span>선수 기록</span></a>
+      <a href="index.html#stats" class="menu-item"><span class="menu-icon">▥</span><span>통계</span></a>
+      <a href="index.html#next-match" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+      <a href="video.html" class="menu-item active" aria-current="page"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+    </nav>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside>
+  <main class="main-content">
+    <div class="video-page">
+      <header class="video-page-header">
+        <span class="video-page-label">WGH MATCH VIDEO</span>
+        <h2>🎬 경기 영상</h2>
+        <p>전체 경기와 하이라이트를 시청하고, 경기별 분석 결과와 피드백을 확인하세요.</p>
+      </header>
+
+      <section class="video-panel" aria-label="영상 시청 영역">
+        <div class="video-tabs" role="tablist" aria-label="영상 종류">
+          <button type="button" id="fullTab" class="video-tab active" role="tab" aria-selected="true" aria-controls="fullPanel">🎥 전체 경기 영상</button>
+          <button type="button" id="highlightTab" class="video-tab" role="tab" aria-selected="false" aria-controls="highlightPanel">✨ AI 하이라이트</button>
+        </div>
+        <div id="fullPanel" role="tabpanel" aria-labelledby="fullTab">
+          <div id="fullPlaceholder" class="video-player-placeholder">▶<br>아래 목록에서 전체 경기 영상을 선택하세요.</div>
+          <video id="fullPlayer" class="video-player" controls playsinline preload="metadata" hidden></video>
+          <h3 class="video-list-heading">📁 전체 경기 영상 목록</h3>
+          <div id="fullVideoList" class="video-list"><p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p></div>
+        </div>
+        <div id="highlightPanel" role="tabpanel" aria-labelledby="highlightTab" hidden>
+          <div id="highlightPlaceholder" class="video-player-placeholder">▶<br>아래 목록에서 AI 하이라이트를 선택하세요.</div>
+          <video id="highlightPlayer" class="video-player" controls playsinline preload="metadata" hidden></video>
+          <h3 class="video-list-heading">✨ AI 하이라이트 목록</h3>
+          <div id="highlightVideoList" class="video-list"><p class="video-empty">아직 제작된 하이라이트 영상이 없습니다.</p></div>
+        </div>
+      </section>
+
+      <section class="video-panel" aria-labelledby="uploadTitle">
+        <h3 id="uploadTitle">📤 경기 영상 업로드 및 AI 분석</h3>
+        <div class="video-upload-area">
+          <p class="video-muted">경기 영상을 선택하세요.<br>영상 파일을 선택한 뒤 업로드 버튼을 누르면 전체 경기 영상 목록에 등록됩니다.</p>
+          <div class="video-actions">
+            <label for="matchVideoFile" class="video-primary-button">＋ 영상 선택</label>
+            <button type="button" id="uploadVideoButton" class="video-primary-button" disabled>⬆ 영상 업로드</button>
+            <button type="button" id="analyzeButton" class="video-primary-button" disabled>✨ AI 분석 실행 (준비 중)</button>
+          </div>
+          <input type="file" id="matchVideoFile" accept="video/*" hidden>
+          <p id="selectedVideoName" class="video-file-name" aria-live="polite"></p>
+          <p id="videoUploadStatus" class="video-note" role="status" aria-live="polite"></p>
+          <p class="video-note">업로드한 영상은 로컬 서버의 uploads/videos 폴더에 저장됩니다. AI 분석은 추후 연결됩니다.</p>
+        </div>
+      </section>
+
+      <section class="video-panel" aria-labelledby="analysisTitle">
+        <h3 id="analysisTitle">📊 경기별 AI 분석 결과 목록</h3>
+        <div id="analysisList" class="video-list"><p class="video-empty">아직 완료된 경기 분석이 없습니다.<br>분석이 완료되면 날짜별 경기와 피드백이 이곳에 표시됩니다.</p></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+  // 탭 전환: 이전 탭의 영상은 일시 정지합니다.
+  const tabs = {
+    full: { button: document.getElementById('fullTab'), panel: document.getElementById('fullPanel'), player: document.getElementById('fullPlayer') },
+    highlight: { button: document.getElementById('highlightTab'), panel: document.getElementById('highlightPanel'), player: document.getElementById('highlightPlayer') }
+  };
+  function switchVideoTab(nextTab) {
+    Object.entries(tabs).forEach(([name, tab]) => {
+      const selected = name === nextTab;
+      if (!selected) tab.player.pause();
+      tab.button.classList.toggle('active', selected);
+      tab.button.setAttribute('aria-selected', String(selected));
+      tab.panel.hidden = !selected;
+    });
+  }
+  tabs.full.button.addEventListener('click', () => switchVideoTab('full'));
+  tabs.highlight.button.addEventListener('click', () => switchVideoTab('highlight'));
+
+  // 향후 서버에서 받은 영상 목록을 여기에 전달하면 됩니다.
+  // 항목 예시: { title: '2026.10.12 · WGH vs 상대팀', url: '/uploads/match.mp4' }
+  let fullVideos = [];
+  const highlightVideos = [];
+  function renderVideoList(videos, listId, playerId, placeholderId) {
+    const list = document.getElementById(listId);
+    if (!videos.length) return;
+    list.replaceChildren();
+    videos.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'video-list-item';
+      const title = document.createElement('span');
+      title.textContent = item.title;
+      const play = document.createElement('span');
+      play.textContent = '▶ 재생';
+      button.append(title, play);
+      button.addEventListener('click', () => {
+        const player = document.getElementById(playerId);
+        player.src = item.url;
+        player.hidden = false;
+        document.getElementById(placeholderId).hidden = true;
+        list.querySelectorAll('.video-list-item').forEach((el) => el.classList.remove('selected'));
+        button.classList.add('selected');
+        player.play().catch(() => { /* 브라우저 정책에 따라 재생 버튼을 누를 수 있음 */ });
+      });
+      list.appendChild(button);
+    });
+  }
+  renderVideoList(fullVideos, 'fullVideoList', 'fullPlayer', 'fullPlaceholder');
+  renderVideoList(highlightVideos, 'highlightVideoList', 'highlightPlayer', 'highlightPlaceholder');
+
+  const videoInput = document.getElementById('matchVideoFile');
+  const uploadButton = document.getElementById('uploadVideoButton');
+  const uploadStatus = document.getElementById('videoUploadStatus');
+
+  videoInput.addEventListener('change', () => {
+    const file = videoInput.files[0];
+    document.getElementById('selectedVideoName').textContent = file ? '선택한 영상: ' + file.name : '';
+    uploadButton.disabled = !file;
+    uploadStatus.textContent = '';
+  });
+
+  // 서버에 저장된 전체 경기 영상 목록 불러오기
+  async function loadFullVideos() {
+    const list = document.getElementById('fullVideoList');
+    try {
+      const response = await fetch('/api/videos');
+      if (!response.ok) throw new Error('목록 조회 실패: HTTP ' + response.status);
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) throw new Error('목록 응답 형식 오류');
+      fullVideos = result.data.map((item) => ({
+        title: item.filename || '이름 없는 영상',
+        url: item.url
+      }));
+      if (fullVideos.length === 0) {
+        list.innerHTML = '<p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p>';
+      } else {
+        renderVideoList(fullVideos, 'fullVideoList', 'fullPlayer', 'fullPlaceholder');
+      }
+    } catch (error) {
+      console.error(error);
+      list.textContent = '영상 목록을 불러오지 못했습니다. 서버 연결을 확인해 주세요.';
+    }
+  }
+
+  // 선택한 영상을 FastAPI 서버로 업로드
+  uploadButton.addEventListener('click', async () => {
+    const file = videoInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    uploadButton.disabled = true;
+    videoInput.disabled = true;
+    uploadStatus.textContent = '영상을 업로드하는 중입니다. 잠시 기다려 주세요…';
+
+    try {
+      const response = await fetch('/api/videos/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        let message = 'HTTP ' + response.status;
+        try {
+          const errorData = await response.json();
+          message = errorData.detail || message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+      const result = await response.json();
+      if (!result.success) throw new Error('업로드 응답 오류');
+
+      uploadStatus.textContent = '업로드 완료! 전체 경기 영상 목록에 추가되었습니다.';
+      videoInput.value = '';
+      document.getElementById('selectedVideoName').textContent = '';
+      await loadFullVideos();
+    } catch (error) {
+      console.error(error);
+      uploadStatus.textContent = '업로드 실패: ' + error.message;
+    } finally {
+      videoInput.disabled = false;
+      uploadButton.disabled = !videoInput.files.length;
+    }
+  });
+
+  loadFullVideos();
+</script>
+</body>
+</html>
