@@ -5,3 +5,6 @@ __pycache__/
 
 # 로컬 영상 및 업로드 데이터
 uploads/
+
+# 이전 Node.js 서버 보관 폴더
+legacy_node/
