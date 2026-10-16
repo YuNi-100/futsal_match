@@ -2,3 +2,6 @@
 node_modules
 .venv/
 __pycache__/
+
+# 로컬 영상 및 업로드 데이터
+uploads/

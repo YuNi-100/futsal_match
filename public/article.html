@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WGH 경기 기사 실습</title>
+<style>
+body{max-width:900px;margin:40px auto;padding:0 20px;font:16px/1.7 system-ui;color:#172233;background:#f5f7fa}
+section{background:white;border:1px solid #d7dfeb;padding:24px;border-radius:16px;margin:18px 0}
+button,select{font:inherit;padding:10px;margin:5px 6px 5px 0}button{cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere}#status{font-weight:bold}a{color:#254cc2}
+</style>
+<h1>WGH 경기 기사 실습</h1><a href="/">기존 홈페이지</a>
+<p>저장된 경기에서 근거를 확인하고 기사 초안을 만듭니다.</p>
+<section><label for="match">경기 선택</label><br><select id="match"><option value="">경기를 불러오는 중</option></select><br>
+<button id="template" disabled>무료 template 생성</button><br>
+<label><input id="consent" type="checkbox">선택 경기의 날짜·팀명·점수·장소를 OpenAI로 보내고 API 비용이 발생함을 확인했습니다.</label><br>
+<button id="openai" disabled>OpenAI 기사 생성</button><p id="status" role="status"></p></section>
+<section><h2>근거 facts</h2><pre id="facts">생성 후 표시됩니다.</pre></section>
+<section><h2>검수 전 기사 초안</h2><pre id="article">생성 후 표시됩니다.</pre><pre id="meta"></pre>
+<button id="save" disabled>제출용 결과 내려받기</button></section>
+<section><h2>제출 전 확인</h2><p>날짜·상대팀·점수·승패를 대조하고 수정한 문장 1개와 이유를 별도로 작성하세요. 득점자·경기 흐름·원인은 기록에 없으면 추가하지 않습니다.</p></section>
+<script>
+const el=id=>document.getElementById(id);
+let lastResult=null;
+let busy=false;
+function updateButtons(){
+const ready=Boolean(el('match').value)&&!busy;
+el('template').disabled=!ready;
+el('openai').disabled=!ready||!el('consent').checked;
+el('match').disabled=busy;
+}
+async function loadMatches(){
+try{
+const response=await fetch('/api/matches');
+const result=await response.json();
+if(!response.ok||!result.success||!Array.isArray(result.data)) throw Error('경기 목록을 불러오지 못했습니다. MySQL 연결을 확인해 주세요.');
+el('match').replaceChildren();
+for(const match of result.data){
+const option=document.createElement('option');option.value=match.match_id;
+option.textContent=String(match.match_date)+' / '+match.opponent+' / '+match.our_score+':'+match.opponent_score;
+el('match').append(option);
+}
+if(!result.data.length)el('status').textContent='먼저 기존 홈페이지에서 경기 기록을 등록하세요.';
+}catch(error){el('match').replaceChildren();el('status').textContent=error.message;}
+updateButtons();
+}
+async function generate(mode){
+busy=true;updateButtons();lastResult=null;el('save').disabled=true;
+el('facts').textContent='';el('article').textContent='';el('meta').textContent='';
+el('status').textContent=mode==='openai'?'OpenAI 기사 생성 중…':'무료 template 생성 중…';
+try{
+const response=await fetch('/api/matches/'+encodeURIComponent(el('match').value)+'/article',{
+method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode})
+});
+const result=await response.json();
+if(!response.ok)throw Error(typeof result.detail==='string'?result.detail:'요청을 처리하지 못했습니다.');
+lastResult=result.data;
+el('facts').textContent=JSON.stringify(lastResult.facts,null,2);
+el('article').textContent=lastResult.article;
+el('meta').textContent=JSON.stringify({mode:lastResult.mode,ai_generated:lastResult.ai_generated,model:lastResult.model,review_required:lastResult.review_required,usage:lastResult.usage},null,2);
+el('status').textContent='완료 · 제출 전에 근거와 문장을 대조해 주세요.';
+el('save').disabled=false;
+}catch(error){el('status').textContent=error.message;}
+finally{busy=false;updateButtons();}
+}
+el('match').addEventListener('change',()=>{el('consent').checked=false;updateButtons();});
+el('consent').addEventListener('change',updateButtons);
+el('template').addEventListener('click',()=>generate('template'));
+el('openai').addEventListener('click',()=>generate('openai'));
+el('save').addEventListener('click',()=>{
+if(!lastResult)return;
+const url=URL.createObjectURL(new Blob([JSON.stringify(lastResult,null,2)],{type:'application/json'}));
+const link=document.createElement('a');link.href=url;link.download='wgh-article-result.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+loadMatches();
+</script></html>

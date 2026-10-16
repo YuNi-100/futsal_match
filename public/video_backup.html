@@ -84,14 +84,16 @@
       <section class="video-panel" aria-labelledby="uploadTitle">
         <h3 id="uploadTitle">📤 경기 영상 업로드 및 AI 분석</h3>
         <div class="video-upload-area">
-          <p class="video-muted">경기 영상을 선택하세요.<br>현재는 업로드 전에 화면과 재생 동작을 확인하는 단계입니다.</p>
+          <p class="video-muted">경기 영상을 선택하세요.<br>영상 파일을 선택한 뒤 업로드 버튼을 누르면 전체 경기 영상 목록에 등록됩니다.</p>
           <div class="video-actions">
             <label for="matchVideoFile" class="video-primary-button">＋ 영상 선택</label>
+            <button type="button" id="uploadVideoButton" class="video-primary-button" disabled>⬆ 영상 업로드</button>
             <button type="button" id="analyzeButton" class="video-primary-button" disabled>✨ AI 분석 실행 (준비 중)</button>
           </div>
           <input type="file" id="matchVideoFile" accept="video/*" hidden>
           <p id="selectedVideoName" class="video-file-name" aria-live="polite"></p>
-          <p class="video-note">영상 선택은 서버 업로드가 아닙니다. 새로고침하면 선택 정보가 사라집니다.</p>
+          <p id="videoUploadStatus" class="video-note" role="status" aria-live="polite"></p>
+          <p class="video-note">업로드한 영상은 로컬 서버의 uploads/videos 폴더에 저장됩니다. AI 분석은 추후 연결됩니다.</p>
         </div>
       </section>
 
@@ -122,7 +124,7 @@
 
   // 향후 서버에서 받은 영상 목록을 여기에 전달하면 됩니다.
   // 항목 예시: { title: '2026.10.12 · WGH vs 상대팀', url: '/uploads/match.mp4' }
-  const fullVideos = [];
+  let fullVideos = [];
   const highlightVideos = [];
   function renderVideoList(videos, listId, playerId, placeholderId) {
     const list = document.getElementById(listId);
@@ -153,10 +155,80 @@
   renderVideoList(highlightVideos, 'highlightVideoList', 'highlightPlayer', 'highlightPlaceholder');
 
   const videoInput = document.getElementById('matchVideoFile');
+  const uploadButton = document.getElementById('uploadVideoButton');
+  const uploadStatus = document.getElementById('videoUploadStatus');
+
   videoInput.addEventListener('change', () => {
     const file = videoInput.files[0];
     document.getElementById('selectedVideoName').textContent = file ? '선택한 영상: ' + file.name : '';
+    uploadButton.disabled = !file;
+    uploadStatus.textContent = '';
   });
+
+  // 서버에 저장된 전체 경기 영상 목록 불러오기
+  async function loadFullVideos() {
+    const list = document.getElementById('fullVideoList');
+    try {
+      const response = await fetch('/api/videos');
+      if (!response.ok) throw new Error('목록 조회 실패: HTTP ' + response.status);
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) throw new Error('목록 응답 형식 오류');
+      fullVideos = result.data.map((item) => ({
+        title: item.filename || '이름 없는 영상',
+        url: item.url
+      }));
+      if (fullVideos.length === 0) {
+        list.innerHTML = '<p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p>';
+      } else {
+        renderVideoList(fullVideos, 'fullVideoList', 'fullPlayer', 'fullPlaceholder');
+      }
+    } catch (error) {
+      console.error(error);
+      list.textContent = '영상 목록을 불러오지 못했습니다. 서버 연결을 확인해 주세요.';
+    }
+  }
+
+  // 선택한 영상을 FastAPI 서버로 업로드
+  uploadButton.addEventListener('click', async () => {
+    const file = videoInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    uploadButton.disabled = true;
+    videoInput.disabled = true;
+    uploadStatus.textContent = '영상을 업로드하는 중입니다. 잠시 기다려 주세요…';
+
+    try {
+      const response = await fetch('/api/videos/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        let message = 'HTTP ' + response.status;
+        try {
+          const errorData = await response.json();
+          message = errorData.detail || message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+      const result = await response.json();
+      if (!result.success) throw new Error('업로드 응답 오류');
+
+      uploadStatus.textContent = '업로드 완료! 전체 경기 영상 목록에 추가되었습니다.';
+      videoInput.value = '';
+      document.getElementById('selectedVideoName').textContent = '';
+      await loadFullVideos();
+    } catch (error) {
+      console.error(error);
+      uploadStatus.textContent = '업로드 실패: ' + error.message;
+    } finally {
+      videoInput.disabled = false;
+      uploadButton.disabled = !videoInput.files.length;
+    }
+  });
+
+  loadFullVideos();
 </script>
 </body>
 </html>

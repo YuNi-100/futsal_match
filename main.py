@@ -946,6 +946,354 @@ def play_match_video(video_id: str):
 
     return FileResponse(video_path)
 
+
+# =====================================================
+# 17. Gemini AI 연결 테스트
+# GET /api/ai/test
+# =====================================================
+
+from google import genai
+
+@app.get("/api/ai/test")
+def test_gemini_connection():
+
+    # .env에서 API 키 불러오기
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini API 키가 없습니다."
+        )
+
+    try:
+        # Gemini 연결
+        client = genai.Client(api_key=api_key)
+
+        # AI 응답 테스트
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents="WGH 풋살팀 AI 분석 연결 성공 메시지를 한국어로 짧게 작성해줘."
+        )
+
+        return {
+            "success": True,
+            "message": "Gemini AI 연결 성공!",
+            "ai_response": response.text
+        }
+
+    
+    except Exception as error:
+
+        # Gemini API 오류 상세 내용 확인
+        print("Gemini 연결 오류:", type(error).__name__)
+        print("Gemini 상세 오류:", str(error))
+
+        raise HTTPException(
+            status_code=502,
+            detail="Gemini 연결에 실패했습니다."
+        )
+
+
+# =====================================================
+# 18. Gemini AI 경기 영상 분석 API
+# POST /api/videos/{video_id}/analyze
+# =====================================================
+
+import time
+from google import genai
+from google.genai import types
+
+# =====================================================
+# AI 분석용 영상 자동 압축
+# 원본 영상은 변경하지 않음
+# =====================================================
+
+import subprocess
+
+# Gemini 업로드 제한보다 여유 있게 설정
+MAX_AI_VIDEO_BYTES = 1500 * 1024 * 1024  # 1,500MiB
+
+
+def compress_video_for_ai(video_path, video_id):
+
+    # 압축 파일은 원본과 다른 이름으로 저장
+    compressed_path = VIDEO_DIR / f"{video_id}_ai.mp4"
+
+    # 이전 분석 실패 후 남겨 둔 압축 파일을 재사용
+    if compressed_path.is_file():
+        cached_size = compressed_path.stat().st_size
+        if 0 < cached_size <= MAX_AI_VIDEO_BYTES:
+            print("기존 AI 압축 영상 재사용:", round(cached_size / (1024 ** 2), 2), "MB")
+            return compressed_path
+        compressed_path.unlink(missing_ok=True)
+
+    print("AI 영상 압축 시작:", video_path.name)
+
+    command = [
+        "ffmpeg",
+        "-y",
+        "-i", str(video_path),
+
+        # 분석용 영상 해상도: 가로 최대 1280px
+        # 세로 해상도는 원본 비율에 맞게 자동 조절
+        "-vf", "scale=w='min(1280,iw)':h=-2",
+
+        # H.264 영상 압축
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-b:v", "1800k",
+
+        # 오디오 압축
+        "-c:a", "aac",
+        "-b:a", "96k",
+
+        # 분석용 영상 생성
+        str(compressed_path)
+    ]
+
+    try:
+        subprocess.run(
+            command,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        compressed_size = compressed_path.stat().st_size
+
+        print(
+            "AI 영상 압축 완료:",
+            round(compressed_size / (1024 ** 2), 2),
+            "MB"
+        )
+
+        # Gemini 업로드 제한보다 큰 경우 전송 차단
+        if compressed_size > MAX_AI_VIDEO_BYTES:
+            raise RuntimeError(
+                "압축 영상이 1,500MiB를 초과했습니다."
+            )
+
+        return compressed_path
+
+    except Exception:
+        # 압축 실패 시 생성 중이던 임시 파일 삭제
+        compressed_path.unlink(missing_ok=True)
+        raise
+
+
+@app.post("/api/videos/{video_id}/analyze")
+def analyze_match_video(video_id: str):
+
+    # 1. 기존 영상 목록에서 분석할 영상 찾기
+    videos = load_videos()
+
+    video = next(
+        (item for item in videos if item["video_id"] == video_id),
+        None
+    )
+
+    if video is None:
+        raise HTTPException(
+            status_code=404,
+            detail="분석할 영상을 찾을 수 없습니다."
+        )
+
+    # 2. 실제 영상 파일 확인
+    video_path = VIDEO_DIR / video["stored_name"]
+
+    if not video_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="영상 파일이 존재하지 않습니다."
+        )
+
+    # 3. Gemini API 키 확인
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini API 키가 없습니다."
+        )
+
+    client = genai.Client(api_key=api_key)
+    uploaded_file = None
+    compressed_path = None
+    analysis_succeeded = False
+
+    try:
+        # 4. 압축 영상 생성 또는 기존 압축 영상 재사용
+        compressed_path = compress_video_for_ai(video_path, video_id)
+        print("AI 압축 영상 업로드 시작:", compressed_path.name)
+
+        uploaded_file = client.files.upload(
+            file=str(compressed_path)
+        )
+
+        # 5. 영상 처리 완료 대기 (최대 5분)
+        for _ in range(60):
+
+            state = uploaded_file.state
+
+            if state == "ACTIVE":
+                break
+
+            if state == "FAILED":
+                raise RuntimeError(
+                    "Gemini 영상 처리에 실패했습니다."
+                )
+
+            time.sleep(5)
+
+            uploaded_file = client.files.get(
+                name=uploaded_file.name
+            )
+
+        else:
+            raise TimeoutError(
+                "영상 처리 대기 시간이 초과되었습니다."
+            )
+
+        # 6. AI에게 경기 분석 요청
+        prompt = """
+너는 WGH 여자 풋살팀의 전문 경기 분석 코치야.
+
+제공된 경기 영상을 분석해 줘.
+
+분석 항목:
+1. 골 장면
+2. 슈팅 장면
+3. 주요 수비 장면
+4. 공격 및 수비 전술 피드백
+
+영상에서 실제 확인할 수 있는 장면만 기록해.
+확실하지 않은 장면은 추측하지 마.
+영상 시작을 00:00으로 하여 시간을 기록해.
+
+다음 JSON 형식으로만 답변해.
+
+{
+  "summary": "전체 경기 요약",
+  "events": [
+    {
+      "time": "00:00",
+      "type": "goal 또는 shot 또는 defense",
+      "description": "장면 설명"
+    }
+  ],
+  "feedback": "WGH 팀을 위한 코치 피드백"
+}
+"""
+
+        print("Gemini AI 경기 분석 시작")
+
+        
+        # Gemini 서버 과부하 시 자동 재시도
+        from google.genai.errors import ServerError
+
+        response = None
+
+        max_attempts = 5
+        for attempt in range(max_attempts):
+
+            try:
+                print(f"AI 분석 요청 {attempt + 1}/{max_attempts}")
+
+                response = client.models.generate_content(
+                    model=os.getenv(
+                        "GEMINI_MODEL",
+                        "gemini-3-flash-preview"
+                    ),
+                    contents=[uploaded_file, prompt],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+
+                # 정상 응답이면 반복 종료
+                break
+
+            except ServerError as error:
+
+                # 503 이외의 서버 오류는 즉시 전달
+                if error.code != 503:
+                    raise
+
+                # 마지막 시도까지 실패한 경우
+                if attempt == max_attempts - 1:
+                    raise
+
+                # 서버 혼잡이 계속되면 점진적으로 대기
+                wait_seconds = min(15 * (2 ** attempt), 120)
+
+                print(
+                    f"Gemini 서버 혼잡. "
+                    f"{wait_seconds}초 후 재시도..."
+                )
+
+                time.sleep(wait_seconds)
+
+
+        if not response.text:
+            raise RuntimeError("AI 분석 결과가 비어 있습니다.")
+
+        # 7. AI 응답을 JSON 데이터로 변환
+        analysis = json.loads(response.text)
+
+        print("Gemini AI 경기 분석 완료!")
+        analysis_succeeded = True
+
+        return {
+            "success": True,
+            "message": "AI 경기 분석이 완료되었습니다.",
+            "video_id": video_id,
+            "filename": video["filename"],
+            "analysis": analysis
+        }
+
+    except Exception as error:
+
+        print(
+            "AI 영상 분석 오류:",
+            type(error).__name__,
+            str(error)
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail="AI 경기 분석에 실패했습니다. 서버 로그를 확인해 주세요."
+        )
+
+    finally:
+        # Gemini에 임시 업로드한 파일 삭제 시도
+        if uploaded_file is not None:
+            try:
+                client.files.delete(name=uploaded_file.name)
+            except Exception as cleanup_error:
+                print("Gemini 임시 파일 정리 실패:", cleanup_error)
+
+        client.close()
+
+        # 분석에 성공했을 때만 로컬 압축 파일 삭제
+        # 실패했다면 다음 요청에서 재사용하도록 남겨 둠
+        if compressed_path is not None and analysis_succeeded:
+            compressed_path.unlink(missing_ok=True)
+            print("AI 압축 영상 정리 완료")
+        elif compressed_path is not None:
+            print("분석 실패: AI 압축 영상 보관:", compressed_path.name)
+
+
+# 신규 유튜브 영상 API: 기존 영상/경기 API는 유지
+from youtube_videos import router as youtube_video_router
+app.include_router(youtube_video_router)
+
+from article_routes import create_article_router
+app.include_router(create_article_router(get_db_connection))
+
+from youtube_feedback import router as youtube_feedback_router
+app.include_router(youtube_feedback_router)
+
 app.mount(
     "/",
     StaticFiles(directory="public", html=True),

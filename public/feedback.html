@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WGH | 영상 피드백</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#20304a;font:16px/1.7 system-ui}
+main{max-width:960px;margin:40px auto;padding:0 20px}section{background:white;border:1px solid #dfe6f1;border-radius:18px;padding:24px;margin:20px 0}
+h1,h2,h3{line-height:1.4}label{display:block;margin:12px 0 6px}input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #bbc9dd;max-width:100%}select{width:100%}
+button{cursor:pointer;background:#234dc5;color:white}button:disabled{opacity:.5;cursor:default}input[type=text]{width:100%}input[type=number]{width:120px}
+small,.muted{color:#66758b}#status{white-space:pre-wrap;font-weight:600}iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px}article{border-top:1px solid #dfe6f1;margin-top:18px;padding-top:18px}article p{white-space:pre-wrap}a{color:#234dc5}
+</style></head>
+<body><main>
+<a href="/video.html">경기 영상 페이지</a>
+<h1>영상으로 돌아보는 WGH 플레이</h1>
+<p>짧은 장면을 살펴보고, 잘한 점과 다음에 시도할 행동을 정리해요.</p>
+<section><h2>분석할 영상</h2>
+<form id="feedbackForm">
+<label for="video">등록한 YouTube 영상</label><select id="video" required><option value="">불러오는 중…</option></select>
+<p class="muted">공개 YouTube 영상을 사용하세요. 비공개·일부 공개 영상은 이 방식으로 분석할 수 없습니다.</p>
+<label for="color">우리 팀 유니폼 특징</label><input id="color" type="text" maxlength="80" required placeholder="예: 분홍색 상의, 검은색 하의">
+<label for="start">원본 영상 기준 시작 시간(초)</label><input id="start" type="number" min="0" max="86400" step="1" value="0" required>
+<label for="end">종료 시간(초)</label><input id="end" type="number" min="1" max="86580" step="1" value="60" required>
+<p class="muted">예: 1분~2분은 시작 60, 종료 120. 한 번에 최대 180초.</p>
+<label><input id="consent" type="checkbox" required> 선택한 영상 링크·분석 구간·팀 유니폼 설명을 Google Gemini로 보내는 데 동의하고, 계정 요금과 한도를 확인했어요.</label>
+<button id="analyze" type="submit" disabled>영상 분석하고 피드백 받기</button>
+<p id="status" role="status">영상 목록을 확인하고 있어요.</p>
+</form></section>
+<section id="result" hidden><h2>검수 전 코치 코멘트</h2><p id="summary"></p><div id="scenes"></div>
+<h3>확인하기 어려웠던 부분</h3><ul id="limits"></ul><p class="muted" id="meta"></p>
+<button id="download" type="button">제출용 분석 결과 저장</button>
+<p class="muted">화면을 새로고침하면 결과가 사라져요. 결과는 JSON으로 저장해 두세요. 시간 표시와 관찰 내용은 원본 영상으로 검토해야 해요.</p>
+</section><section><h2>선택 영상</h2><iframe id="player" title="선택 경기 영상" allowfullscreen hidden></iframe></section>
+</main><script src="feedback.js"></script></body></html>
