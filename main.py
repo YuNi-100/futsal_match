@@ -6,7 +6,8 @@ import os
 import pymysql
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from auth import router as auth_router, require_admin_for_request
 
 # .env 파일의 환경변수 불러오기
 load_dotenv()
@@ -18,6 +19,7 @@ load_dotenv()
 
 app = FastAPI(
     title="WGH Futsal Match API",
+    dependencies=[Depends(require_admin_for_request)],
     description="We Go High 풋살 경기 관리 시스템",
     version="1.0.0"
 )
@@ -203,16 +205,38 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from datetime import date
 from typing import Optional
+from match_player_records import MatchPlayerRecord, save_match_players, read_match_players
 
 
 # 경기 기록 등록 시 전달받을 데이터 형식
 class MatchCreate(BaseModel):
+    players: Optional[list[MatchPlayerRecord]] = Field(default=None, max_length=500)
     match_date: date                  # 경기 날짜 (필수)
     opponent: str                     # 상대팀 (필수)
     our_score: int = Field(ge=0)      # 우리팀 점수 (0 이상)
     opponent_score: int = Field(ge=0) # 상대팀 점수 (0 이상)
     location: Optional[str] = None    # 경기 장소 (선택)
     memo: Optional[str] = None        # 메모 (선택)
+
+
+@app.get("/api/matches/{match_id}/players")
+def get_match_player_records(match_id: int):
+    connection = None
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT match_id FROM futsal_match WHERE match_id=%s", (match_id,))
+            if cursor.fetchone() is None:
+                raise HTTPException(404, "경기 기록을 찾을 수 없습니다.")
+            records = read_match_players(cursor, match_id)
+        return {"success": True, "data": records}
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(500, "선수 경기 기록을 불러오지 못했습니다.") from None
+    finally:
+        if connection:
+            connection.close()
 
 
 @app.post("/api/matches", status_code=201)
@@ -262,6 +286,7 @@ def create_match(match: MatchCreate):
             ))
 
             new_match_id = cursor.lastrowid
+            save_match_players(cursor, new_match_id, match.players)
 
         connection.commit()
 
@@ -279,6 +304,11 @@ def create_match(match: MatchCreate):
                 "memo": match.memo
             }
         }
+
+    except HTTPException:
+        if connection:
+            connection.rollback()
+        raise
 
     except Exception as error:
 
@@ -319,6 +349,10 @@ def update_match(match_id: int, match: MatchCreate):
 
         with connection.cursor() as cursor:
 
+            cursor.execute("SELECT match_id FROM futsal_match WHERE match_id=%s AND user_id=%s FOR UPDATE", (match_id, 1))
+            if cursor.fetchone() is None:
+                raise HTTPException(404, "수정할 경기 기록이 없습니다.")
+
             # 기존 경기 기록 수정
             cursor.execute("""
                 UPDATE futsal_match
@@ -344,14 +378,7 @@ def update_match(match_id: int, match: MatchCreate):
                 1
             ))
 
-            updated_rows = cursor.rowcount
-
-        if updated_rows == 0:
-            connection.rollback()
-            raise HTTPException(
-                status_code=404,
-                detail="수정할 경기 기록이 없습니다."
-            )
+            save_match_players(cursor, match_id, match.players)
 
         connection.commit()
 
@@ -371,6 +398,8 @@ def update_match(match_id: int, match: MatchCreate):
         }
 
     except HTTPException:
+        if connection:
+            connection.rollback()
         raise
 
     except Exception as error:
@@ -1293,6 +1322,17 @@ app.include_router(create_article_router(get_db_connection))
 
 from youtube_feedback import router as youtube_feedback_router
 app.include_router(youtube_feedback_router)
+
+from match_detail_routes import create_match_detail_router
+app.include_router(create_match_detail_router(get_db_connection))
+
+from player_detail_routes import create_player_detail_router
+app.include_router(create_player_detail_router(get_db_connection))
+
+from video_match_link import router as video_match_link_router
+app.include_router(video_match_link_router)
+
+app.include_router(auth_router)
 
 app.mount(
     "/",

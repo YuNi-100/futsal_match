@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선수 정보 | We Go High</title>
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/match-detail.css"><link rel="stylesheet" href="/player.css">
+<script src="/auth.js"></script><script src="/player.js" defer></script>
+</head><body><div class="app-container"><aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+      <a href="index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+      <a href="matches.html" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+      <a href="players.html" class="menu-item active" aria-current="page"><span class="menu-icon">♙</span><span>선수 정보</span></a>
+      <a href="index.html#stats" class="menu-item"><span class="menu-icon">▥</span><span>통계</span></a>
+      <a href="index.html#next-match" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+      <a href="video.html" class="menu-item"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+    </nav>
+<div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside><main class="main-content"><div class="match-detail-page">
+<a id="playerBack" class="detail-back" href="/players.html">← 선수 목록으로</a>
+<p class="detail-label">WGH PLAYER RECORD</p><h2 class="detail-heading">선수 정보</h2>
+<p id="playerStatus" class="detail-panel" role="status">선수 정보를 불러오는 중입니다…</p>
+<div id="playerDetail" hidden>
+<section class="detail-panel"><div class="player-profile-heading"><span id="playerNumber"></span><div><h3 id="playerName"></h3><p id="playerPosition" class="detail-muted"></p></div></div>
+<p class="detail-muted player-joined">입단일 · <span id="playerJoined"></span></p>
+<dl class="player-totals"><div><dt>출전</dt><dd><strong id="appearances"></strong> 경기</dd></div><div><dt>득점</dt><dd><strong id="goals"></strong> 골</dd></div><div><dt>도움</dt><dd><strong id="assists"></strong> 도움</dd></div></dl></section>
+<section class="detail-panel"><h3>출전 경기 기록</h3><p class="detail-muted player-history-note">상대팀 이름을 누르면 경기 상세로 이동합니다. 연결 영상이 있는 경기의 득점 숫자를 누르면 해당 경기 영상을 볼 수 있습니다.</p>
+<p id="playerMatchesEmpty" class="detail-muted" hidden>등록된 출전 경기 기록이 없습니다.</p>
+<div class="detail-table-wrap"><table id="playerMatchesTable" class="detail-table"><thead><tr><th scope="col">날짜</th><th scope="col">상대팀</th><th scope="col">점수</th><th scope="col">득점</th><th scope="col">도움</th><th scope="col">경기 영상</th></tr></thead><tbody id="playerMatches"></tbody></table></div>
+</section></div></div></main></div></body></html>

@@ -2124,3 +2124,18 @@ body.modal-open {
     color: #3478f6;
     background: #edf4ff;
 }
+/* Existing home cards link to the selected match; admin actions stay independent. */
+.match-card { position:relative; }
+.match-detail-link { position:absolute; inset:0; z-index:1; border-radius:inherit; }
+.match-detail-link:focus-visible { outline:3px solid #3478f6; outline-offset:3px; }
+.match-card .match-actions { position:relative; z-index:2; }
+
+.player-record-link { color:#3478f6; text-decoration:underline; text-underline-offset:3px; }
+.player-record-link:focus-visible { outline:2px solid #3478f6; outline-offset:3px; }
+
+/* Compact home player cards, with one accessible link covering the entire card. */
+#playerList a.player-item { display:block; padding:16px 14px; color:inherit; text-decoration:none; transition:border-color .15s,box-shadow .15s; }
+#playerList a.player-item:hover { border-color:#3478f6; box-shadow:0 6px 18px rgba(52,120,246,.10); }
+#playerList a.player-item:focus-visible { outline:3px solid #3478f6; outline-offset:3px; }
+#playerList a.player-item .player-number { width:44px; height:44px; margin-bottom:8px; font-size:18px; }
+#playerList a.player-item .player-stats { margin-top:12px; padding-top:10px; }

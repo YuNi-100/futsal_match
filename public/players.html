@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선수 정보 | We Go High</title>
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/players.css">
+<script src="/auth.js"></script><script src="/players.js" defer></script>
+</head><body><div class="app-container"><aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+      <a href="index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+      <a href="matches.html" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+      <a href="players.html" class="menu-item active" aria-current="page"><span class="menu-icon">♙</span><span>선수 정보</span></a>
+      <a href="index.html#stats" class="menu-item"><span class="menu-icon">▥</span><span>통계</span></a>
+      <a href="index.html#next-match" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+      <a href="video.html" class="menu-item"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+    </nav>
+<div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside><main class="main-content"><div class="players-page">
+<a href="/index.html" class="players-back">← 홈으로</a><p class="players-label">WGH PLAYERS</p>
+<div class="players-heading"><h2>👟 선수 정보</h2><p id="playersCount"></p></div>
+<p id="playersStatus" class="loading-message" role="status">선수 목록을 불러오는 중입니다…</p>
+<div id="playerDirectory" aria-label="선수 목록"></div>
+</div></main></div></body></html>

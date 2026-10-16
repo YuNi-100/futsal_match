@@ -1,0 +1,12 @@
+.player-profile-heading { display:flex; align-items:center; gap:20px; }
+#playerNumber { color:#3478f6; background:#edf4ff; padding:18px; border-radius:14px; font-size:32px; font-weight:800; }
+#playerName { font-size:25px; margin-bottom:6px; overflow-wrap:anywhere; }
+.player-joined { margin:18px 0; }
+.player-totals { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; border-top:1px solid #e7edf3; padding-top:20px; }
+.player-totals dt { color:#7b8491; font-size:13px; margin-bottom:8px; }
+.player-totals dd { font-size:13px; }
+.player-totals strong { font-size:28px; }
+.player-history-note { margin-bottom:12px; font-size:13px; }
+#playerMatchesTable { min-width:570px; }
+.player-record-link { color:#3478f6; text-decoration:underline; text-underline-offset:3px; }
+.player-record-link:focus-visible { outline:2px solid #3478f6; outline-offset:3px; }

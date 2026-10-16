@@ -1,0 +1,6 @@
+/* Preserve the existing WGH layout; hide editing controls until the server confirms the role. */
+html:not(.wgh-admin) :is(#addMatchButton,#scheduleAddButton,.edit-match-button,.delete-match-button,.edit-schedule-button,.delete-schedule-button,#youtubeRegisterForm,[data-admin-only]) { display:none !important; }
+.wgh-auth-panel { display:flex; flex-direction:column; gap:10px; margin:16px 20px; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.wgh-auth-panel a,.wgh-auth-panel button { font:inherit; text-align:center; background:#fff; color:#20304a; border:1px solid #d7dfea; border-radius:8px; padding:9px 12px; text-decoration:none; cursor:pointer; }
+.wgh-auth-panel a:hover,.wgh-auth-panel button:hover { border-color:#3478f6; }
+html[data-auth-error="true"] .wgh-auth-panel::after { content:'로그인 준비 상태를 확인해 주세요.'; color:#a33; }

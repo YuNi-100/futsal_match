@@ -14,7 +14,7 @@ const addMatchButton = document.getElementById("addMatchButton");
 const viewAllButton = document.getElementById("viewAllButton");
 
 // 전체 경기 표시 여부
-let showAllMatches = false;
+// Home shows the five most recent matches only.
 
 // DB에서 불러온 경기 기록 보관
 let currentMatches = [];
@@ -71,6 +71,9 @@ const scheduleForm =
 // ---------------------------------------------------------
 
 function openMatchModal() {
+    editingMatchId = null;
+    matchForm.reset();
+    prepareMatchPlayers(null);
 
     matchModal.classList.add("active");
 
@@ -101,6 +104,8 @@ function openMatchModal() {
 // ---------------------------------------------------------
 
 function closeMatchModal() {
+    matchPlayersLoadVersion++;
+    matchPlayersReady = false;
 
     matchModal.classList.remove("active");
 
@@ -533,6 +538,10 @@ matchForm.addEventListener(
         event.preventDefault();
 
 
+        if (!matchPlayersReady) {
+            alert("선수 기록을 불러온 후 저장해 주세요. 불러오기에 실패했다면 창을 다시 열어주세요.");
+            return;
+        }
         // 입력값 가져오기
         const matchData = {
 
@@ -577,7 +586,7 @@ const response = await fetch(url, {
     headers: {
         "Content-Type": "application/json"
     },
-    body: JSON.stringify(matchData)
+    body: JSON.stringify({...matchData, players: collectMatchPlayers()})
 });
             
 
@@ -588,8 +597,8 @@ const response = await fetch(url, {
             if (!response.ok) {
 
                 alert(
-                    result.message ||
-                    "경기 등록에 실패했습니다."
+                    (typeof result.detail === "string" ? result.detail : result.message) ||
+                    "경기 저장에 실패했습니다."
                 );
 
                 return;
@@ -598,7 +607,7 @@ const response = await fetch(url, {
 
 
             // 등록 성공
-            alert("⚽ 경기 기록이 등록되었습니다!");
+            alert(editingMatchId ? "경기 기록이 수정되었습니다!" : "⚽ 경기 기록이 등록되었습니다!");
 
 
             console.log(
@@ -620,6 +629,7 @@ const response = await fetch(url, {
             // DB에서 경기 기록을 다시 불러와
 // 최근 경기와 통계를 바로 갱신
             await loadMatches();
+            await loadPlayers();
 
 
         } catch (error) {
@@ -735,10 +745,7 @@ function renderMatches(matches) {
 
 // showAllMatches가 false면 최근 5경기
 // showAllMatches가 true면 전체 경기
-const displayMatches =
-    showAllMatches
-        ? matches
-        : matches.slice(0, 5);
+const displayMatches = matches.slice(0, 5);
 
 
 // 선택된 경기 목록 화면에 출력
@@ -791,6 +798,7 @@ displayMatches.forEach(function (match) {
 
 
         card.className = "match-card";
+        card.dataset.matchId = match.match_id;
 
 
         card.innerHTML = `
@@ -851,6 +859,11 @@ displayMatches.forEach(function (match) {
         `;
 
 
+        const detailLink = document.createElement('a');
+        detailLink.className = 'match-detail-link';
+        detailLink.href = '/match.html?match_id=' + encodeURIComponent(match.match_id);
+        detailLink.setAttribute('aria-label', `${match.match_date} WGH 대 ${match.opponent} 경기 상세 보기`);
+        card.appendChild(detailLink);
         matchList.appendChild(card);
 
     });
@@ -1004,27 +1017,7 @@ function escapeHtml(value) {
 // ---------------------------------------------------------
 
 viewAllButton.addEventListener("click", function () {
-
-    // false → true
-    // true → false
-    showAllMatches = !showAllMatches;
-
-
-    // 저장해둔 경기 데이터로 목록 다시 출력
-    renderMatches(currentMatches);
-
-
-    // 현재 상태에 따라 버튼 글자 변경
-    if (showAllMatches) {
-
-        viewAllButton.textContent = "접기 ↑";
-
-    } else {
-
-        viewAllButton.textContent = "전체보기 ›";
-
-    }
-
+    window.location.href = '/matches.html';
 });
 
 // =========================================================
@@ -1061,6 +1054,7 @@ document.addEventListener("click", function (event) {
 
     // 현재 수정 중인 경기 번호 저장
     editingMatchId = matchId;
+    prepareMatchPlayers(matchId);
 
 
     // ---------------------------------------------------------
@@ -1164,6 +1158,7 @@ document.addEventListener("click", async function (event) {
 
         // DB에서 최신 경기 기록 다시 불러오기
         await loadMatches();
+        await loadPlayers();
 
 
     } catch (error) {
@@ -1413,7 +1408,7 @@ list.appendChild(item);
 document.addEventListener("click", (event) => {
     if (event.target.classList.contains("edit-schedule-button")) {
         editingScheduleId = parseInt(event.target.dataset.id);
-        loadScheduleForEdit(editingScheduleId);
+        // The existing delegated handler above fills and opens the schedule form.
     }
 });
 
@@ -1440,22 +1435,7 @@ async function loadNextMatch() {
 // 경기 등록 팝업 - 참가 선수 목록 불러오기
 // =========================================================
 
-async function loadMatchPlayers() {
-
-    try {
-
-        // DB 선수 목록 가져오기
-        const response = await fetch("/api/players");
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-
-            throw new Error(
-                result.message || "선수 목록 조회 실패"
-            );
-        }
-
-
+function renderMatchPlayerRows(players) {
         // 선수 목록이 들어갈 영역
         const matchPlayerList =
             document.getElementById("matchPlayerList");
@@ -1466,7 +1446,7 @@ async function loadMatchPlayers() {
 
 
         // 선수 한 명씩 생성
-        result.data.forEach(player => {
+        players.forEach(player => {
 
             const playerRow =
                 document.createElement("div");
@@ -1490,7 +1470,7 @@ async function loadMatchPlayers() {
                     </span>
 
                     <strong class="match-player-name">
-                        ${player.player_name}
+                        ${escapeHtml(player.player_name)}
                     </strong>
 
                 </label>
@@ -1570,15 +1550,6 @@ checkbox.addEventListener("change", () => {
         });
 
 
-    } catch (error) {
-
-        console.error(
-            "❌ 참가 선수 목록 불러오기 오류:",
-            error
-        );
-
-    }
-
 }
 
 // =========================================================
@@ -1629,9 +1600,11 @@ async function loadPlayers() {
         result.data.forEach(player => {
 
             const playerItem =
-                document.createElement("div");
+                document.createElement("a");
 
             playerItem.className = "player-item";
+            playerItem.href = '/player.html?player_id=' + encodeURIComponent(player.player_id);
+            playerItem.setAttribute('aria-label', player.player_name + ' 선수 정보 보기');
 
            playerItem.innerHTML = `
 
@@ -1645,12 +1618,12 @@ async function loadPlayers() {
 
         <!-- 이름 -->
         <strong class="player-name">
-            ${player.player_name}
+            ${escapeHtml(player.player_name)}
         </strong>
 
         <!-- 포지션 -->
         <span class="player-position">
-            ${positionNames[player.position] || player.position}
+            ${escapeHtml(positionNames[player.position] || player.position)}
         </span>
 
     </div>
@@ -1691,6 +1664,57 @@ async function loadPlayers() {
 }
 
 
+
+let matchPlayersReady = false;
+let matchPlayersLoadVersion = 0;
+function collectMatchPlayers() {
+    return [...document.querySelectorAll('#matchPlayerList .match-player-row')]
+        .filter(row => row.querySelector('.match-player-checkbox').checked)
+        .map(row => ({
+            player_id: Number(row.querySelector('.match-player-checkbox').value),
+            goals: Number(row.querySelector('.match-player-goals').value),
+            assists: Number(row.querySelector('.match-player-assists').value)
+        }));
+}
+async function prepareMatchPlayers(matchId) {
+    const version = ++matchPlayersLoadVersion;
+    matchPlayersReady = false;
+    const submit = matchForm.querySelector('[type="submit"]');
+    if (submit) submit.disabled = true;
+    try {
+        // Fetch first, then render once. Version check prevents a stale edit request
+        // from overwriting a newly opened match form.
+        const [playersResponse, recordsResponse] = await Promise.all([
+            fetch('/api/players'),
+            matchId === null ? Promise.resolve(null) : fetch(`/api/matches/${matchId}/players`)
+        ]);
+        const players = await playersResponse.json();
+        const records = recordsResponse ? await recordsResponse.json() : {success:true,data:[]};
+        if (!playersResponse.ok || !players.success || (recordsResponse && !recordsResponse.ok) || !records.success) {
+            throw new Error('선수 기록을 불러오지 못했습니다. 창을 닫고 다시 열어주세요.');
+        }
+        if (version !== matchPlayersLoadVersion) return;
+        renderMatchPlayerRows(players.data);
+        const knownIds = new Set(players.data.map(player => Number(player.player_id)));
+        if (records.data.some(record => !knownIds.has(Number(record.player_id)))) throw new Error('선수 목록과 경기 기록이 일치하지 않습니다. 저장하지 않고 확인해 주세요.');
+        const stored = new Map(records.data.map(record => [Number(record.player_id),record]));
+        document.querySelectorAll('#matchPlayerList .match-player-row').forEach(row => {
+            const checkbox = row.querySelector('.match-player-checkbox');
+            const record = stored.get(Number(checkbox.value));
+            checkbox.checked = Boolean(record);
+            checkbox.dispatchEvent(new Event('change'));
+            if (record) {
+                row.querySelector('.match-player-goals').value = record.goals;
+                row.querySelector('.match-player-assists').value = record.assists;
+            }
+        });
+        matchPlayersReady = true;
+        if (submit) submit.disabled = false;
+    } catch (error) {
+        if (version === matchPlayersLoadVersion) alert(error.message);
+    }
+}
+
 // 경기 기록 불러오기
 loadMatches();
 
@@ -1699,4 +1723,4 @@ loadNextMatch();
 
 loadPlayers();
 
-loadMatchPlayers();
+

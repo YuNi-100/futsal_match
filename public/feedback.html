@@ -8,13 +8,15 @@ main{max-width:960px;margin:40px auto;padding:0 20px}section{background:white;bo
 h1,h2,h3{line-height:1.4}label{display:block;margin:12px 0 6px}input,select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #bbc9dd;max-width:100%}select{width:100%}
 button{cursor:pointer;background:#234dc5;color:white}button:disabled{opacity:.5;cursor:default}input[type=text]{width:100%}input[type=number]{width:120px}
 small,.muted{color:#66758b}#status{white-space:pre-wrap;font-weight:600}iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px}article{border-top:1px solid #dfe6f1;margin-top:18px;padding-top:18px}article p{white-space:pre-wrap}a{color:#234dc5}
-</style></head>
-<body><main>
+</style><link rel="stylesheet" href="/auth.css">
+<script src="/auth.js"></script>
+</head>
+<body><main><div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
 <a href="/video.html">경기 영상 페이지</a>
 <h1>영상으로 돌아보는 WGH 플레이</h1>
 <p>짧은 장면을 살펴보고, 잘한 점과 다음에 시도할 행동을 정리해요.</p>
 <section><h2>분석할 영상</h2>
-<form id="feedbackForm">
+<form data-admin-only id="feedbackForm">
 <label for="video">등록한 YouTube 영상</label><select id="video" required><option value="">불러오는 중…</option></select>
 <p class="muted">공개 YouTube 영상을 사용하세요. 비공개·일부 공개 영상은 이 방식으로 분석할 수 없습니다.</p>
 <label for="color">우리 팀 유니폼 특징</label><input id="color" type="text" maxlength="80" required placeholder="예: 분홍색 상의, 검은색 하의">
