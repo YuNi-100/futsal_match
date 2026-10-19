@@ -1,7 +1,7 @@
 """Attach or detach an existing WGH video without changing its metadata."""
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import pymysql
 import video_repository as repository
 
@@ -75,3 +75,38 @@ def delete_registered_video(video_id: int=Path(gt=0)):
         raise HTTPException(500,'영상 등록 정보를 삭제하지 못했습니다.') from None
     finally:
         if connection:connection.close()
+
+
+class VideoTitleUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=200, strict=True)
+
+    @field_validator('title')
+    @classmethod
+    def trim_title(cls, value):
+        value = value.strip()
+        if not value:
+            raise ValueError('영상 제목을 입력해 주세요.')
+        return value
+
+
+@router.patch('/{video_id}/title')
+def update_video_title(payload: VideoTitleUpdate, video_id: int = Path(gt=0)):
+    """Rename website metadata without changing the YouTube source or records."""
+    connection = None
+    try:
+        connection = repository.connect()
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT video_id FROM futsal_video WHERE video_id=%s AND user_id=%s FOR UPDATE', (video_id, 1))
+            if cursor.fetchone() is None:
+                raise HTTPException(404, '수정할 등록 영상을 찾을 수 없습니다.')
+            cursor.execute('UPDATE futsal_video SET title=%s WHERE video_id=%s AND user_id=%s', (payload.title, video_id, 1))
+        connection.commit()
+        return {'success': True, 'message': '영상 제목을 수정했습니다.', 'data': {'video_id': video_id, 'title': payload.title}}
+    except HTTPException:
+        if connection: connection.rollback()
+        raise
+    except pymysql.MySQLError:
+        if connection: connection.rollback()
+        raise HTTPException(500, '영상 제목을 수정하지 못했습니다.') from None
+    finally:
+        if connection: connection.close()

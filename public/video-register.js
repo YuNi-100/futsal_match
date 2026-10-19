@@ -155,6 +155,10 @@ function showSelectedVideoMatch() {
     matchSelect.add(new Option('기존 연결 경기 #'+video.match_id,String(video.match_id)));
   }
   matchSelect.value=video?.match_id == null?'':String(video.match_id);
+  const titleInput=document.getElementById('editVideoTitle');
+  if (!videoManagementBusy) titleInput.value=video?.title || '';
+  titleInput.disabled=videoManagementBusy || !(video && videoCatalogReady);
+  document.getElementById('saveVideoTitle').disabled=videoManagementBusy || !(video && videoCatalogReady);
   document.getElementById('linkVideoSelect').disabled=videoManagementBusy;
   document.getElementById('linkMatchSelect').disabled=videoManagementBusy;
   document.getElementById('deleteRegisteredVideo').disabled=videoManagementBusy || !(video && videoCatalogReady);
@@ -207,6 +211,42 @@ document.getElementById('videoLinkForm').addEventListener('submit',async event=>
   } catch(error) {status.textContent=error.message;}
   finally {videoManagementBusy=false;showSelectedVideoMatch();}
 });
+document.getElementById('editVideoTitle').addEventListener('keydown',event=>{
+  if (event.key==='Enter') {event.preventDefault();document.getElementById('saveVideoTitle').click();}
+});
+
+document.getElementById('saveVideoTitle').addEventListener('click',async()=>{
+  if (videoManagementBusy || !videoCatalogReady) return;
+  const videoId=document.getElementById('linkVideoSelect').value;
+  const video=videoCatalog.find(item=>String(item.video_id)===videoId);
+  const input=document.getElementById('editVideoTitle');
+  const title=input.value.trim();
+  const status=document.getElementById('videoLinkStatus');
+  if (!video) return;
+  if (!title || title.length>200) {status.textContent='영상 제목은 1~200자로 입력해 주세요.';input.focus();return;}
+  if (title===video.title) {status.textContent='제목이 변경되지 않았습니다.';return;}
+  const pendingMatch=document.getElementById('linkMatchSelect').value;
+  let saved=false;
+  videoManagementBusy=true;showSelectedVideoMatch();
+  try {
+    const response=await fetch('/api/youtube-videos/'+encodeURIComponent(videoId)+'/title',{
+      method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title})
+    });
+    const result=await response.json();
+    if (!response.ok || !result.success) throw new Error(typeof result.detail==='string'?result.detail:'영상 제목을 수정하지 못했습니다.');
+    video.title=result.data.title;saved=true;
+    refreshLinkEditor();
+    window.dispatchEvent(new CustomEvent('wgh-video-catalog',{detail:{videos:videoCatalog}}));
+    await loadSavedAnalyses();
+    status.textContent='영상 제목을 수정했습니다.';
+  } catch(error) {status.textContent=error.message;}
+  finally {
+    videoManagementBusy=false;showSelectedVideoMatch();
+    document.getElementById('linkMatchSelect').value=pendingMatch;
+    if (!saved) input.value=title;
+  }
+});
+
 document.getElementById('deleteRegisteredVideo').addEventListener('click',async()=>{
   if (videoManagementBusy || !videoCatalogReady) return;
   const videoId=document.getElementById('linkVideoSelect').value;
