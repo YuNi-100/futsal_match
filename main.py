@@ -207,6 +207,48 @@ from datetime import date
 from typing import Optional
 from match_player_records import MatchPlayerRecord, save_match_players, read_match_players
 
+from typing import Literal
+from pydantic import field_validator
+
+
+class PlayerCreate(BaseModel):
+    player_name: str = Field(min_length=1, max_length=50)
+    back_number: int = Field(ge=0, strict=True)
+    position: Literal['GK','FIXO','ALA','PIVO']
+    joined_at: Optional[date] = None
+
+    @field_validator('player_name')
+    @classmethod
+    def clean_name(cls,value):
+        value=value.strip()
+        if not value:
+            raise ValueError('선수 이름을 입력해 주세요.')
+        return value
+
+
+@app.post('/api/players', status_code=201)
+def create_player(player: PlayerCreate):
+    connection=None
+    try:
+        connection=get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute('INSERT INTO futsal_player (player_name,back_number,position,joined_at) VALUES (%s,%s,%s,%s)',(player.player_name,player.back_number,player.position,player.joined_at))
+            player_id=cursor.lastrowid
+        connection.commit()
+        return {'success':True,'data':{'player_id':player_id,**player.model_dump()}}
+    except pymysql.err.IntegrityError as error:
+        if connection:connection.rollback()
+        if error.args and error.args[0]==1062:
+            raise HTTPException(409,'이미 사용 중인 등번호입니다.') from None
+        raise HTTPException(500,'선수 등록에 실패했습니다.') from None
+    except Exception:
+        if connection:connection.rollback()
+        raise HTTPException(500,'선수 등록에 실패했습니다.') from None
+    finally:
+        if connection:connection.close()
+
+
+
 
 # 경기 기록 등록 시 전달받을 데이터 형식
 class MatchCreate(BaseModel):

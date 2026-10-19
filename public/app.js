@@ -468,10 +468,8 @@ const response = await fetch(url, {
 // + 경기 기록 추가 버튼
 // ---------------------------------------------------------
 
-addMatchButton.addEventListener(
-    "click",
-    openMatchModal
-);
+// Home and match list use the same creation dialog in navigation.js.
+// The existing match modal below remains available for editing.
 
 
 // ---------------------------------------------------------
@@ -1724,3 +1722,8 @@ loadNextMatch();
 loadPlayers();
 
 
+
+window.addEventListener('wgh-record-created', event => {
+    if (event.detail.kind === 'player') loadPlayers();
+    if (event.detail.kind === 'match') { loadMatches(); loadPlayers(); }
+});

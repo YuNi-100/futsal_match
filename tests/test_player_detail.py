@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from player_detail_routes import create_player_detail_router
@@ -66,3 +66,51 @@ class PlayerDetailDatabaseTests(unittest.TestCase):
         data=response.json()['data']
         self.assertEqual({k:data[k] for k in expected},expected)
         self.assertEqual({r['match_id'] for r in data['matches']},ids)
+
+
+
+class PlayerRegistrationTests(unittest.TestCase):
+    def test_invalid_fields_and_duplicate_number(self):
+        import main
+        import pymysql
+        from pydantic import ValidationError
+        from fastapi import HTTPException
+        for fields in [dict(player_name='  ',back_number=1,position='ALA'),dict(player_name='선수',back_number=-1,position='ALA'),dict(player_name='선수',back_number=1,position='BAD')]:
+            with self.assertRaises(ValidationError):main.PlayerCreate(**fields)
+        db=MagicMock();db.cursor.return_value.__enter__.return_value.execute.side_effect=pymysql.err.IntegrityError(1062,'duplicate')
+        with patch.object(main,'get_db_connection',return_value=db):
+            with self.assertRaises(HTTPException) as error:main.create_player(main.PlayerCreate(player_name='선수',back_number=7,position='ALA'))
+        self.assertEqual(error.exception.status_code,409)
+        db.rollback.assert_called_once()
+        db.commit.assert_not_called()
+
+
+@unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
+class PlayerRegistrationDatabaseTests(unittest.TestCase):
+    def test_register_list_duplicate_and_rollback(self):
+        import main
+        from video_repository import connect
+        from fastapi import HTTPException
+        real=connect()
+        class RollbackOnly:
+            def cursor(self):return real.cursor()
+            def commit(self):pass
+            def close(self):pass
+            def rollback(self):real.rollback()
+        try:
+            with real.cursor() as cur:
+                cur.execute('SELECT DATABASE() AS db_name');self.assertEqual(cur.fetchone()['db_name'],'futsaldb_test')
+                cur.execute('SELECT * FROM futsal_player ORDER BY player_id');before=list(cur.fetchall())
+                cur.execute('SELECT COALESCE(MAX(back_number),0)+1 AS number FROM futsal_player');number=cur.fetchone()['number']
+            with patch.object(main,'get_db_connection',return_value=RollbackOnly()):
+                body=main.PlayerCreate(player_name='  temporary registration check  ',back_number=number,position='ALA',joined_at='2026-10-19')
+                result=main.create_player(body);self.assertTrue(result['success'])
+                record=next(p for p in main.get_players()['data'] if p['player_id']==result['data']['player_id'])
+                self.assertEqual(record['player_name'],'temporary registration check')
+                self.assertEqual(record['appearances'],0);self.assertEqual(record['goals'],0)
+                with self.assertRaises(HTTPException) as error:main.create_player(body)
+                self.assertEqual(error.exception.status_code,409)
+            real.rollback()
+            with real.cursor() as cur:
+                cur.execute('SELECT * FROM futsal_player ORDER BY player_id');self.assertEqual(list(cur.fetchall()),before)
+        finally:real.rollback();real.close()

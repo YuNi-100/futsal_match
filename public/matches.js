@@ -88,5 +88,6 @@
       status.textContent = error.message;
     }
   }
+  window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='match')load();});
   load();
 })();

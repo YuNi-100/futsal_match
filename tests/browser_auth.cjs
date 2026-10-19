@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..', 'public');
 (async () => {
   const browser = await chromium.launch({headless:true,channel:'msedge'});
   try {
+    await testRegistrations(browser);
     for (const role of ['guest','user','admin']) {
       const context = await browser.newContext({viewport:{width:1366,height:900}});
       const page = await context.newPage();
@@ -48,7 +49,7 @@ const root = path.resolve(__dirname, '..', 'public');
           if (role === 'admin') {
             await page.locator('#addMatchButton').click();
             assert.equal(await page.locator('#matchStartTime,#matchEndTime').count(), 0);
-            await page.locator('#modalCloseButton').click();
+            await page.locator('dialog [data-register-close]').first().click();
             await page.locator('.edit-match-button').click();
             await page.waitForFunction(() => !document.querySelector('#matchForm [type=submit]').disabled);
             assert.equal(await page.locator('.match-player-checkbox').isChecked(),true);
@@ -79,3 +80,71 @@ const root = path.resolve(__dirname, '..', 'public');
     }
   } finally { await browser.close(); }
 })().catch(error => {console.error(error);process.exitCode=1;});
+
+
+async function testRegistrations(browser) {
+  const projectRoot = require('node:path').resolve(__dirname,'..','public');
+  for (const role of ['guest','user','admin']) {
+    const context=await browser.newContext();const page=await context.newPage();const errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    let saved=null;
+    let matchLayout=null;
+    const players=[{player_id:1,player_name:'기존 선수',back_number:7,position:'ALA',appearances:1,goals:1,assists:0}];
+    const matches=[];const schedules=[];
+    await page.route('**/*',async route=>{
+      const request=route.request(),url=new URL(request.url());
+      if(url.hostname!=='wgh.test')return route.fulfill({body:''});
+      if(url.pathname==='/auth/me')return route.fulfill({json:{user:role==='guest'?null:{user_id:1,name:'테스트',role},csrf_token:'csrf'}});
+      if(url.pathname.startsWith('/api/')){
+        if(request.method()==='POST'){
+          assert.equal(request.headers()['x-csrf-token'],'csrf');saved=request.postDataJSON();
+          if(url.pathname==='/api/players'){
+            if(players.some(p=>p.back_number===saved.back_number))return route.fulfill({status:409,json:{detail:'이미 사용 중인 등번호입니다.'}});
+            players.push({...saved,player_id:players.length+1,appearances:0,goals:0,assists:0});
+          }
+          if(url.pathname==='/api/matches')matches.push({...saved,match_id:9,result:'win'});
+          if(url.pathname==='/api/schedules')schedules.push({...saved,schedule_id:9});
+          return route.fulfill({status:201,json:{success:true,data:saved}});
+        }
+        return route.fulfill({json:{success:true,data:url.pathname==='/api/players'?players:url.pathname==='/api/matches'?matches:url.pathname==='/api/schedules'?schedules:[]}});
+      }
+      return route.fulfill({path:require('node:path').join(projectRoot,url.pathname==='/'?'index.html':url.pathname.slice(1))});
+    });
+    for(const [url,kind]of [['/','player'],['/players.html','player'],['/','match'],['/matches.html','match'],['/schedules.html','schedule']]){
+      await page.goto('http://wgh.test'+url);await page.waitForFunction(()=>document.querySelector('[data-auth-panel]')?.textContent.length>0);
+      const button=page.locator(`[data-wgh-create="${kind}"]`);
+      assert.equal(await button.isVisible(),role==='admin');
+      if(role!=='admin')continue;
+      await button.click();await page.waitForSelector('dialog[open]');
+      if(kind==='player'){
+        await page.fill('#registerPlayerName',url==='/'?'홈 신규 선수':'목록 신규 선수');
+        await page.fill('#registerNumber',url==='/'?'30':'31');await page.selectOption('#registerPosition','ALA');
+        await page.locator('dialog [type=submit]').click();await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+        assert.equal(saved.back_number,url==='/'?30:31);
+        await page.waitForSelector(url==='/'?'#playerList a.player-item':'#playerDirectory a.player-item');
+        assert.match(await page.locator(url==='/'?'#playerList':'#playerDirectory').first().textContent(),url==='/'?/홈 신규 선수/:/목록 신규 선수/);
+        await button.click();await page.fill('#registerPlayerName','중복 확인');await page.fill('#registerNumber','7');await page.selectOption('#registerPosition','GK');
+        await page.locator('dialog [type=submit]').click();await page.waitForFunction(()=>document.querySelector('.wgh-register-status').textContent.includes('이미 사용'));
+        await page.locator('dialog [data-register-close]').first().click();
+      } else if(kind==='match') {
+        await page.waitForFunction(()=>!document.querySelector('dialog [type=submit]').disabled);
+        assert.equal(await page.locator('dialog input[type=time]').count(),0);
+        const layout=await page.locator('dialog').evaluate(dialog=>({title:dialog.querySelector('h2').textContent,labels:[...dialog.querySelectorAll('form > .form-group > label,.score-input-area label,.match-player-title')].map(node=>node.textContent.replace(/\s+/g,' ').trim()),scoreLayout:getComputedStyle(dialog.querySelector('.score-input-area')).display,width:dialog.getBoundingClientRect().width,submit:dialog.querySelector('[type=submit]').textContent.trim()}));
+        if(matchLayout)assert.deepEqual(layout,matchLayout);else matchLayout=layout;
+        await page.screenshot({path:'C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21ce9cc51/match-create-'+(url==='/'?'home':'list')+'.png',fullPage:true});
+        await page.fill('#registerDate','2026-10-19');await page.fill('#registerOpponent','추가 경기');await page.fill('#registerOurScore','3');
+        await page.locator('dialog .match-player-row [type=checkbox]').first().check();await page.locator('dialog .match-player-row [data-record=goals]').first().fill('3');
+        await page.locator('dialog [type=submit]').click();await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+        assert.deepEqual(saved.players,[{player_id:1,goals:3,assists:0}]);assert.equal(saved.start_time,undefined);
+        await page.waitForFunction(()=>document.querySelector('#allMatchList,#matchList').textContent.includes('추가 경기'));
+      } else {
+        await page.fill('#registerDate','2026-10-25');await page.fill('#registerOpponent','추가 일정');await page.fill('#registerStart','2000');await page.fill('#registerEnd','2130');
+        assert.equal(await page.locator('#registerStart').inputValue(),'20:00');assert.equal(await page.locator('dialog input[type=time]').count(),0);
+        await page.locator('dialog [type=submit]').click();await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+        assert.equal(saved.start_time,'20:00');assert.equal(saved.end_time,'21:30');
+        await page.waitForFunction(()=>document.querySelector('#schedulePageList').textContent.includes('추가 일정'));
+      }
+    }
+    assert.deepEqual(errors,[]);console.log(role+': administrator add buttons/forms, inline refresh, player duplicate feedback, player stats, match records, numeric schedule time OK');await context.close();
+  }
+}

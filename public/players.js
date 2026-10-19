@@ -31,5 +31,6 @@
       status.hidden=true;
     }catch(error){status.textContent=error.message;}
   }
+  window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='player')load();});
   load();
 })();
