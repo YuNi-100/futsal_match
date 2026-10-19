@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>We Go High | 경기 영상</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="/video.css">
+  <link rel="stylesheet" href="/video.css"><link rel="stylesheet" href="/video-review-layout.css">
 <link rel="stylesheet" href="/auth.css">
 <script src="/auth.js"></script>
 <script src="/navigation.js" defer></script>
@@ -41,8 +41,9 @@
 
       <section class="video-panel" aria-label="영상 시청 영역">
         <div class="video-tabs" role="tablist" aria-label="영상 종류">
-          <button type="button" id="fullTab" class="video-tab active" role="tab" aria-selected="true" aria-controls="fullPanel">🎥 전체 경기 영상</button>
-          <button type="button" id="highlightTab" class="video-tab" role="tab" aria-selected="false" aria-controls="highlightPanel">✨ AI 하이라이트</button>
+          <button type="button" id="fullTab" class="video-tab active" role="tab" aria-selected="true" aria-controls="fullPanel">경기 영상</button>
+          <button type="button" id="analysisTab" class="video-tab" role="tab" aria-selected="false" aria-controls="analysisPanel">분석 결과</button>
+          <button type="button" id="highlightTab" class="video-tab" role="tab" aria-selected="false" aria-controls="highlightPanel">하이라이트</button>
         </div>
         <div id="fullPanel" role="tabpanel" aria-labelledby="fullTab">
           <div id="fullPlaceholder" class="video-player-placeholder">▶<br>아래 목록에서 전체 경기 영상을 선택하세요.</div>
@@ -50,6 +51,7 @@
           <h3 class="video-list-heading">📁 전체 경기 영상 목록</h3>
           <div id="fullVideoList" class="video-list"><p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p></div>
         </div>
+        <div id="analysisPanel" role="tabpanel" aria-labelledby="analysisTab" hidden><div class="published-analysis-toolbar"><label for="analysisVideoSelect">경기 영상</label><select id="analysisVideoSelect"><option value="">영상을 선택하세요</option></select></div><iframe id="analysisPlayer" class="published-player" title="분석 결과 경기 영상" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe><p id="publishedStatus" role="status">영상을 선택하면 검수 완료된 결과를 볼 수 있습니다.</p><p id="publishedSummary"></p><div id="publishedComments" class="published-comments"></div></div>
         <div id="highlightPanel" role="tabpanel" aria-labelledby="highlightTab" hidden>
           <div id="highlightPlaceholder" class="video-player-placeholder">▶<br>아래 목록에서 AI 하이라이트를 선택하세요.</div>
           <video id="highlightPlayer" class="video-player" controls playsinline preload="metadata" hidden></video>
@@ -62,6 +64,6 @@
     </div>
   </main>
 </div>
-  <script src="video.js"></script>
+  <script src="video.js"></script><script src="/video-published.js"></script>
 </body>
 </html>

@@ -1,0 +1,58 @@
+const {chromium}=require('playwright');const path=require('node:path');const fs=require('node:fs');const assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..','public');
+const output='C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21ce9cc51';
+(async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});try{
+ let role='admin',analysisCalls=0,patches=0;
+ let data=JSON.parse(fs.readFileSync(path.join(root,'..','.wgh-sync','analysis-1.json'),'utf8')).data;
+ delete data.review;
+ const errors=[];
+ const context=await browser.newContext({viewport:{width:1512,height:1100}});
+ context.on('page',page=>page.on('pageerror',e=>errors.push(e.message)));
+ await context.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='wgh.test')return route.fulfill({body:''});
+  if(u.pathname==='/auth/me')return route.fulfill({json:{user:{user_id:1,name:'정세윤',role},csrf_token:'csrf'}});
+  if(u.pathname==='/api/matches')return route.fulfill({json:{success:true,data:[]}});
+  if(u.pathname==='/api/youtube-videos')return route.fulfill({json:{success:true,data:[{video_id:9,title:data.title,match_date:'2026-03-30',match_id:null,youtube_id:'Gfgr1JNRgG4'}]}});
+  if(u.pathname==='/api/admin/video-analyses')return route.fulfill({json:{success:true,data:[{analysis_id:1,video_id:9,title:data.title,published:!!data.review?.publication}]}});
+  if(u.pathname==='/api/admin/video-analyses/1')return route.fulfill({json:{success:true,data}});
+  if(u.pathname==='/api/admin/video-analyses/1/review'){
+   assert.equal(req.method(),'PATCH');assert.equal(req.headers()['x-csrf-token'],'csrf');assert.equal(role,'admin');patches++;
+   const body=req.postDataJSON();assert.equal(body.revision,data.review?.revision||0);
+   const scenes=body.scenes.slice().sort((a,b)=>a.time_seconds-b.time_seconds);
+   const review={...data.review,revision:body.revision+1,summary:body.summary,scenes};
+   if(body.publish)review.publication={summary:body.summary,scenes,published_at:'2026-10-19T04:00:00Z'};
+   data={...data,review};return route.fulfill({json:{success:true,data}});
+  }
+  if(u.pathname==='/api/youtube-videos/9/analysis')return route.fulfill({json:{success:true,data:data.review?.publication||null}});
+  if(u.pathname.endsWith('/feedback')){analysisCalls++;throw Error('No billable analysis may run in this review test');}
+  return route.fulfill({path:path.join(root,u.pathname.slice(1))});
+ });
+ const page=await context.newPage();await page.goto('http://wgh.test/video-register.html');
+ await page.waitForFunction(()=>document.querySelector('#analysisVideo').options.length===2);
+ const headings=await page.locator('section.video-panel > h3').allTextContents();
+ assert.deepEqual(headings,['영상 등록','AI 분석','분석 목록','나중에 경기 영상 연결·해제']);
+ await page.screenshot({path:path.join(output,'wgh-management-review-layout.png'),fullPage:true});
+ await page.locator('#analysisList a').click();await page.locator('.review-row').first().waitFor();
+ assert.match(await page.locator('h2').textContent(),/분석한 영상 결과/);
+ assert.equal(await page.locator('#feedbackForm,#analysisForm').count(),0);
+ assert.equal(await page.locator('.review-row').count(),13);
+ await page.locator('.scene-time').first().fill('00:40');await page.locator('.scene-comment').first().fill('유니폼이 비슷해 팀 식별이 어렵습니다. 원본으로 확인해 주세요.');
+ await page.locator('#reviewSummary').fill('선수들이 확인할 주요 장면과 코멘트입니다.');
+ await page.locator('#saveReview').click();await page.waitForFunction(()=>document.querySelector('#reviewStatus').textContent.includes('임시 저장했습니다'));
+ assert.equal(data.review.publication,undefined);
+ await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(output,'wgh-analysis-review-layout.png'),fullPage:true});
+ role='player';const member=await context.newPage();await member.goto('http://wgh.test/video.html?video_id=9&tab=analysis');
+ await member.waitForFunction(()=>document.querySelector('#publishedStatus').textContent.includes('아직 검수 완료된'));
+ assert.equal(await member.locator('.published-comment').count(),0);
+ role='admin';await page.locator('#publishReview').click();await page.waitForFunction(()=>document.querySelector('#reviewStatus').textContent.includes('선수 화면의 분석 결과에 게시'));
+ assert.equal(patches,2);assert.ok(data.review.publication.scenes.some(scene=>scene.time_seconds===40));
+ role='player';await member.reload();await member.locator('.published-comment').first().waitFor();
+ assert.equal(await member.locator('.published-comment').count(),13);
+ assert.equal(await member.locator('.published-comment button').first().textContent(),'00:36');
+ await member.getByRole('button',{name:'00:40 장면 보기',exact:true}).click();assert.match(await member.locator('#analysisPlayer').getAttribute('src'),/start=40/);
+ assert.equal(await member.locator('a[href="/video-register.html"]').isVisible(),false);
+ await member.screenshot({path:path.join(output,'wgh-player-published-layout.png'),fullPage:true});
+ await member.setViewportSize({width:390,height:844});await member.screenshot({path:path.join(output,'wgh-player-published-mobile.png'),fullPage:true});
+ const overflow=await member.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth);assert.equal(overflow,false);
+ assert.equal(analysisCalls,0);assert.deepEqual(errors,[]);
+ console.log('PASS: separated registration/analysis, compact editable review, draft privacy, publish to player comments, timestamp jump, no AI calls, mobile no horizontal overflow');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

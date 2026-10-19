@@ -60,7 +60,10 @@
     if (url.origin === location.origin && [401,403].includes(response.status)) {
       // Recheck revoked/expired permissions before the next interaction.
       identity = {user: null, csrf_token: null}; showIdentity();
-      alert('로그인 또는 관리자 권한을 확인해 주세요.');
+      // The video viewer renders an actionable login/consent message for read errors.
+      // A blocking alert here prevents its pending fetch handler from continuing.
+      const videoRead = ['GET','HEAD'].includes(method) && url.pathname === '/api/youtube-videos';
+      if (!videoRead) alert('로그인 또는 관리자 권한을 확인해 주세요.');
     }
     return response;
   };

@@ -5,7 +5,8 @@ const {chromium}=require('playwright');const path=require('node:path');const ass
   const videos=[{video_id:1,title:'기존 영상',match_date:'2026-10-15',match_id:6,youtube_id:'abcdefghijk'}];
   const matches=[{match_id:6,match_date:'2026-10-15',opponent:'은평FC',our_score:3,opponent_score:2},{match_id:3,match_date:'2026-10-01',opponent:'다른 팀',our_score:1,opponent_score:0}];
   await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='wgh.test')return route.fulfill({body:''});
-   if(u.pathname==='/auth/me')return route.fulfill({json:{user:role==='guest'?null:{user_id:1,name:'테스트',role},csrf_token:'csrf'}});
+   if(u.pathname==='/api/admin/video-analyses')return route.fulfill({json:{success:true,data:[]}});
+ if(u.pathname==='/auth/me')return route.fulfill({json:{user:role==='guest'?null:{user_id:1,name:'테스트',role},csrf_token:'csrf'}});
    if(u.pathname==='/api/matches')return route.fulfill({json:{success:true,data:matches}});
    if(u.pathname==='/api/youtube-videos/1/match'){
     assert.equal(req.method(),'PATCH');assert.equal(req.headers()['x-csrf-token'],'csrf');saved=req.postDataJSON();videos[0].match_id=saved.match_id;return route.fulfill({json:{success:true,data:{video_id:1,match_id:saved.match_id}}});}

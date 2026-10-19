@@ -22,6 +22,9 @@ window.WGHAuthReady.then(identity => {
   const linkedMatchId = new URLSearchParams(location.search).get('match_id');
 
   function switchVideoTab(name) {
+    const analysisTab=document.getElementById('analysisTab');
+    const analysisPanel=document.getElementById('analysisPanel');
+    if(analysisTab){analysisTab.classList.remove('active');analysisTab.setAttribute('aria-selected','false');analysisPanel.hidden=true;document.getElementById('analysisPlayer').removeAttribute('src');}
     const isFull = name === 'full';
     fullTab.classList.toggle('active', isFull);
     highlightTab.classList.toggle('active', !isFull);
@@ -42,6 +45,7 @@ window.WGHAuthReady.then(identity => {
   function playYouTubeVideo(video, button) {
     if (!/^[a-zA-Z0-9_-]{11}$/.test(video.youtube_id)) return;
     selectedVideoId = video.video_id;
+    window.dispatchEvent(new CustomEvent('wgh-view-video-selected',{detail:{video_id:video.video_id}}));
     const url = new URL('https://www.youtube.com/embed/' + video.youtube_id);
     url.searchParams.set('playsinline', '1');
     fullPlayer.src = url.toString();
@@ -52,18 +56,40 @@ window.WGHAuthReady.then(identity => {
   }
 
   async function loadFullVideos() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     fullList.replaceChildren();
     const loading = document.createElement('p');
     loading.className = 'video-empty';
     loading.textContent = '등록된 경기 영상을 불러오는 중입니다…';
     fullList.appendChild(loading);
     try {
-      const response = await fetch('/api/youtube-videos');
+      const response = await fetch('/api/youtube-videos', {cache:'no-store', signal:controller.signal});
+      if (response.status === 401 || response.status === 403) {
+        fullPlayer.removeAttribute('src');
+        fullPlayer.hidden = true;
+        document.getElementById('fullPlaceholder').hidden = false;
+        selectedVideoId = null;
+        fullList.replaceChildren();
+        const message = document.createElement('p');
+        message.className = 'video-empty';
+        const text = document.createElement('span');
+        text.textContent = response.status === 401
+          ? '현재 요청의 로그인 정보를 확인할 수 없습니다. 로그인 상태를 확인해 주세요. '
+          : '영상 시청을 위한 이용 동의와 로그인 상태를 확인해 주세요. ';
+        const link = document.createElement('a');
+        link.href = '/account.html';
+        link.textContent = response.status === 401 ? 'Google 계정으로 다시 로그인' : '내 페이지에서 확인';
+        message.append(text, link);
+        fullList.appendChild(message);
+        return;
+      }
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const result = await response.json();
       if (!result.success || !Array.isArray(result.data)) throw new Error('목록 형식 오류');
       const videos = linkedMatchId === null ? result.data
         : result.data.filter(video => String(video.match_id) === linkedMatchId);
+      window.dispatchEvent(new CustomEvent('wgh-view-video-catalog',{detail:{videos}}));
       if (!videos.some(video => video.video_id === selectedVideoId)) {
         selectedVideoId = null;
         fullPlayer.removeAttribute('src');
@@ -97,8 +123,17 @@ window.WGHAuthReady.then(identity => {
       fullList.replaceChildren();
       const message = document.createElement('p');
       message.className = 'video-empty';
-      message.textContent = '영상 목록을 불러오지 못했습니다. FastAPI 서버와 MySQL 연결을 확인해 주세요.';
+      message.textContent = error.name === 'AbortError'
+        ? '서버 응답이 늦어 영상 목록을 불러오지 못했습니다. '
+        : '영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요. ';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.textContent = '다시 불러오기';
+      retry.addEventListener('click', loadFullVideos);
+      message.appendChild(retry);
       fullList.appendChild(message);
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

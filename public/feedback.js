@@ -30,8 +30,25 @@ async function loadVideos() {
       option.textContent = (item.match_date || '') + ' · ' + item.title;
       el('video').append(option);
     }
+    const params=new URLSearchParams(location.search);
+    const videoId=params.get('video_id');
+    if(videoId && videos.some(item=>String(item.video_id)===videoId))el('video').value=videoId;
+    const end=Number(params.get('end'));
+    if(Number.isInteger(end)&&end>0&&end<=1800)el('end').value=end;
+    el('color').value='파란색 계열의 진한 유니폼. 색이 비슷하거나 가려져 구분되지 않으면 확인 어려움으로 표시';
     el('status').textContent = videos.length ? '우리 팀 유니폼과 분석할 구간을 입력하세요.' : '경기 영상 페이지에서 공개 YouTube 영상을 먼저 등록해 주세요.';
     showPlayer();
+    const analysisId=params.get('analysis_id');
+    if(analysisId && /^\d+$/.test(analysisId)) {
+      const savedResponse=await fetch('/api/admin/video-analyses/'+encodeURIComponent(analysisId),{cache:'no-store'});
+      const saved=await savedResponse.json();
+      if(!savedResponse.ok||!saved.success)throw Error('저장된 분석 결과를 불러오지 못했습니다.');
+      el('video').value=String(saved.data.video_id);
+      el('start').value=saved.data.start_seconds;el('end').value=saved.data.end_seconds;
+      el('color').value=saved.data.team_color;
+      render(saved.data);showPlayer();
+      el('status').textContent='저장된 분석 결과를 불러왔어요. 추가 AI 호출은 하지 않았습니다.';
+    }
   } catch (error) {
     el('video').replaceChildren();
     el('status').textContent = error.message;
@@ -84,8 +101,8 @@ el('feedbackForm').addEventListener('submit', async event => {
   const start = Number(el('start').value);
   const end = Number(el('end').value);
   const teamColor = el('color').value.trim();
-  if (!Number.isInteger(start) || !Number.isInteger(end) || end <= start || end - start > 180 || !teamColor) {
-    el('status').textContent = '우리 팀 유니폼을 입력하고 1~180초 구간을 지정해 주세요.';
+  if (!Number.isInteger(start) || !Number.isInteger(end) || end <= start || end - start > 1800 || !teamColor) {
+    el('status').textContent = '우리 팀 유니폼을 입력하고 1~1800초(30분) 구간을 지정해 주세요.';
     return;
   }
   if (!el('consent').checked) return;
@@ -94,7 +111,7 @@ el('feedbackForm').addEventListener('submit', async event => {
   el('video').disabled = true;
   el('result').hidden = true;
   latest = null;
-  el('status').textContent = '영상을 분석하고 있어요. 최대 약 2분이 걸릴 수 있어요. 버튼을 다시 누르지 마세요.';
+  el('status').textContent = '전체 구간을 분석하고 있어요. 수 분이 걸릴 수 있습니다. 이 창을 유지하고 버튼을 다시 누르지 마세요.';
   try {
     const response = await fetch('/api/youtube-videos/' + encodeURIComponent(el('video').value) + '/feedback', {
       method: 'POST',
@@ -104,7 +121,8 @@ el('feedbackForm').addEventListener('submit', async event => {
     const result = await response.json();
     if (!response.ok || !result.success) throw Error(typeof result.detail === 'string' ? result.detail : '요청 값을 확인해 주세요. 오류 코드: ' + response.status);
     render(result.data);
-    el('status').textContent = '분석을 마쳤어요. 장면을 다시 보며 코멘트가 맞는지 확인해 주세요.';
+    el('status').textContent = result.cached ? '같은 조건으로 저장된 분석을 불러왔어요. 추가 AI 호출은 하지 않았습니다.' : '분석 결과를 저장했어요. 장면을 다시 보며 코멘트가 맞는지 확인해 주세요.';
+    const savedUrl=new URL(location.href);savedUrl.searchParams.set('video_id',result.data.video_id);savedUrl.searchParams.set('analysis_id',result.data.analysis_id);history.replaceState(null,'',savedUrl);
   } catch (error) {
     el('status').textContent = error.message + ' 재시도 전 사용 내역을 확인해 주세요.';
   } finally {
@@ -122,5 +140,8 @@ el('download').addEventListener('click', () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-loadVideos();
+window.WGHAuthReady.then(identity=>{
+  if(identity.user?.role==='admin'&&!identity.user.consent_required)loadVideos();
+  else el('status').textContent='분석 실행과 저장 결과 조회는 동의를 완료한 관리자만 가능합니다.';
+});
 

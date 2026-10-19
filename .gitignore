@@ -8,3 +8,5 @@ uploads/
 
 # 이전 Node.js 서버 보관 폴더
 legacy_node/
+# YouTube automatic registration processing history
+.wgh-sync/

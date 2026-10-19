@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We Go High | 분석한 영상 결과</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/video.css"><link rel="stylesheet" href="/feedback-review.css">
+<link rel="stylesheet" href="/auth.css">
+<script src="/auth.js"></script>
+<script src="/navigation.js" defer></script>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+<a href="/index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+<a href="/matches.html" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+<a href="/players.html" class="menu-item"><span class="menu-icon">♙</span><span>선수 정보</span></a>
+<a href="/schedules.html" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+<a href="/index.html#team" class="menu-item"><span class="menu-icon">♧</span><span>팀 소개</span></a>
+<a href="/video.html" class="menu-item active" aria-current="page"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+</nav>
+<div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside>
+  <main class="main-content"><div class="video-page review-page">
+  <header class="video-page-header"><a href="/video-register.html">← 영상 등록·관리</a><h2>분석한 영상 결과</h2><p id="reviewVideoTitle">결과를 불러오는 중…</p></header>
+  <div id="reviewContent" class="review-grid" hidden>
+    <section class="video-panel review-preview"><iframe id="reviewPlayer" title="분석한 경기 영상" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p id="reviewRange" class="video-muted"></p><p class="video-note">원본 영상과 비교해 시간·코멘트를 수정하세요. 이 페이지에서는 AI를 다시 호출하지 않습니다.</p><a id="publishedLink" href="/video.html">선수 화면 확인 →</a></section>
+    <section class="video-panel review-editor"><form id="reviewForm">
+      <div class="review-heading"><h3>코멘트 검수</h3><span id="reviewState"></span></div>
+      <label for="reviewSummary">요약 (선택)</label><textarea id="reviewSummary" rows="2" maxlength="1000"></textarea>
+      <p class="video-note">시간은 분:초 형식입니다. 잘못된 장면은 삭제할 수 있어요.</p>
+      <div id="reviewScenes"></div><button id="addReviewScene" type="button">＋ 코멘트 추가</button>
+      <div class="review-actions"><button id="saveReview" type="submit" class="video-primary-button">임시 저장</button><button id="publishReview" type="submit" data-publish="true" class="video-primary-button">검수 완료</button></div>
+      <p class="video-note">검수 완료를 누르면 수정한 내용이 선수들이 보는 분석 결과에 게시됩니다. 임시 저장은 게시 내용에 반영되지 않습니다.</p>
+    </form></section>
+  </div><p id="reviewStatus" role="status" aria-live="polite">분석 결과를 불러오고 있습니다.</p>
+</div>
+</main></div><script src="/feedback-review.js"></script></body></html>

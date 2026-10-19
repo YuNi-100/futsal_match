@@ -161,6 +161,21 @@ def me(request: Request):
     }, 'csrf_token': user['csrf_token'] if user else None}, headers={'Cache-Control': 'no-store'})
 
 
+@router.get('/session-check')
+def session_check(request: Request):
+    """Read-only diagnostics: never return session tokens or CSRF values."""
+    expected = session_cookie()
+    received = bool(request.cookies.get(expected))
+    alternate = 'wgh_session' if expected == '__Host-wgh_session' else '__Host-wgh_session'
+    user = current_user(request)
+    return JSONResponse({
+        'cookie_received': received,
+        'other_cookie_received': bool(request.cookies.get(alternate)),
+        'signed_in': user is not None,
+        'host_matches_login': request.url.hostname == urlsplit(settings()[2]).hostname,
+    }, headers={'Cache-Control': 'no-store'})
+
+
 @router.post('/logout')
 def logout(request: Request):
     user = current_user(request)

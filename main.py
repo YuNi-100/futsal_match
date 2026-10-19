@@ -7,7 +7,7 @@ import pymysql
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from auth import router as auth_router, require_admin_for_request
 
 # .env 파일의 환경변수 불러오기
@@ -1426,6 +1426,8 @@ app.include_router(create_article_router(get_db_connection))
 
 from youtube_feedback import router as youtube_feedback_router
 app.include_router(youtube_feedback_router)
+from youtube_feedback import history_router as video_analysis_history_router
+app.include_router(video_analysis_history_router)
 
 from match_detail_routes import create_match_detail_router
 app.include_router(create_match_detail_router(get_db_connection))
@@ -1444,7 +1446,11 @@ class RevalidatingStaticFiles(StaticFiles):
     """Revalidate page assets so navigation changes do not leave old menus cached."""
     async def get_response(self, path, scope):
         from auth import current_user, video_login_page
-        admin_video_page=Path(path).name.lower()=='video-register.html'
+        if Path(path).name.lower()=='feedback.html':
+            analysis_id=Request(scope).query_params.get('analysis_id','')
+            destination='/feedback-review.html?analysis_id='+analysis_id if analysis_id.isdigit() else '/video-register.html#analysisRunTitle'
+            return RedirectResponse(destination,status_code=307,headers={'Cache-Control':'no-store'})
+        admin_video_page=Path(path).name.lower() in ('video-register.html','feedback-review.html')
         if admin_video_page:
             try:
                 user=current_user(Request(scope))

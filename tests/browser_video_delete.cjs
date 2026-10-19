@@ -3,6 +3,7 @@ const {chromium}=require('playwright');const path=require('node:path');const ass
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));let fail=false,deleted=0;
  let videos=[{video_id:1,title:'선택 영상',match_date:'2026-10-19',match_id:6,youtube_id:'abcdefghijk'},{video_id:2,title:'유지할 영상',match_date:'2026-10-18',match_id:null,youtube_id:'12345678901'}];
  await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='wgh.test')return route.fulfill({body:''});
+ if(u.pathname==='/api/admin/video-analyses')return route.fulfill({json:{success:true,data:[]}});
  if(u.pathname==='/auth/me')return route.fulfill({json:{user:{user_id:1,name:'관리자',role:'admin'},csrf_token:'csrf'}});
  if(u.pathname==='/api/matches')return route.fulfill({json:{success:true,data:[{match_id:6,match_date:'2026-10-19',opponent:'은평',our_score:3,opponent_score:2}]}});
  if(u.pathname==='/api/youtube-videos')return route.fulfill({json:{success:true,data:videos}});

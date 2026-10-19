@@ -20,6 +20,7 @@ window.WGHAuthReady.then(identity => {
       const result=await response.json();
       if (!response.ok || !result.success || !Array.isArray(result.data)) throw new Error('영상 목록을 불러오지 못했습니다. 새로고침해 주세요.');
       videoCatalog=result.data;
+      window.dispatchEvent(new CustomEvent('wgh-video-catalog',{detail:{videos:videoCatalog}}));
       videoCatalogReady=true;
       refreshLinkEditor();
     } catch (error) {
@@ -232,5 +233,24 @@ document.getElementById('unlinkVideoMatch').addEventListener('click',()=>{
 });
 loadMatchChoices();
 loadFullVideos();
+
+async function loadSavedAnalyses() {
+  const list=document.getElementById('analysisList');
+  list.replaceChildren();
+  try {
+    const response=await fetch('/api/admin/video-analyses',{cache:'no-store'});
+    const result=await response.json();
+    if(!response.ok||!result.success||!Array.isArray(result.data))throw Error('저장된 분석 목록을 불러오지 못했습니다.');
+    for(const item of result.data) {
+      const link=document.createElement('a');link.className='video-list-item';
+      link.href='/feedback-review.html?analysis_id='+encodeURIComponent(item.analysis_id);
+      const title=document.createElement('span');title.textContent=item.title;
+      const state=document.createElement('span');state.textContent=item.published?'게시됨 · 검수·수정':'검수 전 · 결과 보기';
+      link.append(title,state);list.append(link);
+    }
+    if(!result.data.length){const empty=document.createElement('p');empty.className='video-empty';empty.textContent='아직 저장된 분석이 없습니다.';list.append(empty);}
+  }catch(error){const message=document.createElement('p');message.textContent=error.message;list.append(message);}
+}
+loadSavedAnalyses();
 
 });
