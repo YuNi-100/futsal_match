@@ -19,6 +19,8 @@
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(typeof result.detail === 'string' ? result.detail : '경기 상세 정보를 불러오지 못했습니다.');
       const match = result.data;
+      document.getElementById('matchRecordActions')?.remove();
+      const actions=window.WGHRecordActions('match',match,()=>{location.href='/matches.html';});actions.id='matchRecordActions';el('matchDetail').prepend(actions);
       document.title = `WGH vs ${match.opponent} | 경기 기록`;
       el('matchTitle').textContent = `WGH vs ${match.opponent}`;
       el('detailDate').textContent = match.match_date;
@@ -85,5 +87,6 @@
       status.textContent = error.message;
     }
   }
+  window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='match')load();});
   load();
 })();

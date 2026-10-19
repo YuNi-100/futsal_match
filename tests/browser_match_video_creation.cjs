@@ -29,7 +29,7 @@ const {chromium}=require('playwright');const path=require('node:path');const ass
  await page.goto('http://wgh.test/video-register.html');await page.waitForSelector('html.wgh-admin');
  assert.equal(await page.locator('main section.video-panel').first().getAttribute('aria-labelledby'),'uploadTitle');
  const order=await page.locator('main section.video-panel').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-labelledby')));
- assert.deepEqual(order,['uploadTitle','videoLinkTitle','analysisTitle']);
+ assert.deepEqual(order,['uploadTitle','analysisRunTitle','analysisTitle','videoLinkTitle']);
  assert.equal(await page.locator('#unlinkVideoMatch').isVisible(),true);
  await page.screenshot({path:'C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21ce9cc51/video-primary-register.png',fullPage:true});
  assert.deepEqual(errors,[]);console.log('PASS: primary card order, shared/home match video choice, linked video disabled, payload+players, optional lookup failure, unlink control');

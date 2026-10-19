@@ -32,7 +32,7 @@ const output='C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21
  assert.deepEqual(headings,['영상 등록','AI 분석','분석 목록','나중에 경기 영상 연결·해제']);
  await page.screenshot({path:path.join(output,'wgh-management-review-layout.png'),fullPage:true});
  await page.locator('#analysisList a').click();await page.locator('.review-row').first().waitFor();
- assert.match(await page.locator('h2').textContent(),/분석한 영상 결과/);
+ assert.match(await page.getByRole('heading',{name:'분석한 영상 결과',exact:true}).textContent(),/분석한 영상 결과/);
  assert.equal(await page.locator('#feedbackForm,#analysisForm').count(),0);
  assert.equal(await page.locator('.review-row').count(),13);
  await page.locator('.scene-time').first().fill('00:40');await page.locator('.scene-comment').first().fill('유니폼이 비슷해 팀 식별이 어렵습니다. 원본으로 확인해 주세요.');

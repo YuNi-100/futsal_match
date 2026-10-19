@@ -21,7 +21,7 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
   }
 };
 
-/* Shared WGH sidebar. Change labels and URLs here instead of editing every page. */
+/* Shared WGH navigation; preserve URLs and authentication while using a top header. */
 (() => {
   const menu=document.querySelector('.side-menu');
   if (!menu) return;
@@ -30,13 +30,13 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     {key:'matches',icon:'▣',label:'경기 기록',href:'/matches.html'},
     {key:'players',icon:'♙',label:'선수 정보',href:'/players.html'},
     {key:'schedules',icon:'▦',label:'다음 경기',href:'/schedules.html'},
-    {key:'team',icon:'♧',label:'팀 소개',href:'/index.html#team'},
-    {key:'video',icon:'▶',label:'경기 영상',href:'/video.html'}
+    {key:'video',icon:'▶',label:'WGH TV',href:'/video.html'},
+    {key:'team',icon:'♧',label:'팀 소개',href:'/index.html#team'}
   ];
   const filename=location.pathname.split('/').pop()||'index.html';
   function activeKey(){
     if(filename==='index.html') return location.hash==='#team'?'team':'home';
-    return {'matches.html':'matches','match.html':'matches','players.html':'players','player.html':'players','schedules.html':'schedules','video.html':'video','video-register.html':'video'}[filename];
+    return {'matches.html':'matches','match.html':'matches','players.html':'players','player.html':'players','schedules.html':'schedules','video.html':'video','video-register.html':'video','feedback-review.html':'video'}[filename];
   }
   function render(){
     const active=activeKey();
@@ -45,6 +45,7 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
       const link=document.createElement('a');
       link.className='menu-item'+(item.key===active?' active':'');
       link.href=item.href;
+      link.setAttribute('aria-label',item.label);
       if(item.key===active)link.setAttribute('aria-current','page');
       const icon=document.createElement('span');icon.className='menu-icon';icon.textContent=item.icon;
       const label=document.createElement('span');label.textContent=item.label;
@@ -53,6 +54,26 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
   }
   render();
   window.addEventListener('hashchange',render);
+  const sidebar=document.querySelector('aside.sidebar');
+  if(sidebar){
+    document.body.classList.add('wgh-top-layout');
+    if(filename==='index.html')document.body.classList.add('wgh-home');
+    const header=document.createElement('header');header.className='wgh-site-header';
+    const utility=document.createElement('div');utility.className='wgh-header-utility';
+    const utilityInner=document.createElement('div');utilityInner.className='wgh-header-inner';
+    const description=document.createElement('span');description.className='wgh-header-tagline';description.textContent='WOMEN’S FUTSAL CLUB · WE GO HIGH';utilityInner.append(description);
+    const authPanel=sidebar.querySelector('[data-auth-panel]');if(authPanel)utilityInner.append(authPanel);utility.append(utilityInner);
+    const bar=document.createElement('div');bar.className='wgh-header-main';
+    const home=document.createElement('a');home.href='/index.html';home.className='wgh-brand-home';home.setAttribute('aria-label','WGH 홈');
+    const logo=sidebar.querySelector('.team-logo');if(logo){logo.querySelector('h1').textContent='WE GO HIGH';home.append(logo);}
+    const toggle=document.createElement('button');toggle.type='button';toggle.className='wgh-menu-toggle';toggle.textContent='메뉴';toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','wghMainNavigation');
+    menu.id='wghMainNavigation';menu.setAttribute('aria-label','주 메뉴');
+    function closeMenu(){header.classList.remove('wgh-nav-open');toggle.setAttribute('aria-expanded','false');}
+    toggle.addEventListener('click',()=>{const opened=header.classList.toggle('wgh-nav-open');toggle.setAttribute('aria-expanded',String(opened));});
+    menu.addEventListener('click',event=>{if(event.target.closest('a'))closeMenu();});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&header.classList.contains('wgh-nav-open')){closeMenu();toggle.focus();}});
+    bar.append(home,toggle,menu);header.append(utility,bar);sidebar.replaceWith(header);
+  }
 })();
 
 /* Shared creation dialogs in the existing navigation script. */
@@ -91,7 +112,8 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     const kind=trigger.dataset.wghCreate;
     if(!['player','match','schedule'].includes(kind))return;
     if(document.querySelector('.wgh-register-dialog[open]'))return;
-    const title={player:'선수 등록',match:'경기 기록 추가',schedule:'다음 일정 추가'}[kind];
+    const editing=trigger.dataset.recordEdit?JSON.parse(trigger.dataset.recordEdit):(kind==='schedule'&&trigger.dataset.scheduleEdit?JSON.parse(trigger.dataset.scheduleEdit):null);
+    const title=editing?{schedule:'다음 일정 수정',match:'경기 기록 수정',player:'선수 정보 수정'}[kind]:{player:'선수 등록',match:'경기 기록 추가',schedule:'다음 일정 추가'}[kind];
     const dialog=document.createElement('dialog');dialog.className='wgh-register-dialog'+(kind==='match'?' wgh-match-dialog':'');dialog.setAttribute('aria-labelledby','registrationTitle');
     let fields='';
     if(kind==='match') {
@@ -113,13 +135,34 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     document.body.append(dialog);
     const form=dialog.querySelector('form');form.reset();const status=dialog.querySelector('[role=status]');const submit=form.querySelector('[type=submit]');
     const get=id=>dialog.querySelector('#'+id);
-    let saving=false,playersReady=kind!=='match',membersReady=kind!=='player';
+    let saving=false,playersReady=kind!=='match',membersReady=kind!=='player'||Boolean(editing);
     const close=()=>{if(!saving)dialog.close();};
     dialog.querySelectorAll('[data-register-close]').forEach(button=>button.addEventListener('click',close));
     dialog.addEventListener('cancel',e=>{if(saving)e.preventDefault();});
     dialog.addEventListener('close',()=>{dialog.remove();trigger.focus();},{once:true});
     dialog.showModal();
     if(kind!=='player')get('registerDate').value=today();
+    if(editing&&kind==='schedule'){
+      for(const [id,key] of [['registerDate','match_date'],['registerOpponent','opponent'],['registerLocation','location'],['registerMemo','memo']])get(id).value=editing[key]||'';
+      get('registerStart').value=String(editing.start_time||'').slice(0,5);get('registerEnd').value=String(editing.end_time||'').slice(0,5);
+    }
+    if(editing&&kind==='match'){
+      for(const [id,key] of [['registerDate','match_date'],['registerOpponent','opponent'],['registerLocation','location'],['registerMemo','memo'],['registerOurScore','our_score'],['registerTheirScore','opponent_score']])get(id).value=editing[key]??'';
+      dialog.querySelector('h2').textContent=title;
+      get('registerVideo').closest('.form-group').hidden=true;
+    }
+    if(editing&&kind==='player'){
+      get('registerMember').closest('.form-group').hidden=true;
+      get('registerPlayerName').value=editing.player_name;get('registerNumber').value=editing.back_number;get('registerPosition').value=editing.position;
+      submit.disabled=true;membersReady=false;
+      try{
+        const response=await fetch('/api/players/'+encodeURIComponent(editing.player_id));const result=await response.json();
+        if(!response.ok||!result.success)throw new Error('선수 정보를 불러오지 못했습니다. 창을 닫고 다시 열어 주세요.');
+        if(!dialog.isConnected)return;
+        get('registerPlayerName').value=result.data.player_name;get('registerNumber').value=result.data.back_number;get('registerPosition').value=result.data.position;get('registerJoined').value=result.data.joined_at||'';
+        membersReady=true;submit.disabled=false;
+      }catch(error){status.textContent=error.message;}
+    }
     if(kind==='schedule')for(const id of ['registerStart','registerEnd'])get(id).addEventListener('input',()=>{const digits=get(id).value.replace(/\D/g,'');if(digits.length===4)get(id).value=digits.slice(0,2)+':'+digits.slice(2);});
     if(kind==='match'){
       submit.disabled=true;
@@ -127,6 +170,14 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
         const response=await fetch('/api/players');const result=await response.json();
         if(!response.ok||!result.success||!Array.isArray(result.data))throw new Error('선수 목록을 불러오지 못했습니다. 창을 닫고 다시 열어주세요.');
         if(!dialog.isConnected)return;
+        let saved=[];
+        if(editing){
+          const recordsResponse=await fetch('/api/matches/'+encodeURIComponent(editing.match_id)+'/players');const records=await recordsResponse.json();
+          if(!recordsResponse.ok||!records.success||!Array.isArray(records.data))throw new Error('기존 선수 기록을 불러오지 못했습니다. 저장하지 말고 다시 열어 주세요.');
+          saved=records.data;
+          const ids=new Set(result.data.map(player=>Number(player.player_id)));
+          if(saved.some(record=>!ids.has(Number(record.player_id))))throw new Error('선수 정보가 변경되었습니다. 창을 닫고 다시 열어 주세요.');
+        }
         for(const player of result.data){
           const row=document.createElement('div');row.className='match-player-row';
           const label=document.createElement('label');label.className='match-player-check';
@@ -141,16 +192,18 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
             wrap.append(caption,input);row.append(wrap);
           }
           checkbox.addEventListener('change',()=>row.querySelectorAll('[data-record]').forEach(input=>{input.disabled=!checkbox.checked;if(!checkbox.checked)input.value='0';}));
+          const record=saved.find(record=>Number(record.player_id)===Number(player.player_id));
+          if(record){checkbox.checked=true;for(const key of ['goals','assists']){const input=row.querySelector('[data-record='+key+']');input.disabled=false;input.value=record[key];}}
           get('registerPlayers').append(row);
         }
         get('registerPlayerStatus').textContent=result.data.length?'':'등록된 선수가 없습니다.';
         get('registerPlayerStatus').hidden=result.data.length>0;
-        await window.WGHLoadMatchVideoOptions(get('registerVideo'),()=>dialog.isConnected);
+        if(!editing)await window.WGHLoadMatchVideoOptions(get('registerVideo'),()=>dialog.isConnected);
         if(!dialog.isConnected)return;
         playersReady=true;submit.disabled=false;
       }catch(error){if(dialog.isConnected)status.textContent=error.message;}
     }
-    if(kind==='player') {
+    if(kind==='player'&&!editing) {
       submit.disabled=true;
       try {
         const response=await fetch('/api/admin/members',{cache:'no-store'});const result=await response.json();
@@ -166,7 +219,8 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
       if(!document.documentElement.classList.contains('wgh-admin')){status.textContent='관리자 로그인을 확인해 주세요.';return;}
       let payload,url;
       if(kind==='player'){
-        payload={player_name:get('registerPlayerName').value.trim(),back_number:Number(get('registerNumber').value),position:get('registerPosition').value,joined_at:get('registerJoined').value||null,member_user_id:get('registerMember').value?Number(get('registerMember').value):null};url='/api/players';
+        payload={player_name:get('registerPlayerName').value.trim(),back_number:Number(get('registerNumber').value),position:get('registerPosition').value,joined_at:get('registerJoined').value||null,member_user_id:get('registerMember').value?Number(get('registerMember').value):null};url=editing?'/api/players/'+encodeURIComponent(editing.player_id):'/api/players';
+        if(editing)delete payload.member_user_id;
         if(!payload.player_name){status.textContent='선수 이름을 입력해 주세요.';return;}
       }else{
         payload={match_date:get('registerDate').value,opponent:get('registerOpponent').value.trim(),location:get('registerLocation').value.trim(),memo:get('registerMemo').value};
@@ -175,15 +229,15 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
           const normalize=value=>/^\d{4}$/.test(value)?value.slice(0,2)+':'+value.slice(2):value;
           const start=normalize(get('registerStart').value),end=normalize(get('registerEnd').value);const pattern=/^([01]\d|2[0-3]):[0-5]\d$/;
           if(!pattern.test(start)||!pattern.test(end)||end<=start){status.textContent='시작·종료 시간을 24시간 형식으로 확인해 주세요. 종료 시간은 시작 시간보다 늦어야 합니다.';return;}
-          Object.assign(payload,{start_time:start,end_time:end});url='/api/schedules';
+          Object.assign(payload,{start_time:start,end_time:end});url=editing?'/api/schedules/'+encodeURIComponent(editing.schedule_id):'/api/schedules';
         }else{
-          payload.video_id=get('registerVideo').value?Number(get('registerVideo').value):null;
-          Object.assign(payload,{our_score:Number(get('registerOurScore').value),opponent_score:Number(get('registerTheirScore').value),players:[...get('registerPlayers').children].filter(row=>row.querySelector('[type=checkbox]')?.checked).map(row=>({player_id:Number(row.querySelector('[type=checkbox]').value),goals:Number(row.querySelector('[data-record=goals]').value),assists:Number(row.querySelector('[data-record=assists]').value)}))});url='/api/matches';
+          if(!editing)payload.video_id=get('registerVideo').value?Number(get('registerVideo').value):null;
+          Object.assign(payload,{our_score:Number(get('registerOurScore').value),opponent_score:Number(get('registerTheirScore').value),players:[...get('registerPlayers').children].filter(row=>row.querySelector('[type=checkbox]')?.checked).map(row=>({player_id:Number(row.querySelector('[type=checkbox]').value),goals:Number(row.querySelector('[data-record=goals]').value),assists:Number(row.querySelector('[data-record=assists]').value)}))});url=editing?'/api/matches/'+encodeURIComponent(editing.match_id):'/api/matches';
         }
       }
       saving=true;busy=true;submit.disabled=true;status.textContent='저장 중입니다…';
       try{
-        const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();
+        const response=await fetch(url,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();
         if(!response.ok||result.success===false)throw new Error(typeof result.detail==='string'?result.detail:'입력값을 확인해 주세요.');
         window.dispatchEvent(new CustomEvent('wgh-record-created',{detail:{kind,data:result.data}}));
         if(kind==='player')window.dispatchEvent(new Event('wgh-membership-changed'));
@@ -193,3 +247,48 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     });
   });
 })();
+
+/* Original brand images and Instagram links supplied by the WGH owner. */
+(() => {
+  const main=document.querySelector('main.main-content');
+  if(!main||document.getElementById('wghBrandFooter'))return;
+  const channels=[
+    {name:'위고하이 오피셜',handle:'wegohigh_official',image:'wegohigh-official.png'},
+    {name:'여자풋살클럽 위고하이',handle:'wghfutsal',image:'wgh-futsal.png'},
+    {name:'위필드',handle:'wefield_official',image:'wefield-official.png'},
+    {name:'위고하이 은평',handle:'wgh.eunpyeong',image:'wgh-eunpyeong.png'}
+  ];
+  const footer=document.createElement('footer');footer.id='wghBrandFooter';footer.className='wgh-brand-footer';
+  footer.setAttribute('aria-labelledby','wghBrandFooterTitle');
+  const heading=document.createElement('h2');heading.id='wghBrandFooterTitle';heading.textContent='WGH 공식 채널';
+  const links=document.createElement('div');links.className='wgh-brand-links';
+  for(const channel of channels){
+    const link=document.createElement('a');link.href='https://www.instagram.com/'+channel.handle+'/';link.target='_blank';link.rel='noopener noreferrer';link.className='wgh-brand-link';link.setAttribute('aria-label',channel.name+' 인스타그램 (새 탭)');
+    const image=document.createElement('img');image.src='/images/brands/'+channel.image;image.alt=channel.name+' 로고';image.width=88;image.height=88;image.loading='lazy';
+    const name=document.createElement('strong');name.textContent=channel.name;
+    const handle=document.createElement('span');handle.textContent='@'+channel.handle;
+    link.append(image,name,handle);links.append(link);
+  }
+  footer.append(heading,links);main.append(footer);
+})();
+
+/* Admin controls shared by record lists and detail pages. */
+window.WGHRecordActions=(kind,record,afterDelete)=>{
+  const bar=document.createElement('div');bar.className='wgh-record-actions match-actions';bar.dataset.adminOnly='';
+  const edit=document.createElement('button');edit.type='button';edit.className='wgh-record-edit';edit.textContent='수정';edit.dataset.wghCreate=kind;edit.dataset.recordEdit=JSON.stringify(record);
+  const remove=document.createElement('button');remove.type='button';remove.className='wgh-record-delete';remove.textContent='삭제';
+  remove.addEventListener('click',async event=>{
+    event.preventDefault();event.stopPropagation();
+    if(!document.documentElement.classList.contains('wgh-admin')||remove.disabled)return;
+    const message=kind==='match'?'이 경기 기록과 해당 경기의 선수 득점·도움 기록을 삭제하시겠습니까? 연결 영상은 유지됩니다.':'이 선수를 삭제하시겠습니까? 출전 기록이나 회원 연결이 있는 선수는 삭제할 수 없습니다.';
+    if(!confirm(message))return;
+    remove.disabled=true;
+    try{
+      const id=kind==='match'?record.match_id:record.player_id;
+      const response=await fetch('/api/'+(kind==='match'?'matches':'players')+'/'+encodeURIComponent(id),{method:'DELETE'});const result=await response.json();
+      if(!response.ok||result.success===false)throw new Error(typeof result.detail==='string'?result.detail:'삭제하지 못했습니다. 다시 확인해 주세요.');
+      if(afterDelete)await afterDelete();
+    }catch(error){alert(error.message);}finally{remove.disabled=false;}
+  });
+  bar.append(edit,remove);return bar;
+};

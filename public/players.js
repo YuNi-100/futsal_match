@@ -14,19 +14,22 @@
       const result=await response.json();
       if(!response.ok||!result.success||!Array.isArray(result.data))throw new Error('선수 목록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.');
       document.getElementById('playersCount').textContent=`전체 ${result.data.length}명`;
-      list.replaceChildren();
+      list.replaceChildren();status.hidden=false;
       if(!result.data.length){status.textContent='등록된 선수가 없습니다.';return;}
       for(const player of result.data){
-        const card=node('a','player-item');
+        const wrapper=node('div','player-item');
+        const card=node('a','player-card-link');
         card.href='/player.html?player_id='+encodeURIComponent(player.player_id);
         card.setAttribute('aria-label',player.player_name+' 선수 정보 보기');
         const info=node('div','player-info');
-        info.append(node('div','player-number',player.back_number),node('strong','player-name',player.player_name),node('span','player-position',positions[player.position]||player.position));
+        const jersey=node('div','player-number');
+        jersey.append(node('strong','player-name jersey-name',player.player_name),node('span','jersey-number',player.back_number));
+        info.append(jersey,node('span','player-position',positions[player.position]||player.position));
         const stats=node('div','player-stats');
         for(const [label,value] of [['출전',player.appearances],['득점',player.goals],['도움',player.assists]]){
           const stat=node('div','player-stat');stat.append(node('span',null,label),node('strong',null,value));stats.append(stat);
         }
-        card.append(info,stats);list.append(card);
+        card.append(info,stats);wrapper.append(card,window.WGHRecordActions('player',player,load));list.append(wrapper);
       }
       status.hidden=true;
     }catch(error){status.textContent=error.message;}

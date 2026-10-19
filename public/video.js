@@ -20,6 +20,16 @@ window.WGHAuthReady.then(identity => {
   const fullList = document.getElementById('fullVideoList');
   let selectedVideoId = null;
   const linkedMatchId = new URLSearchParams(location.search).get('match_id');
+  const requestedVideoId=new URLSearchParams(location.search).get('video_id');
+  const playbackPanel=document.getElementById('tvPlaybackPanel');
+  const caption=document.getElementById('tvNowPlaying');
+  function clearPlayer(){
+    selectedVideoId=null;fullPlayer.removeAttribute('src');fullPlayer.hidden=true;
+    document.getElementById('fullPlaceholder').hidden=false;
+    if(playbackPanel)playbackPanel.hidden=true;
+    fullList.querySelectorAll('.video-list-item').forEach(item=>item.classList.remove('selected'));
+  }
+  document.getElementById('tvClosePlayer')?.addEventListener('click',clearPlayer);
 
   function switchVideoTab(name) {
     const analysisTab=document.getElementById('analysisTab');
@@ -49,6 +59,8 @@ window.WGHAuthReady.then(identity => {
     const url = new URL('https://www.youtube.com/embed/' + video.youtube_id);
     url.searchParams.set('playsinline', '1');
     fullPlayer.src = url.toString();
+    if(playbackPanel)playbackPanel.hidden=false;
+    if(caption)caption.textContent=video.title||'경기 영상';
     fullPlayer.hidden = false;
     document.getElementById('fullPlaceholder').hidden = true;
     fullList.querySelectorAll('.video-list-item').forEach(item => item.classList.remove('selected'));
@@ -66,10 +78,7 @@ window.WGHAuthReady.then(identity => {
     try {
       const response = await fetch('/api/youtube-videos', {cache:'no-store', signal:controller.signal});
       if (response.status === 401 || response.status === 403) {
-        fullPlayer.removeAttribute('src');
-        fullPlayer.hidden = true;
-        document.getElementById('fullPlaceholder').hidden = false;
-        selectedVideoId = null;
+        clearPlayer();
         fullList.replaceChildren();
         const message = document.createElement('p');
         message.className = 'video-empty';
@@ -91,10 +100,7 @@ window.WGHAuthReady.then(identity => {
         : result.data.filter(video => String(video.match_id) === linkedMatchId);
       window.dispatchEvent(new CustomEvent('wgh-view-video-catalog',{detail:{videos}}));
       if (!videos.some(video => video.video_id === selectedVideoId)) {
-        selectedVideoId = null;
-        fullPlayer.removeAttribute('src');
-        fullPlayer.hidden = true;
-        document.getElementById('fullPlaceholder').hidden = false;
+        clearPlayer();
       }
       fullList.replaceChildren();
       if (!videos.length) {
@@ -107,15 +113,23 @@ window.WGHAuthReady.then(identity => {
       for (const video of videos) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'video-list-item';
-        const title = document.createElement('span');
-        title.textContent = (video.match_date ? video.match_date + ' · ' : '') + (video.title || '제목 없는 경기');
-        const play = document.createElement('span');
-        play.textContent = '▶ 재생';
-        button.append(title, play);
+        button.className = 'video-list-item wgh-tv-card';
+        button.setAttribute('aria-label',(video.title||'경기 영상')+' 재생');
+        const thumbnail=document.createElement('span');thumbnail.className='tv-card-thumbnail';
+        if(/^[a-zA-Z0-9_-]{11}$/.test(video.youtube_id)){
+          const image=document.createElement('img');image.src='https://i.ytimg.com/vi/'+video.youtube_id+'/hqdefault.jpg';image.alt='';image.loading='lazy';image.width=480;image.height=270;
+          image.addEventListener('error',()=>{image.hidden=true;});thumbnail.append(image);
+        }
+        const play=document.createElement('span');play.className='tv-card-play';play.textContent='▶';play.setAttribute('aria-hidden','true');thumbnail.append(play);
+        const copy=document.createElement('span');copy.className='tv-card-copy';
+        const title = document.createElement('strong');title.className='tv-card-title';
+        title.textContent = video.title || '제목 없는 경기';
+        const date=document.createElement('span');date.className='tv-card-meta';date.textContent=video.match_date||'날짜 미등록';
+        copy.append(title,date);button.append(thumbnail,copy);
         button.addEventListener('click', () => playYouTubeVideo(video, button));
         if (video.video_id === selectedVideoId) button.classList.add('selected');
         fullList.appendChild(button);
+        if(requestedVideoId!==null&&String(video.video_id)===requestedVideoId)playYouTubeVideo(video,button);
         if (linkedMatchId !== null && selectedVideoId === null) playYouTubeVideo(video, button);
       }
     } catch (error) {

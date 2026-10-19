@@ -1442,6 +1442,9 @@ from account_routes import router as account_router
 app.include_router(account_router)
 app.include_router(auth_router)
 
+from player_management import create_player_management_router
+app.include_router(create_player_management_router(get_db_connection))
+
 class RevalidatingStaticFiles(StaticFiles):
     """Revalidate page assets so navigation changes do not leave old menus cached."""
     async def get_response(self, path, scope):

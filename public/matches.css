@@ -29,3 +29,23 @@ a.matches-page-link:hover { background:#e6eef9; }
 @media(max-width:1100px) { #allMatchList .match-card { grid-template-columns:100px minmax(0,1fr) 120px 44px; gap:14px; } }
 @media(max-width:800px) { #allMatchList { padding:4px 12px; } #allMatchList .match-card { grid-template-columns:90px minmax(0,1fr) 90px 38px; gap:10px; } #allMatchList .match-teams { grid-template-columns:45px 68px minmax(45px,1fr); } #allMatchList .match-score { width:68px; font-size:18px; } #allMatchList .match-teams strong:first-child { padding-right:8px; } #allMatchList .match-teams strong:last-child { padding-left:8px; } #allMatchList .match-date { font-size:12px; } }
 @media(max-width:600px) { #allMatchList .match-card { grid-template-columns:1fr auto; gap:8px; padding:12px 0; } #allMatchList .match-date { grid-column:1; grid-row:1; } #allMatchList .match-teams { grid-column:1; grid-row:2; grid-template-columns:45px 68px minmax(0,1fr); } #allMatchList .match-location { grid-column:1; grid-row:3; } #allMatchList .match-result { grid-column:2; grid-row:2; } }
+
+/* Fixed column ownership keeps admin actions from displacing match information. */
+#allMatchList .match-card{grid-template-columns:110px minmax(0,1fr) 160px 50px 100px;gap:16px}
+#allMatchList .match-date{grid-column:1;grid-row:1;text-align:center}
+#allMatchList .match-teams{grid-column:2;grid-row:1;grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr);width:100%}
+#allMatchList .match-teams strong{text-align:center;padding:0 10px;white-space:normal}
+#allMatchList .match-teams strong:first-child,#allMatchList .match-teams strong:last-child{text-align:center;padding:0 10px}
+#allMatchList .match-location{grid-column:3;grid-row:1;text-align:center;overflow-wrap:anywhere}
+#allMatchList .match-result{grid-column:4;grid-row:1;justify-self:center;margin:0}
+#allMatchList .wgh-record-actions{grid-column:5;grid-row:1;justify-content:center;align-items:center;margin:0;white-space:nowrap}
+@media(max-width:1100px){#allMatchList .match-card{grid-template-columns:90px minmax(0,1fr) 110px 44px 100px;gap:10px}}
+@media(max-width:800px){#allMatchList .match-card{grid-template-columns:84px minmax(0,1fr) 90px 38px 92px;gap:8px}#allMatchList .match-teams{grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)}#allMatchList .match-teams strong:first-child,#allMatchList .match-teams strong:last-child{padding:0 5px}#allMatchList .wgh-record-actions button{padding:6px 8px}}
+@media(max-width:600px){
+ #allMatchList .match-card{grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px 0}
+ #allMatchList .match-date{grid-column:1/-1;grid-row:1}
+ #allMatchList .match-teams{grid-column:1;grid-row:2}
+ #allMatchList .match-result{grid-column:2;grid-row:2}
+ #allMatchList .match-location{grid-column:1;grid-row:3}
+ #allMatchList .wgh-record-actions{grid-column:2;grid-row:3}
+}

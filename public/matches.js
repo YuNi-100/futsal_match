@@ -70,7 +70,7 @@
         const link = node('a','match-detail-link');
         link.href = '/match.html?match_id=' + encodeURIComponent(match.match_id);
         link.setAttribute('aria-label',`${match.match_date} WGH 대 ${match.opponent} 경기 상세 보기`);
-        card.append(date,teams,location,badge,link);
+        card.append(date,teams,location,badge,link,window.WGHRecordActions('match',match,load));
         list.append(card);
       }
       status.hidden = true;

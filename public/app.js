@@ -1611,13 +1611,9 @@ async function loadPlayers() {
 
         <!-- 등번호 -->
         <div class="player-number">
-            ${player.back_number}
+            <strong class="player-name jersey-name">${escapeHtml(player.player_name)}</strong>
+            <span class="jersey-number">${escapeHtml(String(player.back_number))}</span>
         </div>
-
-        <!-- 이름 -->
-        <strong class="player-name">
-            ${escapeHtml(player.player_name)}
-        </strong>
 
         <!-- 포지션 -->
         <span class="player-position">

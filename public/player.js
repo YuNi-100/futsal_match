@@ -21,8 +21,13 @@
       if (!response.ok || !result.success) throw new Error(typeof result.detail==='string'?result.detail:'선수 정보를 불러오지 못했습니다.');
       const player=result.data;
       document.title=player.player_name+' | WGH 선수 정보';
+      document.getElementById('playerRecordActions')?.remove();
+      const actions=window.WGHRecordActions('player',player,()=>{location.href='/players.html';});actions.id='playerRecordActions';el('playerDetail').prepend(actions);
       el('playerName').textContent=player.player_name;
-      el('playerNumber').textContent='#'+player.back_number;
+      const jerseyName=document.createElement('span');jerseyName.className='jersey-name';jerseyName.textContent=player.player_name;
+      const jerseyNumber=document.createElement('span');jerseyNumber.className='jersey-number';jerseyNumber.textContent=player.back_number;
+      el('playerNumber').replaceChildren(jerseyName,jerseyNumber);
+      el('playerNumber').setAttribute('aria-label','등번호 '+player.back_number);
       const positions={GK:'골키퍼',FIXO:'픽소',ALA:'아라',PIVO:'피보'};
       el('playerPosition').textContent=(positions[player.position]||player.position)+' · '+player.position;
       el('playerJoined').textContent=player.joined_at||'미등록';
@@ -87,5 +92,6 @@
       await loadMemberChoices();window.dispatchEvent(new Event('wgh-membership-changed'));
     }catch(error){el('playerMemberStatus').textContent=error.message;el('savePlayerMember').disabled=false;}
   });
+  window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='player')load();});
   load();
 })();

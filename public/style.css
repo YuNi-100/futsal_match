@@ -2162,3 +2162,113 @@ dialog.wgh-match-dialog { width:min(540px,calc(100vw - 32px)); padding:0; backgr
 dialog.wgh-match-dialog::backdrop { background:rgba(10,15,22,.6); backdrop-filter:blur(3px); }
 dialog.wgh-match-dialog .modal-content { width:100%; max-height:none; margin:0; box-shadow:none; }
 dialog.wgh-match-dialog .match-player-record input { width:60px; padding:8px; text-align:center; }
+
+/* WGH visual refresh: existing assets, data, form IDs and routes are preserved. */
+body.wgh-top-layout{font-family:Arial,"Noto Sans KR",sans-serif;color:#151922;background:#eef3f8;line-height:1.5}
+.wgh-top-layout .app-container{display:block;min-height:100vh}
+.wgh-top-layout .main-content{width:100%;margin-left:0;padding-bottom:28px;min-width:0}
+.wgh-site-header{background:#fff;border-bottom:1px solid #e0e7ef;position:relative;z-index:100}
+.wgh-header-utility{background:#f5f8fc;border-bottom:1px solid #e7edf3}
+.wgh-header-inner,.wgh-header-main{max-width:1240px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 28px}
+.wgh-header-inner{min-height:36px}.wgh-header-tagline{font-size:10px;letter-spacing:1.2px;color:#5d6a7e}
+.wgh-site-header .wgh-auth-panel{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:0;font-size:11px;color:#58677c;line-height:1.5}
+.wgh-site-header .wgh-auth-panel a,.wgh-site-header .wgh-auth-panel button{border:0;border-radius:4px;background:transparent;padding:7px 3px;font-size:11px;color:#24354e}
+.wgh-site-header .wgh-auth-panel a:hover,.wgh-site-header .wgh-auth-panel button:hover{color:#3478f6;text-decoration:underline}
+.wgh-header-main{min-height:90px;flex-wrap:wrap;column-gap:24px}
+.wgh-brand-home{flex-shrink:0;border-radius:8px}.wgh-brand-home:focus-visible,.wgh-menu-toggle:focus-visible{outline:3px solid #3478f6;outline-offset:4px}
+.wgh-site-header .team-logo{display:grid;grid-template-columns:58px auto;grid-template-rows:auto auto;gap:0 12px;text-align:left;align-items:center;margin:0}
+.wgh-site-header .logo-circle{display:flex;grid-row:1/3;width:58px;height:58px;margin:0}
+.wgh-site-header .team-logo h1{display:block;font-size:22px;letter-spacing:-.6px;margin:0;align-self:end;color:#151f33}
+.wgh-site-header .team-logo p{display:block;font-size:9px;color:#718096;letter-spacing:.7px;align-self:start}
+.wgh-site-header .side-menu{display:flex;flex-direction:row;align-items:center;gap:6px;margin:0;padding:0}
+.wgh-site-header .menu-item{display:flex;justify-content:center;gap:0;min-height:44px;margin:0;padding:10px 12px;border-radius:9px;color:#41506a;font-size:14px;font-weight:700;box-shadow:none;transform:none;white-space:nowrap}
+.wgh-site-header .menu-item .menu-icon{display:none}.wgh-site-header .menu-item span:last-child{display:inline}
+.wgh-site-header .menu-item:hover{color:#3478f6;background:#f2f6fc;transform:none}.wgh-site-header .menu-item.active{color:#fff;background:linear-gradient(135deg,#367bff,#2864ec);box-shadow:0 4px 12px #3478f625}
+.wgh-menu-toggle{display:none}
+.wgh-top-layout :is(.matches-page,.players-page,.match-detail-page,.video-page,.account-page){max-width:1180px}
+.wgh-top-layout :is(.matches-heading,.players-heading,.schedule-page-heading){flex-wrap:wrap}
+.wgh-top-layout :is(.detail-heading,.matches-heading h2,.players-heading h2,.video-page-header h2){font-size:27px;letter-spacing:-.6px;line-height:1.35}
+.wgh-top-layout :is(.video-page-header,.matches-heading,.players-heading){margin-bottom:22px}
+.wgh-top-layout :is(.detail-panel,.video-panel,.player-item){box-shadow:0 5px 22px rgba(31,46,70,.045)}
+.wgh-home .hero{height:330px;padding:32px 56px;background-position:center 52%;justify-content:center}
+.wgh-home .hero-title{left:auto;transform:none;width:min(670px,75%)}
+.wgh-home .hero-title-image{width:100%;max-width:100%;height:auto}
+.wgh-home .hero-message{font-size:22px;right:5%;top:52px}
+.wgh-home :is(.stats-section,.match-section,.bottom-grid,.player-section){width:calc(100% - 64px);max-width:1160px;margin-left:auto;margin-right:auto}
+.wgh-home .stats-section{margin-top:-25px;padding:12px;gap:10px;border-radius:21px;grid-template-columns:repeat(4,minmax(0,1fr)) 1.15fr 1.1fr;box-shadow:0 10px 28px #1f2e4610}
+.wgh-home .stat-card{min-height:112px;padding:13px 8px;border-radius:15px}.wgh-home .stat-card strong{font-size:32px;line-height:1.2}.wgh-home .stat-label{font-size:13px}.wgh-home .stat-card small{font-size:11px;margin-top:6px}
+.wgh-home .rate-circle{width:76px;height:76px}.wgh-home .rate-circle::before{width:58px;height:58px}.wgh-home .rate-circle strong{font-size:20px}
+.wgh-home .score-card strong{font-size:25px}.wgh-home .ball-icon{font-size:22px;margin-bottom:3px}
+.wgh-home .bottom-grid{margin-top:24px;gap:20px;grid-template-columns:1fr 1fr}
+.wgh-home :is(.next-match-card,.notice-card){padding:22px;min-height:230px;border-radius:18px;box-shadow:0 5px 22px #1f2e4609}
+.wgh-home :is(.card-title-row h2,.section-header h2){font-size:21px;letter-spacing:-.4px;line-height:1.4}
+.wgh-home .card-title-row{gap:10px;flex-wrap:wrap}.wgh-home .next-match-title{gap:8px}
+
+
+.wgh-home .notice-list{margin-top:12px}.wgh-home .notice-item{padding:13px 0;gap:10px}.wgh-home .notice-item p{font-size:13px;line-height:1.6}
+.wgh-home .section-header{margin-bottom:12px;gap:12px}.wgh-home .section-actions{gap:12px;flex-wrap:wrap}
+.wgh-home .add-match-button{padding:10px 14px;font-size:12px}.wgh-home .text-button{font-size:12px}
+
+
+
+
+
+
+
+
+.wgh-home .player-section{margin-top:26px;padding:22px;border-radius:18px}.wgh-home #playerList{gap:14px;margin-top:16px}
+.wgh-top-layout :is(.player-number,#playerNumber){position:relative;display:flex;flex-shrink:0;align-items:center;justify-content:center;width:76px;height:80px;min-width:0;padding:12px 0 0;margin:0 0 10px;border-radius:0;background:linear-gradient(110deg,#337cff,#2463ed);color:#fff;font-size:25px;font-weight:900;clip-path:polygon(25% 0,39% 0,43% 6%,57% 6%,61% 0,75% 0,100% 20%,87% 43%,76% 35%,76% 100%,24% 100%,24% 35%,13% 43%,0 20%)}
+.wgh-top-layout .player-number::before,.wgh-top-layout #playerNumber::before{content:"";position:absolute;top:-2px;left:39%;width:22%;height:11px;border:3px solid #bed7ff;border-top:0;border-radius:0 0 50% 50%}
+.wgh-home #playerList a.player-item .player-number{width:66px;height:70px;margin-bottom:10px;font-size:23px}
+.wgh-top-layout .player-stat strong{color:#24354e}.wgh-top-layout .player-name{font-size:16px}.wgh-top-layout .player-item{border-radius:15px}
+.wgh-top-layout :is(button,a,input,select,textarea):focus-visible{outline:3px solid #3478f6;outline-offset:3px}
+@media(max-width:1050px){.wgh-header-main{gap:10px;padding:12px 24px}.wgh-site-header .menu-item{padding:9px 10px;font-size:13px}.wgh-site-header .team-logo h1{font-size:19px}.wgh-site-header .logo-circle{width:50px;height:50px}.wgh-site-header .team-logo{grid-template-columns:50px auto}.wgh-home .stats-section{gap:8px}.wgh-home .stat-card strong{font-size:28px}}
+@media(min-width:701px) and (max-width:930px){.wgh-header-main{justify-content:center}.wgh-site-header .side-menu{width:100%;justify-content:center;flex-wrap:wrap}.wgh-home .hero{height:280px}.wgh-home .hero-message{display:none}.wgh-home .hero-title{width:min(600px,90%)}.wgh-home :is(.stats-section,.match-section,.bottom-grid,.player-section){width:calc(100% - 40px)}.wgh-home .stat-card{min-height:100px}.wgh-home .rate-circle{width:66px;height:66px}.wgh-home .rate-circle::before{width:50px;height:50px}}
+@media(max-width:700px){.wgh-header-tagline{display:none}.wgh-header-inner{padding:0 16px;gap:8px;justify-content:flex-end}.wgh-site-header .wgh-auth-panel{gap:10px;min-height:34px;font-size:10px;flex-wrap:nowrap;min-width:0}.wgh-site-header .wgh-auth-panel>span{min-width:0;max-width:48vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wgh-site-header .wgh-auth-panel a,.wgh-site-header .wgh-auth-panel button{font-size:11px;white-space:nowrap}.wgh-header-main{justify-content:space-between;padding:12px 16px;min-height:76px}.wgh-site-header .team-logo h1{font-size:19px}.wgh-site-header .team-logo p{font-size:8px}.wgh-site-header .logo-circle{width:46px;height:46px}.wgh-site-header .team-logo{grid-template-columns:46px auto;gap:0 10px}.wgh-menu-toggle{display:block;min-height:44px;padding:9px 13px;background:#edf4ff;color:#2768ed;border-radius:8px;font:inherit;font-size:13px;font-weight:700}.wgh-site-header .side-menu{display:none;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:10px;border-top:1px solid #edf0f4}.wgh-site-header.wgh-nav-open .side-menu{display:grid}.wgh-site-header .menu-item{font-size:12px;padding:10px 5px;min-height:44px}.wgh-home .hero{height:235px;padding:25px 20px}.wgh-home .hero-title{width:90%}.wgh-home .hero-message{display:none}.wgh-home :is(.stats-section,.match-section,.bottom-grid,.player-section){width:calc(100% - 28px)}.wgh-home .stats-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:-16px;padding:10px;border-radius:17px}.wgh-home .stat-card{min-height:100px;padding:10px 5px}.wgh-home .stat-card strong{font-size:28px}.wgh-home .stat-label{font-size:12px}.wgh-home .rate-circle{width:64px;height:64px}.wgh-home .rate-circle::before{width:48px;height:48px}.wgh-home .rate-circle strong{font-size:18px}.wgh-home .score-card strong{font-size:22px}.wgh-home .bottom-grid{grid-template-columns:1fr;margin-top:18px;gap:16px}.wgh-home :is(.next-match-card,.notice-card){min-height:0;padding:18px}.wgh-home .section-header{flex-direction:row;align-items:center;flex-wrap:wrap}.wgh-home .section-header h2,.wgh-home .card-title-row h2{font-size:19px}.wgh-home .section-actions{gap:8px}.wgh-home .player-section{padding:17px}.wgh-home #playerList{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wgh-home #playerList a.player-item{padding:14px 8px}.wgh-home .player-stat strong{font-size:18px}.wgh-top-layout :is(.detail-heading,.matches-heading h2,.players-heading h2,.video-page-header h2){font-size:24px}.wgh-top-layout .wgh-register-dialog{max-height:90dvh}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.wgh-top-layout *{transition:none!important;animation:none!important}}
+
+/* A normal page footer: never fixed over existing content or controls. */
+.wgh-brand-footer{width:min(1100px,calc(100% - 50px));margin:48px auto 0;padding:25px 0 8px;border-top:1px solid #dce4ee}
+.wgh-brand-footer h2{font-size:14px;letter-spacing:.02em;color:#66758b;margin:0 0 20px;font-weight:700;text-align:center}
+.wgh-brand-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.wgh-brand-link{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px;text-align:center;border-radius:12px;min-width:0;color:#263347;transition:background .15s}
+.wgh-brand-link:hover{background:#e6edf6}.wgh-brand-link:focus-visible{outline:3px solid #3478f6;outline-offset:3px}
+.wgh-brand-link img{display:block;width:88px;height:88px;object-fit:contain;border-radius:8px;background:#fff}
+.wgh-brand-link strong{font-size:13px;line-height:1.6;overflow-wrap:anywhere;font-weight:700}
+.wgh-brand-link span{font-size:11px;color:#718096;line-height:1.6;overflow-wrap:anywhere}
+@media(max-width:800px){.wgh-brand-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.wgh-brand-footer{width:calc(100% - 32px);margin-top:32px}.wgh-brand-link img{width:76px;height:76px}}
+@media(prefers-reduced-motion:reduce){.wgh-brand-link{transition:none}}
+
+/* WGH blue jersey: real player names and numbers, shared by all player views. */
+.wgh-top-layout :is(.player-number,#playerNumber),.wgh-top-layout #playerDirectory .player-number,.wgh-home #playerList a.player-item .player-number{
+ width:140px;height:148px;padding:36px 0 0;margin:0 auto 10px;flex-direction:column;justify-content:flex-start;gap:3px;
+ background:#215cb6 url('/images/player-jersey.svg') center/100% 100% no-repeat;
+ filter:drop-shadow(0 4px 4px rgba(18,44,83,.16));
+}
+.wgh-top-layout .player-number::before,.wgh-top-layout #playerNumber::before{top:-3px;left:38%;width:24%;height:15px;border:5px solid #101c2a;border-top:0;border-radius:0 0 50% 50%;background:#173b78}
+.wgh-top-layout :is(.player-number,#playerNumber) .jersey-name{position:relative;display:block;max-width:70px;margin:0;color:#fff;font-size:12px;font-weight:800;line-height:1.3;letter-spacing:.08em;text-align:center;overflow-wrap:anywhere;text-shadow:0 1px 3px #102c50}
+.wgh-top-layout :is(.player-number,#playerNumber) .jersey-number{position:relative;display:block;color:#fff;font-family:Arial,sans-serif;font-size:48px;font-weight:900;line-height:1.08;letter-spacing:-2px;text-shadow:0 2px 2px #123564}
+.wgh-top-layout #playerNumber{margin:0;flex-shrink:0}
+@media(max-width:600px){
+ .wgh-top-layout :is(.player-number,#playerNumber),.wgh-top-layout #playerDirectory .player-number,.wgh-home #playerList a.player-item .player-number{width:124px;height:132px;padding-top:31px}
+ .wgh-top-layout :is(.player-number,#playerNumber) .jersey-number{font-size:43px}
+ .wgh-top-layout :is(.player-number,#playerNumber) .jersey-name{font-size:11px;max-width:62px}
+}
+
+.wgh-record-actions{position:relative;z-index:2;display:flex;justify-content:flex-end;gap:6px;margin:10px 0}
+.wgh-record-actions button{padding:5px 6px;border:0;border-radius:6px;background:transparent;color:#7b8491;font:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:color .2s,background .2s}
+.wgh-record-actions .wgh-record-delete{color:#9aa2af}.wgh-record-actions button:disabled{opacity:.5;cursor:wait}
+#allMatchList .wgh-record-actions{grid-column:5;grid-row:1;margin:0}
+#playerDirectory .player-card-link{display:block;color:inherit;text-decoration:none}
+#playerDirectory .player-card-link:focus-visible{outline:3px solid #3478f6;outline-offset:4px}
+@media(max-width:1100px){#allMatchList .wgh-record-actions{grid-column:1/-1;grid-row:auto;margin:0}}
+@media(max-width:600px){#allMatchList .wgh-record-actions{grid-row:4}}
+
+/* Restore the original home fixture card; dedicated pages keep their own layouts. */
+.wgh-home .next-match-card{min-height:240px;padding:25px;border-radius:20px;box-shadow:0 8px 30px rgba(31,46,70,.06)}
+@media(max-width:700px){.wgh-home .next-match-date-row{flex-wrap:wrap;gap:8px}.wgh-home .next-match-location{white-space:normal;overflow-wrap:anywhere}.wgh-home .next-teams{gap:20px}.wgh-home #matchList .match-card{grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:15px 16px}.wgh-home #matchList .match-date{grid-column:1;grid-row:1}.wgh-home #matchList .match-teams{grid-column:1;grid-row:2;gap:10px;flex-wrap:wrap}.wgh-home #matchList .match-location{grid-column:1;grid-row:3;overflow-wrap:anywhere}.wgh-home #matchList .match-result{grid-column:2;grid-row:2}.wgh-home #matchList .match-actions{grid-column:2;grid-row:3}}
+@media(min-width:701px) and (max-width:1100px){.wgh-home #matchList .match-card{grid-template-columns:90px minmax(0,1fr) 110px 45px;gap:12px}.wgh-home #matchList .match-actions{grid-column:1/-1}.wgh-home #matchList .match-teams{gap:10px;flex-wrap:wrap}}
+
+/* Match the original home edit/delete text controls across record pages. */
+.wgh-record-actions .wgh-record-edit:hover{color:#3478f6;background:#edf4ff}
+.wgh-record-actions .wgh-record-delete:hover{color:#ef4444;background:#fff0f0}
