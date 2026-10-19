@@ -468,4 +468,3 @@ PC·태블릿·모바일 **크기별 브라우저 검증**을 진행했으며 �
 [로그인·권한](AUTH_SETUP.md) · [관리자 관리](ADMIN_RECORD_MANAGEMENT.md) · [디자인](DESIGN_REFRESH.md) · [AI 검수](VIDEO_REVIEW_SETUP.md) · [YouTube 검색](YOUTUBE_SYNC.md) · [Supabase 이전](SUPABASE_MIGRATION.md) · [Vercel 배포](VERCEL_DEPLOYMENT.md)
 
 위 단계별 문서에 과거 MySQL 상태·배포 전 설명이 남아 있다면 현재 구성·완료 상태는 이 README와 실제 환경을 기준으로 확인합니다.
-
