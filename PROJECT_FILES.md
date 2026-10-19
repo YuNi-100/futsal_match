@@ -1,154 +1,37 @@
 # WGH 프로젝트 파일 안내
 
-실행하는 프로젝트: `C:\workspace\futsal_match`.
-기존 FastAPI·MySQL·HTML/CSS/JavaScript 프로젝트를 유지한다.
-코드 추가는 Git 커밋·Push나 원본 DB 적용을 의미하지 않는다.
+현재 실행 구성은 FastAPI + Supabase PostgreSQL + HTML/CSS/JavaScript입니다. 파일의 실제 위치를 유지한 역할 안내이며, 디렉터리 이동을 수행한 문서가 아닙니다.
 
-## 이번 메뉴 정리에서 추가한 파일
+| 구분 | 파일·폴더 | 역할 |
+| --- | --- | --- |
+| 서버 | `main.py` | FastAPI 진입점, 공통 API·라우터·정적 파일·보호 페이지 제공 |
+| DB | `database.py` | PostgreSQL 연결·호환 처리·쓰기 대상 확인, MySQL 복구용 연결 |
+| 인증 | `auth.py`, `auth_store.py`, `account_routes.py`, `manage_auth.py` | Google OAuth·세션·CSRF·계정·관리자 관리 |
+| 경기 | `match_detail_routes.py`, `match_player_records.py` | 경기 상세와 참가 선수 기록 |
+| 선수 | `player_detail_routes.py`, `player_management.py` | 선수 상세·집계·관리 |
+| 영상 | `youtube_videos.py`, `video_repository.py`, `video_match_link.py` | YouTube 메타데이터·등록·삭제·경기 연결 |
+| 분석 | `youtube_feedback.py`, `feedback_store.py` | Gemini 분석·저장·검수·게시 |
+| 검색 | `youtube_sync.py` | 채널 검색·조건 확인·중복 방지 등록 |
+| 시범 기능 | `article_routes.py`, `article_generation.py` | 경기 기록 기반 기사 초안 |
+| 홈 | `public/index.html`, `app.js`, `style.css` | 홈 콘텐츠·통계·공통 디자인 |
+| 공통 화면 | `public/navigation.js`, `auth.js`, `auth.css`, 계정 관련 파일 | 상단 메뉴·로그인 상태·계정 UI |
+| 경기 화면 | `public/matches.*`, `match.html`, `match-detail.*` | 경기 목록·상세 |
+| 선수 화면 | `public/players.*`, `player.*` | 선수 목록·상세 |
+| 일정 화면 | `public/schedules.html`, `schedules.js` | 다음 경기와 일정 관리 |
+| 영상 화면 | `public/video.html`, `video.js`, `video.css`, `video-published.js` | 회원용 WGH TV·게시 결과 |
+| 영상 관리 | `public/video-register.*`, `video-analysis-form.js`, `video-review-layout.css` | 관리자 등록·분석·연결 관리 |
+| 검수 화면 | `public/feedback-review.*` | 분석 결과 편집·검수 완료 게시 |
+| 호환 화면 | `public/feedback.html`, `feedback.js`, `video_backup.html` | 기존 경로 호환·권한 처리 참조 확인 필요 |
+| 이미지 | `public/images/` | 로고·배경·브랜드 이미지 |
+| 배포 | `build_vercel.py`, `vercel.json`, `pyproject.toml`, `uv.lock`, `.python-version`, `.vercelignore` | Vercel 빌드·의존성·자산·보호 페이지 처리 |
+| 의존성 | `requirements.txt`, `requirements-postgres-dev.txt` | 실행·개발 의존성 |
+| 이전 | `postgres_migrate.py`, `migrations/postgresql/` | 안전한 신규 스키마 이전·검증 |
+| 과거 SQL | `migrations/001_google_auth.sql` 등 | MySQL 단계의 수동 마이그레이션 이력 |
+| 검증 | `tests/` | 서버 단위·선택 DB·브라우저 검증 |
+| 설정 예시 | `.env.example`, `.env.supabase.example` | 비밀값 없는 설정 형식. 실제 값은 비공개 파일·서버 환경변수에 저장 |
 
-| 파일 | 역할 |
-|---|---|
-| `public/navigation.js` | 사이드바의 여섯 메뉴와 이동 주소, 현재 메뉴 선택 상태를 공통 관리 |
-| `public/schedules.html` | 다음 경기 일정 목록 페이지 |
-| `public/schedules.js` | 기존 `/api/schedules`를 읽어 날짜·24시간 형식의 시간·상대팀·장소·메모 표시 |
-| `PROJECT_FILES.md` | 이 파일. 프로젝트에서 사용하는 파일 역할 안내 |
+## 로컬 자료
 
-다음 경기 페이지는 기존 일정을 조회한다. 기존 홈의 일정 등록·수정·삭제 동작은 유지한다.
-페이지마다 따로 있던 메뉴를 `navigation.js`로 통일해 메뉴가 서로 달라지는 문제를 방지한다.
-팀 소개는 기존 홈의 `#team` 영역으로 연결하고 통계는 홈 상단에 유지한다.
+`.env`, `.env.supabase`, `.wgh-sync/`, 백업·DB 내보내기는 공개 저장소에 올리지 않습니다. `.wgh-sync/`에는 영상 재등록 방지 등 실행 상태가 있으므로 캐시처럼 지우면 안 됩니다. `.venv/`, `.venv-1/`, `legacy_node/`, `uploads/`도 용도를 확인하기 전 삭제하지 않습니다.
 
-## 서버와 데이터 처리
-
-| 파일 | 역할 |
-|---|---|
-| `main.py` | 서버 진입점. 경기·일정·선수 집계 API, 라우터 연결, 정적 파일 제공 |
-| `auth.py`, `auth_store.py` | Google 로그인·세션·로그아웃·API 관리자 검사와 인증 DB 접근 |
-| `manage_auth.py` | 서버에서만 실행하는 기존 계정 연결·관리자 승인·회수 도구 |
-| `match_player_records.py` | 경기별 참가 선수·득점·도움 저장·조회 |
-| `match_detail_routes.py` | 경기 상세 공개 조회 API |
-| `player_detail_routes.py` | 선수 정보·누적 기록·출전 경기 조회 API |
-| `youtube_videos.py`, `video_repository.py` | YouTube URL 등록·목록 API와 DB 접근 |
-| `video_match_link.py` | 관리자의 기존 영상 경기 연결·변경·해제 API |
-| `youtube_feedback.py` | Gemini 영상 구간 피드백 시범 기능 |
-| `article_routes.py`, `article_generation.py` | 경기 기록 기반 기사 초안 시범 기능 |
-| `requirements.txt` | 서버 실행에 필요한 Python 패키지 목록 |
-| `.env` | DB 연결·Google 로그인·AI 비밀 설정. 내용은 공개하지 않음 |
-| `.env.example` | 설정 항목 이름과 형식 예시. 실제 비밀값 없음 |
-
-## 화면 파일
-
-| 파일 | 역할 |
-|---|---|
-| `public/index.html`, `app.js`, `style.css` | 홈, 최근 경기 5개·통계·공지·선수 기록·일정 입력과 공통 디자인 |
-| `public/matches.html`, `matches.js`, `matches.css` | 전체 경기 목록, 10개씩 페이지 이동 |
-| `public/match.html`, `match-detail.js`, `match-detail.css` | 특정 경기 상세와 선수·영상 연결 |
-| `public/players.html`, `players.js`, `players.css` | 별도 선수 목록 |
-| `public/player.html`, `player.js`, `player.css` | 특정 선수 프로필·누적 기록·경기별 기록 |
-| `public/video.html`, `video.js` | 로그인 회원용 영상 목록·재생 |
-| `public/video-register.html`, `video-register.js` | 관리자 전용 영상 등록·경기 연결 관리·기존 AI 결과 목록 영역 |
-| `public/video.css` | 기존 영상 페이지의 디자인을 두 페이지에서 공유 |
-| `public/auth.js`, `auth.css` | 로그인 상태 표시·로그아웃·관리자 화면 표시·CSRF 헤더 처리 |
-| `public/feedback.html`, `feedback.js` | Gemini 피드백 시범 화면 |
-| `public/article.html` | 경기 기사 초안 시범 화면 |
-| `public/images/` | 기존 WGH 로고·배경·이미지 |
-
-## 검증·DB 준비·보관 파일
-
-| 파일·폴더 | 역할 |
-|---|---|
-| `tests/test_*.py` | 서버 검증. 실제 DB 테스트는 별도 테스트 DB 설정으로 명시적으로 실행 |
-| `tests/browser_*.cjs` | 가상 데이터를 이용한 브라우저 화면·이동 검증 |
-| `migrations/001_google_auth.sql` | 인증용 테이블 4개를 추가하는 수동 적용 SQL. 자동 실행 안 함 |
-| `AUTH_SETUP.md` | 로그인 설정·계정 연결·관리자 승인 절차 |
-| `README.md` | 프로젝트 실행·기능 안내 |
-| `main_backup.py`, `public/*_backup*` | 과거 보관 파일. 현재 페이지에서 사용하지 않으며 이번에 삭제하지 않음 |
-| `legacy_node/` | 이전 Node.js 파일의 로컬 보관 |
-| `uploads/` | 기존 로컬 영상 파일·목록. 소스 정리 대상으로 삭제하지 않음 |
-| `.venv/`, `.venv-1/`, `__pycache__/` | 가상환경·실행 캐시. 실제 사용 환경 확인 없이 삭제하지 않음 |
-
-## 테스트 후 원본 DB 복구 시 주의
-
-현재 검증 대상은 `futsaldb_test`이며 원본은 `futsaldb`다.
-원본에 필요한 인증 테이블과 경기 시간 NULL 허용 변경은 사용자 승인을 받은 뒤 별도로 적용한다.
-전환할 때 `.env`의 `DB_NAME`과 터미널의 `$env:DB_NAME`을 함께 확인하고 서버를 재시작한다.
-테스트 DB에서 확인한 계정 연결·관리자 권한이 원본에 자동 복사되는 것은 아니다.
-기존 데이터와 백업은 보존하고 사용자 승인 없이 커밋·Push하지 않는다.
-
-## 기존 파일 내 관리자 등록 기능
-
-새 파일 없이 navigation.js에 공통 등록창을 추가했다. 경기 기록·선수 정보·다음 경기 페이지의 관리자 추가 버튼과 홈의 선수 등록 버튼이 사용한다. main.py의 POST /api/players는 이름·등번호·포지션·입단일을 저장하며 중복 등번호는 409로 거부한다. 등록 후 각 목록을 다시 조회한다. 홈의 기존 경기·일정 등록창은 유지한다.
-
-## 선수 회원 연결·비회원 영상 제한
-
-- 새 파일 `migrations/002_player_accounts.sql`: 선수-회원 일대일 연결 테이블 추가용. 기존 테이블 변경 없음.
-- 기존 `main.py`, `auth_store.py`: 관리자 회원 목록, 선수 등록 시 연결, 기존 선수 연결·해제 API와 세션의 선수 회원 표시.
-- 기존 `auth.py`, `main.py`: 비회원 영상 페이지·YouTube/로컬 영상 API 차단. 일반·선수·관리자 회원은 영상 조회 가능.
-- 기존 `match_detail_routes.py`: 비회원 경기 상세에 영상 주소·YouTube ID를 반환하지 않음.
-- 기존 `navigation.js`, `player.html`, `player.js`, `auth.js`: 등록창의 회원 선택, 기존 선수의 회원 연결 관리, 선수 회원 상태 표시.
-- 회원 정보 선택 목록은 관리자 전용이며 공개 선수 정보에 회원 이메일을 포함하지 않는다.
-- 연결해도 관리자 권한을 부여하지 않는다. 한 회원과 한 선수만 연결 가능하다.
-- 현재 적용은 테스트 DB에만 수행하며 기존 선수·회원 연결은 자동 추정하거나 변경하지 않는다.
-
-## 내 페이지 및 관리자 승인
-- public/account.html, account.js, account.css: 로그인 안내, 최초 동의, 내 정보·연결 선수, 관리자 신청과 처리 화면.
-- account_routes.py: 본인 정보 조회, 동의 저장, 관리자 신청·승인·반려·권한 해제 및 처리 이력.
-- migrations/003_account_management.sql: 동의·신청·처리 이력 테이블 추가. 기존 데이터 변경 없음.
-- 승인 작업은 기존 관리자만 가능하며 마지막 관리자 해제를 차단합니다. 원본 DB 전환은 별도 승인 후 진행합니다.
-
-## 영상 조회·등록 페이지 분리
-
-영상 조회는 기존 회원 로그인·동의 정책을 유지한다. 관리자만 조회 페이지의 영상 등록·관리 버튼으로 별도 페이지를 열 수 있다. video-register.html 직접 접근도 서버에서 검사하며 비로그인 401, 비관리자 또는 동의 미완료 403으로 차단하고 폼을 내려주지 않는다. 기존 등록 API와 연결 API의 관리자·CSRF 검사는 유지한다. AI 분석 결과 목록은 기존 준비 영역을 옮긴 것이며 새 분석 기능을 구현한 것은 아니다. 경기 기록 추가는 기존 홈·경기 목록의 등록창을 유지하고 별도 경기 등록 페이지는 생성하지 않았다.
-
-## 영상 등록 우선과 경기 등록 시 영상 선택
-
-영상 등록·AI 카드가 첫 번째이고 사후 연결·해제 관리는 그 아래에 있다. 공통 경기 추가 팝업은 기존 등록 영상 중 미연결 영상을 선택해 경기·선수 기록과 같은 트랜잭션에서 연결한다. 다른 경기에 연결된 영상은 선택을 막으며 서버도 409로 거부한다. 영상 조회 실패 시 연결 없이 등록할 수 있고 사후 관리에서 연결한다. 기존 경기 수정은 영상 연결을 임의 변경하지 않으며 사후 관리의 연결 저장·연결 해제 버튼을 사용한다. 스키마 변경은 없다.
-
-## 홈페이지 영상 삭제
-
-관리자 영상 등록·관리의 기존 영상 선택 후 홈페이지 영상 삭제 버튼을 사용한다. 확인창에는 제목·분석 자료 삭제·경기와 선수 기록 및 YouTube 원본 보존을 표시한다. DELETE /api/youtube-videos/{video_id}는 공통 관리자·CSRF 검사를 거쳐 futsal_video의 해당 WGH 행만 삭제한다. 현재 DB의 기존 CASCADE 규칙에 따라 해당 영상의 분석 자료도 삭제될 수 있다. 경기·match_player·선수 데이터에는 삭제 쿼리를 실행하지 않는다. 원본 YouTube에는 요청하지 않는다.
-
-## YouTube 자동 등록 (테스트 DB 단계)
-- youtube_sync.py: 지정 채널의 공개 피드를 읽고 WGH 또는 은평 + YYYY-MM-DD 조건으로 필터링합니다. 기본은 DB 연결 없는 미리 보기이며 명시적 --apply / --watch로만 등록합니다. futsaldb_test 외 DB의 쓰기는 차단합니다. 경기 연결·기존 영상 정보·선수 기록은 변경하지 않습니다.
-- tests/test_youtube_sync.py: 필터·피드 채널 검증·중복·삭제 후 재등록 방지·원본 DB 차단·트랜잭션 실패를 모의 DB로 검증합니다.
-- YOUTUBE_SYNC.md: 실행·중지·최근 피드 범위·처리 이력 보존 안내. .gitignore에 .wgh-sync/를 추가했습니다. DB 스키마 변경이나 자동 시작 설정은 없습니다.
-
-## 영상 조회 실패 안내 보완
-- public/video.js: 조회 요청은 no-store 및 15초 제한으로 실행합니다. 401은 만료로 단정하지 않고 현재 요청의 로그인 정보 확인 실패와 내 페이지 링크를 표시합니다. 403은 이용 동의 확인을 안내하고 서버 오류·시간 초과는 다시 불러오기 버튼을 표시합니다.
-- public/auth.js: 영상 목록 GET의 401/403은 차단 경고창 대신 페이지가 안내하도록 반환합니다. 기존 관리자·CSRF 검증은 유지합니다.
-- tests/browser_video_loading.cjs: 정상 목록·재생, 비인증 응답, 동의 확인, 응답 지연 후 재시도, 서버 오류 후 재시도, 경기별 필터를 검증합니다.
-- 실제 테스트 DB에서 기존 영상 4개와 유효한 12시간 세션을 읽기 전용 확인했습니다. 문제 브라우저의 401 원인은 쿠키·서버 세션 연결을 추가 확인해야 하며, 세션 만료로 확정하지 않습니다. DB 변경은 없습니다.
-
-## 자동 등록 영상 제목의 중복 날짜 제거
-- youtube_sync.py: 새 자동 등록 시 추출한 날짜는 match_date에 저장하고 홈페이지 title에서는 제거합니다. 유튜브 원본과 경기 연결은 유지합니다.
-- tests/test_youtube_sync.py: 날짜 위치별 제거, 다른 숫자·다른 날짜 보존을 확인합니다.
-- YOUTUBE_SYNC.md: 날짜·제목 분리 정책을 추가했습니다. 사용자 요청으로 테스트 DB의 은평vs다산2 기존 제목도 별도로 정리합니다.
-
-## 수·토 18시 YouTube 자동 등록 예약
-- youtube_sync.py: 친선경기 키워드 추가, RSS 오류 시 지정 채널의 공개 동영상 탭 조회로 보완. 채널 ID 확인 후 선택된 동영상 탭만 읽습니다.
-- tests/test_youtube_sync.py: 친선경기 인식, RSS 실패 시 보완 조회, 채널 ID와 선택 탭 범위·중복 검증. 전체 81개 중 75개 통과, 실제 DB 관련 6개 제외.
-- YOUTUBE_SYNC.md: 최신 키워드·조회 보완·수동 중복 제외·예약 실행 조건 기록.
-- Codex 대화 예약 WGH 경기영상 자동 등록(id: wgh), 한국 시간 매주 수요일·토요일 18시 활성화. 프로젝트에 윈도우 예약 작업이나 --watch 상시 프로세스를 설치하지 않았습니다. 사용자 승인된 --apply 단일 실행을 수행합니다. PC·앱·MySQL 필요, 테스트 DB만 허용합니다.
-- 설정 시 실제 자동 등록 단일 실행 성공, 신규 0건. 커밋·Push·원본 DB 변경 없음.
-
-## 긴 경기 영상 AI 피드백과 결과 저장
-- youtube_feedback.py: 관리자·CSRF 검증을 유지한 상태에서 1~1800초(최대 30분) 분석, 최대 16개 주요 장면 요청, 파란색/명암으로 팀을 단정하지 않는 지침을 적용합니다. API 제한 시간 240초, 자동 재호출 없음. 동일 영상·구간·유니폼·설정 모델의 저장 결과를 재사용합니다.
-- feedback_store.py: 기존 video_analysis의 feedback TEXT에 구조화 JSON과 사용량을 저장하고 video_event에 장면 시간을 같은 트랜잭션으로 저장합니다. 스키마 변경 없음. 현재 쓰기는 테스트 DB만 허용합니다. DB 자문 잠금으로 다른 프로세스의 중복 실행을 막습니다.
-- main.py: /api/admin/video-analyses 목록·상세 라우터 추가. 저장 결과는 관리자만 조회합니다.
-- public/feedback.html, feedback.js: 최대 30분 구간 입력, 처리 중 안내, 장면 시간 이동, 결과 URL 저장 및 새로고침 후 추가 AI 호출 없는 다시 보기. 기존 페이지 레이아웃 유지.
-- public/video-register.js: 기존 분석 결과 목록에 분석 화면 링크와 저장 결과 링크를 표시합니다.
-- tests/test_video_feedback.py, tests/browser_video_feedback.cjs: 긴 구간·권한·동의·중복 비용 방지·분석 자료 저장·시간 이동·결과 다시 보기 검증. 기존 영상 관리 브라우저 테스트의 분석 목록 응답 모의 처리도 보완.
-- 전체 단위 테스트 91개 중 85개 통과, 실제 DB 관련 6개 제외. 피드백 브라우저 테스트와 기존 회원별 영상 관리 테스트 통과.
-- 현재는 동기 요청 처리입니다. 창을 닫거나 서버를 재시작하면 진행 상태를 이어 보는 백그라운드 작업 복구는 지원하지 않습니다. 완료된 결과만 DB에 남고, 저장 전 실패하면 자동 재실행하지 않으며 사용 내역을 확인해야 합니다. 하이라이트 파일 생성·수치 기록 자동 수정은 이 단계에 포함하지 않습니다.
-- 사용자가 은평vs다산2 20분 10초, 진한 파란색 팀에 대한 실제 분석 1회를 승인했습니다. 실행 결과는 별도로 확인합니다. 원본 DB 변경·커밋·Push 없음.
-
-### 실제 분석 1회 결과
-은평vs다산2(video_id=9), 전체 요청 0~1210초, gemini-3.6-flash 분석 1회 성공. 분석 ID 1과 장면 13개를 기존 테스트 DB에 저장했습니다. 입력 190426토큰, 출력 1688토큰, 전체 195468토큰입니다. 구조와 시간 범위 검증은 통과했지만 원본 영상 대조 검수는 아직입니다. 선택 장면은 3~671초에 집중돼 뒤쪽 구간의 평가가 충분하다고 보장하지 않습니다. 유니폼 식별 혼선과 가림에 따른 한계가 있으며 요약에 불필요한 홍보·칭찬 문구가 있어 후속 프롬프트 보완 대상입니다. 경기·선수 수치와 영상 메타데이터는 변경하지 않았습니다. 추가 분석·재호출은 실행하지 않았습니다. 결과 보기: /feedback.html?video_id=9&analysis_id=1 . 로컬 결과 사본은 .wgh-sync/analysis-1.json입니다.
-
-## 영상 분석 검수·게시와 화면 분리
-영상 등록·AI 분석은 별도 영역이며 분석 목록은 /feedback-review.html?analysis_id=... 검수 화면으로 연결합니다. 수정할 시간·코멘트와 임시 저장·검수 완료를 제공합니다. 기존 경기 연결·해제는 관리자 화면 맨 아래입니다. 선수용 경기 영상 페이지는 경기 영상 / 분석 결과 / 하이라이트 탭 순서이며 검수 완료 게시본만 시간·짧은 코멘트로 표시합니다.
-기존 video_analysis.feedback JSON의 review에 초안·게시본을 따로 저장하며 AI 원문 및 video_event는 보존합니다. 스키마 변경 없이 관리자·동의·CSRF·행 잠금·revision 검사를 적용합니다. 공개 회원 API에는 초안·사용량·검수자 정보·요청 키를 반환하지 않습니다. 현재 검수 쓰기는 테스트 DB만 허용합니다.
-파일별 변경과 실행 정책은 VIDEO_REVIEW_SETUP.md에 정리했습니다. 전체 테스트 100개 중 94개 통과, 실제 DB 관련 6개 제외. 모의 브라우저에서 편집·임시 저장 비공개·게시·회원 장면 이동·모바일 배치 및 기존 등록·연결·조회 실패 처리를 검증했습니다. 실제 기존 분석 ID 1의 장면 13개와 검수 전 상태를 읽기 전용 확인했습니다. 추가 AI 호출·실제 게시·DB 스키마 변경·커밋·Push 없음.
-
-## 승인된 홈·공통 디자인 리뉴얼
-사용자 확인 후 기존 왼쪽 사이드바를 상단 메뉴로 교체했습니다. 기존 로고·색상·폰트 계열과 둥근 카드는 유지합니다. navigation.js는 기존 인증 패널을 상단으로 옮겨 이벤트를 보존하고 모바일 메뉴와 브랜드 푸터를 제공합니다. index.html은 기존 ID를 유지하며 다음 경기·공지를 최근 경기 위로 배치합니다. style.css의 범위 지정 스타일은 통계·행 정렬·유니폼 등번호·반응형을 정리합니다. player.js는 상세 등번호의 # 접두어만 제거합니다. video.html/js/css는 WGH TV와 썸네일 카드·선택 후 플레이어를 제공합니다. 분석 결과·검수 게시·관리 권한은 유지합니다.
-하단 4개 원본 브랜드 로고와 인스타그램 연결을 반영했습니다. 변경 파일 전체와 기능 점검은 DESIGN_REFRESH.md에 기록했습니다. 백엔드 100개 중 94개 통과·6개 제외, 11개 화면과 5개 너비의 55개 조합에서 가로 넘침 없음. 기존 등록·영상 연결·조회 오류·삭제·검수 게시 모의 브라우저 테스트 통과. 실 데이터는 읽기 전용으로 확인했고, DB·환경변수·예약·원본 데이터·커밋·Push는 변경하지 않았습니다. 원본 DB 전환은 아직입니다.
+`main_backup.py`, `public/*_backup*` 등 정리 후보는 [FILE_CLEANUP_REVIEW.md](FILE_CLEANUP_REVIEW.md)에 구분했습니다. 기존 MySQL을 지우거나 테스트 DB로 되돌리는 작업은 이번 문서 정리에 포함하지 않습니다.
