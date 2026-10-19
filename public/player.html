@@ -28,6 +28,11 @@
 <section class="detail-panel"><div class="player-profile-heading"><span id="playerNumber"></span><div><h3 id="playerName"></h3><p id="playerPosition" class="detail-muted"></p></div></div>
 <p class="detail-muted player-joined">입단일 · <span id="playerJoined"></span></p>
 <dl class="player-totals"><div><dt>출전</dt><dd><strong id="appearances"></strong> 경기</dd></div><div><dt>득점</dt><dd><strong id="goals"></strong> 골</dd></div><div><dt>도움</dt><dd><strong id="assists"></strong> 도움</dd></div></dl></section>
+<section class="detail-panel" data-admin-only><h3>선수 회원 연결</h3>
+<form id="playerMemberForm"><div class="form-group"><label for="playerMemberSelect">연결할 Google 가입 회원</label>
+<select id="playerMemberSelect" disabled><option value="">회원 목록을 불러오는 중…</option></select></div>
+<button type="submit" class="add-match-button" id="savePlayerMember" disabled>회원 연결 저장</button>
+<p id="playerMemberStatus" class="detail-muted" role="status"></p></form></section>
 <section class="detail-panel"><h3>출전 경기 기록</h3><p class="detail-muted player-history-note">상대팀 이름을 누르면 경기 상세로 이동합니다. 연결 영상이 있는 경기의 득점 숫자를 누르면 해당 경기 영상을 볼 수 있습니다.</p>
 <p id="playerMatchesEmpty" class="detail-muted" hidden>등록된 출전 경기 기록이 없습니다.</p>
 <div class="detail-table-wrap"><table id="playerMatchesTable" class="detail-table"><thead><tr><th scope="col">날짜</th><th scope="col">상대팀</th><th scope="col">점수</th><th scope="col">득점</th><th scope="col">도움</th><th scope="col">경기 영상</th></tr></thead><tbody id="playerMatches"></tbody></table></div>

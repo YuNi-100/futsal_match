@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from match_detail_routes import create_match_detail_router
@@ -13,6 +13,7 @@ class DetailTests(unittest.TestCase):
         app=FastAPI()
         app.include_router(create_match_detail_router(lambda:self.db))
         self.client=TestClient(app)
+        self.member=patch('auth.current_user',return_value={'user_id':1,'role':'user'});self.member.start();self.addCleanup(self.member.stop)
 
     def test_exact_match_info_players_and_explicit_videos(self):
         self.cursor.fetchone.return_value={'match_id':6,'opponent':'WGH 은평','start_time':None,'end_time':None,'memo':'메모\n두 번째 줄'}
@@ -42,6 +43,15 @@ class DetailTests(unittest.TestCase):
         self.assertEqual(data['players'],[])
         self.assertEqual(data['videos'],[])
 
+    def test_guest_detail_has_no_video_metadata(self):
+        self.cursor.fetchone.return_value={'match_id':6}
+        self.cursor.fetchall.return_value=[]
+        with patch('auth.current_user',return_value=None):
+            data=self.client.get('/api/matches/6').json()['data']
+        self.assertEqual(data['videos'],[])
+        self.assertTrue(data['video_login_required'])
+        self.assertEqual(self.cursor.execute.call_count,2)
+
     def test_internal_database_error_is_not_exposed(self):
         self.cursor.execute.side_effect=RuntimeError('secret database info')
         response=self.client.get('/api/matches/1')
@@ -67,7 +77,8 @@ class DetailDatabaseTests(unittest.TestCase):
                 videos=[r['video_id'] for r in cursor.fetchall()]
         finally: db.close()
         app=FastAPI();app.include_router(create_match_detail_router(connect))
-        response=TestClient(app).get(f"/api/matches/{match['match_id']}")
+        with patch('auth.current_user',return_value={'user_id':1,'role':'user'}):
+            response=TestClient(app).get(f"/api/matches/{match['match_id']}")
         self.assertEqual(response.status_code,200)
         data=response.json()['data']
         self.assertEqual(data['opponent'],match['opponent'])

@@ -57,5 +57,35 @@
       el('playerDetail').hidden=false;
     } catch(error) {el('playerStatus').textContent=error.message;}
   }
+  let memberChoicesLoading=false;
+  async function loadMemberChoices() {
+    if(!document.documentElement.classList.contains('wgh-admin')||memberChoicesLoading)return;
+    memberChoicesLoading=true;
+    const status=el('playerMemberStatus'),select=el('playerMemberSelect'),button=el('savePlayerMember');
+    button.disabled=true;select.disabled=true;
+    try {
+      const response=await fetch('/api/admin/members',{cache:'no-store'});const result=await response.json();
+      if(!response.ok||!result.success)throw new Error('회원 목록을 불러오지 못했습니다. 새로고침해 주세요.');
+      select.replaceChildren(new Option('연결 안 함 (연결 해제)',''));
+      for(const member of result.data)if(member.player_id==null||Number(member.player_id)===Number(id)) {
+        select.add(new Option(`${member.name} · ${member.email}`,String(member.user_id)));
+        if(Number(member.player_id)===Number(id))select.value=String(member.user_id);
+      }
+      select.disabled=false;button.disabled=false;
+    }catch(error){status.textContent=error.message;}
+    finally{memberChoicesLoading=false;}
+  }
+  window.addEventListener('wgh-auth-changed',loadMemberChoices);
+  if(document.documentElement.classList.contains('wgh-admin'))loadMemberChoices();
+  el('playerMemberForm').addEventListener('submit',async event=>{
+    event.preventDefault();if(!document.documentElement.classList.contains('wgh-admin')||el('savePlayerMember').disabled)return;
+    const selected=el('playerMemberSelect').value;el('savePlayerMember').disabled=true;
+    try {
+      const response=await fetch('/api/admin/players/'+encodeURIComponent(id)+'/member',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:selected?Number(selected):null})});
+      const result=await response.json();if(!response.ok||!result.success)throw new Error(typeof result.detail==='string'?result.detail:'회원 연결 저장에 실패했습니다.');
+      el('playerMemberStatus').textContent=selected?'선수 회원 연결을 저장했습니다.':'선수 회원 연결을 해제했습니다.';
+      await loadMemberChoices();window.dispatchEvent(new Event('wgh-membership-changed'));
+    }catch(error){el('playerMemberStatus').textContent=error.message;el('savePlayerMember').disabled=false;}
+  });
   load();
 })();

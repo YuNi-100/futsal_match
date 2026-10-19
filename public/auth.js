@@ -8,7 +8,7 @@
     document.querySelectorAll('[data-auth-panel]').forEach(panel => {
       panel.replaceChildren();
       const label = document.createElement('span');
-      label.textContent = identity.user ? `${identity.user.name} · ${identity.user.role === 'admin' ? '관리자' : '일반 사용자'}` : '공개 기록은 로그인 없이 볼 수 있어요.';
+      label.textContent = identity.user ? `${identity.user.name} · ${identity.user.role === 'admin' ? '관리자' : identity.user.role === 'player' ? '선수 회원' : '일반 회원'}` : '공개 기록은 로그인 없이 볼 수 있어요.';
       panel.append(label);
       if (identity.user) {
         const button = document.createElement('button');
@@ -20,10 +20,10 @@
             location.reload();
           } catch (error) { alert(error.message); }
         });
-        panel.append(button);
+        const account=document.createElement('a');account.href='/account.html';account.textContent='내 페이지';panel.append(account,button);
       } else {
         const link = document.createElement('a');
-        link.href = '/auth/google/login'; link.textContent = 'Google 계정으로 로그인';
+        link.href = '/account.html'; link.textContent = 'Google 계정으로 로그인';
         panel.append(link);
       }
     });
@@ -38,7 +38,14 @@
   }).then(() => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showIdentity, {once: true});
     else showIdentity();
+    if(identity.user?.consent_required && location.pathname!=='/account.html')location.replace('/account.html');
+    return identity;
   });
+  window.WGHAuthReady=ready;
+  window.addEventListener('wgh-membership-changed', async () => {
+    try { const response=await nativeFetch('/auth/me',{cache:'no-store'}); if(response.ok){identity=await response.json();showIdentity();} } catch (_) {}
+  });
+  window.addEventListener('pageshow',event=>{if(event.persisted && /\/(video(?:_backup|-register)?|feedback)\.html$/i.test(location.pathname))location.reload();});
   window.fetch = async (input, options = {}) => {
     const url = new URL(input instanceof Request ? input.url : input, location.href);
     const method = (options.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();

@@ -177,3 +177,30 @@ class ExistingRouteTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+class MemberVideoAccessTests(unittest.TestCase):
+    def test_guest_video_pages_and_apis_blocked(self):
+        import main
+        client=TestClient(main.app)
+        with patch.object(auth,'current_user',return_value=None):
+            for path in ['/video.html','/video_backup.html','/feedback.html']:
+                response=client.get(path)
+                self.assertIn('로그인 후',response.text)
+                self.assertNotIn('<iframe',response.text)
+                self.assertEqual(response.headers['cache-control'],'no-store')
+            for path in ['/api/youtube-videos','/api/videos','/api/videos/unknown']:
+                self.assertEqual(client.get(path).status_code,401)
+            self.assertEqual(client.get('/api').status_code,200)
+
+    def test_general_player_and_admin_members_can_read_video(self):
+        import main,video_repository
+        client=TestClient(main.app)
+        for role in ['user','player','admin']:
+            with patch.object(auth,'current_user',return_value={'user_id':1,'role':role,'csrf_token':'csrf'}),patch.object(main,'load_videos',return_value=[]),patch.object(video_repository,'connect'),patch.object(video_repository,'list_videos',return_value=[]):
+                self.assertEqual(client.get('/api/videos').status_code,200)
+                self.assertEqual(client.get('/api/youtube-videos').status_code,200)
+                response=client.get('/video.html')
+                self.assertIn('id="fullPlayer"',response.text)
+                self.assertEqual(response.headers['cache-control'],'no-store')

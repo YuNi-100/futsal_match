@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 페이지 | We Go High</title>
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/account.css">
+<script src="/auth.js"></script><script src="/account.js" defer></script>
+<script src="/navigation.js" defer></script>
+</head><body><div class="app-container"><aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+<a href="/index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+<a href="/matches.html" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+<a href="/players.html" class="menu-item active" aria-current="page"><span class="menu-icon">♙</span><span>선수 정보</span></a>
+<a href="/schedules.html" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+<a href="/index.html#team" class="menu-item"><span class="menu-icon">♧</span><span>팀 소개</span></a>
+<a href="/video.html" class="menu-item"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+</nav>
+<div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside><main class="main-content"><div class="account-page">
+<h2>내 페이지</h2><p id="accountStatus" role="status">정보를 불러오는 중입니다…</p>
+<section id="loginGuide" class="account-panel" hidden><h3>Google 계정으로 시작하기</h3><p>별도 아이디와 비밀번호 없이 Google 계정으로 가입·로그인합니다. 공개 경기·선수·일정은 누구나 조회할 수 있으며 경기 영상은 회원만 볼 수 있습니다. 관리자 권한은 별도 승인 후 부여됩니다.</p><a class="account-button" href="/auth/google/login">Google 계정으로 계속</a></section>
+<section id="consentPanel" class="account-panel" hidden><h3>최초 이용 동의</h3><p>Google 로그인 확인 후 첫 이용 시 동의가 필요합니다. 동의 전에는 공개 정보만 이용할 수 있습니다.</p>
+<details open><summary>이용약관</summary><p>WGH는 풋살 경기·선수·일정·영상 정보를 제공합니다. 계정은 Google 로그인으로 확인하며, 일반·선수 회원은 조회 기능을 이용합니다. 등록·수정·삭제는 승인된 관리자만 가능합니다. 타인의 계정이나 선수 정보를 도용하거나 서비스를 방해해서는 안 됩니다.</p></details>
+<label><input type="checkbox" id="termsConsent"> 이용약관에 동의합니다. (필수)</label>
+<details open><summary>개인정보 수집·이용 안내</summary><p>수집 항목: Google 계정 식별자, 이름, 이메일, 가입일, 동의 버전·일시, 로그인 세션, 선수 연결 정보 및 관리자 신청·처리 이력. 이용 목적: 회원 식별, 로그인 유지, 선수 연결과 관리자 권한 관리. 비밀번호는 수집하지 않습니다. 회원 정보는 서비스 이용 기간 동안 보관하며, 탈퇴·삭제 요청 시 운영자가 요청을 확인하고 처리합니다. 동의를 거부하면 공개 정보 조회만 가능합니다.</p></details>
+<label><input type="checkbox" id="privacyConsent"> 개인정보 수집·이용에 동의합니다. (필수)</label><button id="acceptConsent" type="button">동의하고 시작하기</button></section>
+<section id="profilePanel" class="account-panel" hidden><h3>내 정보</h3><dl id="profileFields"></dl><div id="linkedPlayer"></div><p id="consentInfo"></p><button id="accountLogout" type="button">로그아웃</button></section>
+<section id="applicationPanel" class="account-panel" hidden><h3>관리자 신청</h3><p id="applicationState"></p><form id="applicationForm"><label for="applicationReason">신청 사유</label><textarea id="applicationReason" required maxlength="1000"></textarea><button>관리자 권한 신청</button></form></section>
+<section id="managementPanel" class="account-panel" data-admin-only hidden><h3>관리자 신청·승인 관리</h3><p>처리 사유를 입력한 후 승인·반려할 수 있습니다. 마지막 관리자의 권한은 해제할 수 없습니다.</p><div id="requestList"></div><h3>현재 관리자</h3><div id="adminList"></div><h3>최근 처리 이력</h3><div id="historyList"></div></section>
+</div></main></div></body></html>

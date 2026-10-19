@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');const path=require('node:path');const assert=require('node:assert/strict');const root=path.resolve(__dirname,'..','public');
 (async()=>{const browser=await chromium.launch({headless:true,channel:'msedge'});try{
- for(const role of ['guest','user','admin']){
+ for(const role of ['guest','user','player','admin']){
   const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));let saved=null;
   const videos=[{video_id:1,title:'기존 영상',match_date:'2026-10-15',match_id:6,youtube_id:'abcdefghijk'}];
   const matches=[{match_id:6,match_date:'2026-10-15',opponent:'은평FC',our_score:3,opponent_score:2},{match_id:3,match_date:'2026-10-01',opponent:'다른 팀',our_score:1,opponent_score:0}];
@@ -13,12 +13,34 @@ const {chromium}=require('playwright');const path=require('node:path');const ass
     if(req.method()==='POST'){saved=req.postDataJSON();assert.equal(req.headers()['x-csrf-token'],'csrf');return route.fulfill({status:201,json:{success:true}});}
     return route.fulfill({json:{success:true,data:videos}});}
    return route.fulfill({path:path.join(root,u.pathname==='/'?'index.html':u.pathname.slice(1))});});
-  await page.goto('http://wgh.test/video.html');await page.waitForFunction(()=>document.querySelector('#linkVideoSelect').options.length===2&&document.querySelector('#videoMatchSelect').options.length===3);
+  await page.goto('http://wgh.test/video.html');
+  if(role==='guest'){
+   await page.waitForFunction(()=>document.querySelector('main')?.textContent.includes('로그인 후'));
+   assert.equal(await page.locator('iframe').count(),0);assert.equal(await page.locator('#videoLinkForm').count(),0);
+   assert.deepEqual(errors,[]);console.log('guest: video player removed and login prompt shown');await page.close();continue;
+  }
+  await page.waitForSelector('.video-list-item');
+  assert.equal(await page.locator('#videoLinkForm,#youtubeRegisterForm,#analysisList').count(),0);
+  assert.equal(await page.locator('a[href="/video-register.html"]').isVisible(),role==='admin');
+  if(role==='admin') {
+    await page.screenshot({path:'C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21ce9cc51/video-view-split.png',fullPage:true});
+    await page.locator('a[href="/video-register.html"]').click();
+  } else {
+    await page.goto('http://wgh.test/video-register.html');
+    await page.waitForFunction(()=>document.querySelector('main')?.textContent.includes('관리자만'));
+    assert.equal(await page.locator('#youtubeRegisterForm,#videoLinkForm,#analysisList').count(),0);
+    assert.deepEqual(errors,[]);console.log(role+': view-only page and registration blocked');await page.close();continue;
+  }
+  await page.waitForFunction(()=>document.querySelector('#linkVideoSelect').options.length===2&&document.querySelector('#videoMatchSelect').options.length===3);
   assert.equal(await page.locator('#videoLinkForm').isVisible(),role==='admin');assert.equal(await page.locator('#youtubeRegisterForm').isVisible(),role==='admin');
   if(role==='admin'){
+   assert.equal(new URL(page.url()).pathname,'/video-register.html');
+   assert.equal(await page.locator('#fullPlayer').count(),0);
+   assert.equal(await page.locator('#analysisList').isVisible(),true);
+   await page.screenshot({path:'C:/Users/EZ/.codex/.chatgpt-projects/g-p-6ac594379aec8191a402e9b21ce9cc51/video-register-split.png',fullPage:true});
    await page.selectOption('#linkVideoSelect','1');assert.equal(await page.locator('#linkMatchSelect').inputValue(),'6');
    await page.selectOption('#linkMatchSelect','3');await page.locator('#saveVideoMatch').click();await page.waitForFunction(()=>document.querySelector('#videoLinkStatus').textContent.includes('저장했습니다'));assert.deepEqual(saved,{match_id:3});
-   await page.waitForFunction(()=>!document.querySelector('#saveVideoMatch').disabled);await page.selectOption('#linkMatchSelect','');await page.locator('#saveVideoMatch').click();await page.waitForFunction(()=>document.querySelector('#videoLinkStatus').textContent.includes('해제했습니다'));assert.deepEqual(saved,{match_id:null});
+   await page.waitForFunction(()=>!document.querySelector('#saveVideoMatch').disabled);await page.locator('#unlinkVideoMatch').click();await page.waitForFunction(()=>document.querySelector('#videoLinkStatus').textContent.includes('해제했습니다'));assert.deepEqual(saved,{match_id:null});
    await page.fill('#videoTitle','새 영상');await page.fill('#youtubeUrl','https://youtu.be/12345678901');await page.fill('#videoMatchDate','2026-10-15');await page.selectOption('#videoMatchSelect','6');await page.locator('#videoRegisterBtn').click();await page.waitForFunction(()=>document.querySelector('#videoRegisterMessage').textContent.includes('성공적으로'));assert.equal(saved.match_id,6);
   }
   assert.deepEqual(errors,[]);console.log(role+': registration match selection, link/unlink and visibility OK');await page.close();

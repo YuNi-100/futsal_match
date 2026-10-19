@@ -6,7 +6,8 @@ import os
 import pymysql
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.responses import HTMLResponse
 from auth import router as auth_router, require_admin_for_request
 
 # .env 파일의 환경변수 불러오기
@@ -211,7 +212,11 @@ from typing import Literal
 from pydantic import field_validator
 
 
+from auth_store import set_player_member
+
+
 class PlayerCreate(BaseModel):
+    member_user_id: Optional[int] = Field(default=None, gt=0, strict=True)
     player_name: str = Field(min_length=1, max_length=50)
     back_number: int = Field(ge=0, strict=True)
     position: Literal['GK','FIXO','ALA','PIVO']
@@ -227,18 +232,26 @@ class PlayerCreate(BaseModel):
 
 
 @app.post('/api/players', status_code=201)
-def create_player(player: PlayerCreate):
+def create_player(player: PlayerCreate, request: Request = None):
     connection=None
     try:
         connection=get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute('INSERT INTO futsal_player (player_name,back_number,position,joined_at) VALUES (%s,%s,%s,%s)',(player.player_name,player.back_number,player.position,player.joined_at))
             player_id=cursor.lastrowid
+            if player.member_user_id is not None:
+                actor=getattr(request.state,"wgh_user",None) if request else None
+                set_player_member(cursor,player_id,player.member_user_id,actor["user_id"] if actor else None)
         connection.commit()
         return {'success':True,'data':{'player_id':player_id,**player.model_dump()}}
+    except HTTPException:
+        if connection:connection.rollback()
+        raise
     except pymysql.err.IntegrityError as error:
         if connection:connection.rollback()
         if error.args and error.args[0]==1062:
+            if 'uq_wgh_player_account_user' in str(error):
+                raise HTTPException(409,'이미 다른 선수에 연결된 회원입니다.') from None
             raise HTTPException(409,'이미 사용 중인 등번호입니다.') from None
         raise HTTPException(500,'선수 등록에 실패했습니다.') from None
     except Exception:
@@ -250,8 +263,55 @@ def create_player(player: PlayerCreate):
 
 
 
+
+@app.get('/api/admin/members')
+def get_member_choices():
+    connection=None
+    try:
+        connection=get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT u.user_id,u.name,u.email,pa.player_id FROM app_user u JOIN wgh_google_identity g ON g.user_id=u.user_id LEFT JOIN wgh_player_account pa ON pa.user_id=u.user_id ORDER BY u.name,u.user_id')
+            members=list(cursor.fetchall())
+        return {'success':True,'data':members}
+    except pymysql.MySQLError:
+        raise HTTPException(503,'회원 목록을 불러오지 못했습니다.') from None
+    finally:
+        if connection:connection.close()
+
+
+class PlayerMemberLink(BaseModel):
+    user_id: Optional[int] = Field(...,gt=0,strict=True)
+
+
+@app.patch('/api/admin/players/{player_id}/member')
+def update_player_member(player_id: int, body: PlayerMemberLink, request: Request):
+    if player_id<=0:raise HTTPException(422,'선수 번호를 확인해 주세요.')
+    connection=None
+    try:
+        connection=get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT player_id FROM futsal_player WHERE player_id=%s FOR UPDATE',(player_id,))
+            if cursor.fetchone() is None:raise HTTPException(404,'선수를 찾을 수 없습니다.')
+            actor=request.state.wgh_user
+            set_player_member(cursor,player_id,body.user_id,actor['user_id'])
+        connection.commit()
+        return {'success':True,'data':{'player_id':player_id,'user_id':body.user_id}}
+    except HTTPException:
+        if connection:connection.rollback()
+        raise
+    except pymysql.err.IntegrityError:
+        if connection:connection.rollback()
+        raise HTTPException(409,'회원 연결이 변경되었습니다. 다시 확인해 주세요.') from None
+    except pymysql.MySQLError:
+        if connection:connection.rollback()
+        raise HTTPException(503,'회원 연결을 저장하지 못했습니다.') from None
+    finally:
+        if connection:connection.close()
+
+
 # 경기 기록 등록 시 전달받을 데이터 형식
 class MatchCreate(BaseModel):
+    video_id: Optional[int] = Field(default=None, gt=0, strict=True)
     players: Optional[list[MatchPlayerRecord]] = Field(default=None, max_length=500)
     match_date: date                  # 경기 날짜 (필수)
     opponent: str                     # 상대팀 (필수)
@@ -329,6 +389,8 @@ def create_match(match: MatchCreate):
 
             new_match_id = cursor.lastrowid
             save_match_players(cursor, new_match_id, match.players)
+            from video_match_link import attach_video_to_new_match
+            attach_video_to_new_match(cursor, new_match_id, match.video_id)
 
         connection.commit()
 
@@ -1374,12 +1436,36 @@ app.include_router(create_player_detail_router(get_db_connection))
 from video_match_link import router as video_match_link_router
 app.include_router(video_match_link_router)
 
+from account_routes import router as account_router
+app.include_router(account_router)
 app.include_router(auth_router)
 
 class RevalidatingStaticFiles(StaticFiles):
     """Revalidate page assets so navigation changes do not leave old menus cached."""
     async def get_response(self, path, scope):
+        from auth import current_user, video_login_page
+        admin_video_page=Path(path).name.lower()=='video-register.html'
+        if admin_video_page:
+            try:
+                user=current_user(Request(scope))
+                if not user:
+                    return HTMLResponse(video_login_page(),status_code=401,headers={'Cache-Control':'no-store'})
+                if user.get('consent_required',False) or user.get('role')!='admin':
+                    return HTMLResponse('<!doctype html><html lang="ko"><meta charset="utf-8"><title>관리자 전용</title><h1>관리자만 접근할 수 있습니다.</h1><a href="/video.html">경기 영상으로 돌아가기</a></html>',status_code=403,headers={'Cache-Control':'no-store'})
+            except HTTPException:
+                return HTMLResponse(video_login_page(),status_code=503,headers={'Cache-Control':'no-store'})
+        video_page=Path(path).name.lower() in ('video.html','video_backup.html','feedback.html')
+        if video_page:
+            try:
+                user=current_user(Request(scope))
+                if not user or user.get('consent_required',False):
+                    return HTMLResponse(video_login_page(),headers={'Cache-Control':'no-store'})
+            except HTTPException:
+                return HTMLResponse(video_login_page(),status_code=503,headers={'Cache-Control':'no-store'})
         response = await super().get_response(path, scope)
+        if admin_video_page or video_page or Path(path).name.lower()=='account.html':
+            response.headers['Cache-Control']='no-store'
+            return response
         if path in ("", ".") or path.lower().endswith((".html", ".js", ".css")):
             response.headers["Cache-Control"] = "no-cache, max-age=0, must-revalidate"
         return response
@@ -1390,3 +1476,11 @@ app.mount(
     RevalidatingStaticFiles(directory="public", html=True),
     name="static"
 )
+
+
+@app.middleware('http')
+async def private_api_cache(request: Request, call_next):
+    response=await call_next(request)
+    if request.url.path.startswith('/api/'):
+        response.headers['Cache-Control']='no-store'
+    return response

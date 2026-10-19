@@ -584,7 +584,7 @@ const response = await fetch(url, {
     headers: {
         "Content-Type": "application/json"
     },
-    body: JSON.stringify({...matchData, players: collectMatchPlayers()})
+    body: JSON.stringify({...matchData, players: collectMatchPlayers(), ...(!editingMatchId ? {video_id: document.getElementById("matchVideoSelect").value ? Number(document.getElementById("matchVideoSelect").value) : null} : {})})
 });
             
 
@@ -1675,6 +1675,7 @@ function collectMatchPlayers() {
         }));
 }
 async function prepareMatchPlayers(matchId) {
+    document.querySelector('[data-match-video-picker]').hidden = matchId !== null;
     const version = ++matchPlayersLoadVersion;
     matchPlayersReady = false;
     const submit = matchForm.querySelector('[type="submit"]');
@@ -1706,6 +1707,8 @@ async function prepareMatchPlayers(matchId) {
                 row.querySelector('.match-player-assists').value = record.assists;
             }
         });
+        if (matchId === null) await window.WGHLoadMatchVideoOptions(document.getElementById("matchVideoSelect"), () => version === matchPlayersLoadVersion);
+        if (version !== matchPlayersLoadVersion) return;
         matchPlayersReady = true;
         if (submit) submit.disabled = false;
     } catch (error) {

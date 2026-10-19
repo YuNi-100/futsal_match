@@ -14,7 +14,7 @@ const root=path.resolve(__dirname,'..','public');
   await page.route('**/*',async route=>{
    const u=new URL(route.request().url());
    if(u.hostname!=='wgh.test')return route.fulfill({body:''});
-   if(u.pathname==='/auth/me')return route.fulfill({json:{user:null,csrf_token:null}});
+   if(u.pathname==='/auth/me')return route.fulfill({json:{user:{user_id:1,name:'회원',role:'user'},csrf_token:'csrf'}});
    if(u.pathname==='/api/players/7')return route.fulfill({json:{success:true,data:{...player,matches:empty?[]:matches}}});
    if(u.pathname==='/api/players/999')return route.fulfill({status:404,json:{detail:'선수 정보를 찾을 수 없습니다.'}});
    if(u.pathname==='/api/players')return route.fulfill({json:{success:true,data:[player]}});

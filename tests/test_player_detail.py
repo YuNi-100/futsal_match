@@ -114,3 +114,72 @@ class PlayerRegistrationDatabaseTests(unittest.TestCase):
             with real.cursor() as cur:
                 cur.execute('SELECT * FROM futsal_player ORDER BY player_id');self.assertEqual(list(cur.fetchall()),before)
         finally:real.rollback();real.close()
+
+
+
+class MembershipAccessTests(unittest.TestCase):
+    def test_member_admin_endpoints_and_csrf(self):
+        import main,auth
+        from fastapi.testclient import TestClient
+        client=TestClient(main.app)
+        for user,code in [(None,401),({'user_id':2,'role':'user','csrf_token':'csrf'},403),({'user_id':2,'role':'player','csrf_token':'csrf'},403)]:
+            with patch.object(auth,'current_user',return_value=user),patch.object(main,'get_db_connection') as connect:
+                self.assertEqual(client.get('/api/admin/members').status_code,code)
+                self.assertEqual(client.patch('/api/admin/players/1/member',json={'user_id':2},headers={'X-CSRF-Token':'csrf'}).status_code,code)
+                connect.assert_not_called()
+        with patch.object(auth,'current_user',return_value={'user_id':1,'role':'admin','csrf_token':'csrf'}),patch.object(main,'get_db_connection') as connect:
+            self.assertEqual(client.patch('/api/admin/players/1/member',json={'user_id':None}).status_code,403)
+            connect.assert_not_called()
+
+
+@unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
+class MembershipDatabaseTests(unittest.TestCase):
+    def test_link_create_duplicate_move_role_and_rollback(self):
+        import main,auth_store,uuid
+        from types import SimpleNamespace
+        from fastapi import HTTPException
+        from video_repository import connect
+        real=connect()
+        class RollbackOnly:
+            def cursor(self):return real.cursor()
+            def commit(self):pass
+            def close(self):pass
+            def rollback(self):real.rollback()
+        proxy=RollbackOnly()
+        tables=['app_user','futsal_player','wgh_player_account','wgh_user_role','wgh_login_session']
+        def counts():
+            with real.cursor() as cur:
+                result={}
+                for table in tables:
+                    cur.execute('SELECT COUNT(*) AS count FROM '+table);result[table]=cur.fetchone()['count']
+                return result
+        try:
+            with real.cursor() as cur:
+                cur.execute('SELECT DATABASE() AS db_name');self.assertEqual(cur.fetchone()['db_name'],'futsaldb_test')
+                cur.execute('SELECT COALESCE(MAX(back_number),0)+1 AS number FROM futsal_player');number=cur.fetchone()['number']
+            before=counts()
+            with real.cursor() as cur:
+                key=uuid.uuid4().hex
+                cur.execute('INSERT INTO app_user (name,email) VALUES (%s,%s)',('temporary membership test',key+'@example.test'));user_id=cur.lastrowid
+                cur.execute('INSERT INTO wgh_google_identity (google_sub,user_id) VALUES (%s,%s)',('test-'+key,user_id))
+            request=SimpleNamespace(state=SimpleNamespace(wgh_user={'user_id':1}))
+            with patch.object(main,'get_db_connection',return_value=proxy),patch.object(auth_store,'connect',return_value=proxy):
+                first=main.create_player(main.PlayerCreate(player_name='temporary linked player',back_number=number,position='ALA',member_user_id=user_id),request)['data']['player_id']
+                second=main.create_player(main.PlayerCreate(player_name='temporary other player',back_number=number+1,position='GK'),request)['data']['player_id']
+                token=auth_store.create_session(user_id,3600)
+                self.assertEqual(auth_store.get_session(token)['role'],'player')
+                self.assertEqual(auth_store.get_session(token)['player_id'],first)
+                with real.cursor() as cur:
+                    with self.assertRaises(HTTPException) as error:auth_store.set_player_member(cur,second,user_id,1)
+                    self.assertEqual(error.exception.status_code,409)
+                    cur.execute('SELECT COUNT(*) AS count FROM wgh_user_role WHERE user_id=%s',(user_id,));self.assertEqual(cur.fetchone()['count'],0)
+                main.update_player_member(first,main.PlayerMemberLink(user_id=None),request)
+                self.assertEqual(auth_store.get_session(token)['role'],'user')
+                main.update_player_member(second,main.PlayerMemberLink(user_id=user_id),request)
+                self.assertEqual(auth_store.get_session(token)['player_id'],second)
+                with real.cursor() as cur:cur.execute("INSERT INTO wgh_user_role (user_id,role) VALUES (%s,'admin')",(user_id,))
+                self.assertEqual(auth_store.get_session(token)['role'],'admin')
+                # Unknown Google member rolls back player and link together.
+                with self.assertRaises(HTTPException):main.create_player(main.PlayerCreate(player_name='invalid member',back_number=number+2,position='ALA',member_user_id=1000000000),request)
+            real.rollback();self.assertEqual(counts(),before)
+        finally:real.rollback();real.close()

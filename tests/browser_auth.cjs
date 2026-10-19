@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..', 'public');
   const browser = await chromium.launch({headless:true,channel:'msedge'});
   try {
     await testRegistrations(browser);
+    await verifyMembershipUI(browser);
     for (const role of ['guest','user','admin']) {
       const context = await browser.newContext({viewport:{width:1366,height:900}});
       const page = await context.newPage();
@@ -62,7 +63,7 @@ const root = path.resolve(__dirname, '..', 'public');
             assert.deepEqual(savedPlayers,[{player_id:1,goals:3,assists:1}]);
           }
         }
-        if (route === '/video.html') assert.equal(await page.locator('#youtubeRegisterForm').isVisible(), role === 'admin');
+        if (route === '/video.html') assert.equal(await page.locator('#youtubeRegisterForm').count(), 0);
         if (route === '/' && role === 'guest') {
           await page.screenshot({path:path.resolve(__dirname,'..','..','wgh-login-preview.png'),fullPage:true});
           await page.setViewportSize({width:390,height:844});
@@ -147,4 +148,48 @@ async function testRegistrations(browser) {
     }
     assert.deepEqual(errors,[]);console.log(role+': administrator add buttons/forms, inline refresh, player duplicate feedback, player stats, match records, numeric schedule time OK');await context.close();
   }
+}
+
+
+async function verifyMembershipUI(browser) {
+ const root=require('node:path').resolve(__dirname,'..','public');
+ for(const role of ['guest','user','player','admin']) {
+  const context=await browser.newContext();const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  let adminReads=0,saved=null;
+  const members=[{user_id:2,name:'가입 회원',email:'member@example.test',player_id:null},{user_id:3,name:'이미 연결된 회원',email:'other@example.test',player_id:99}];
+  const player={player_id:7,player_name:'기존 선수',back_number:7,position:'ALA',appearances:1,goals:1,assists:0};
+  const players=[player];
+  await page.route('**/*',async route=>{
+   const request=route.request(),url=new URL(request.url());
+   if(url.hostname!=='wgh.test')return route.fulfill({body:''});
+   if(url.pathname==='/auth/me')return route.fulfill({json:{user:role==='guest'?null:{user_id:1,name:'테스트',role,player_id:role==='player'?7:null},csrf_token:'csrf'}});
+   if(url.pathname==='/api/admin/members'){adminReads++;assert.equal(role,'admin');return route.fulfill({json:{success:true,data:members}});}
+   if(url.pathname==='/api/admin/players/7/member'){
+    assert.equal(role,'admin');assert.equal(request.headers()['x-csrf-token'],'csrf');saved=request.postDataJSON();members[0].player_id=saved.user_id==null?null:7;return route.fulfill({json:{success:true}});
+   }
+   if(url.pathname==='/api/players/7')return route.fulfill({json:{success:true,data:{...player,joined_at:null,matches:[]}}});
+   if(url.pathname==='/api/players'){
+    if(request.method()==='POST'){saved=request.postDataJSON();assert.equal(saved.member_user_id,2);assert.equal(request.headers()['x-csrf-token'],'csrf');players.push({...saved,player_id:20,appearances:0,goals:0,assists:0});return route.fulfill({status:201,json:{success:true,data:players.at(-1)}});}
+    return route.fulfill({json:{success:true,data:players}});
+   }
+   if(url.pathname.startsWith('/api/'))return route.fulfill({json:{success:true,data:[]}});
+   return route.fulfill({path:require('node:path').join(root,url.pathname==='/'?'index.html':url.pathname.slice(1))});
+  });
+  await page.goto('http://wgh.test/player.html?player_id=7');await page.waitForSelector('#playerDetail:not([hidden])');await page.waitForFunction(()=>document.querySelector('[data-auth-panel]')?.textContent.length>0);
+  assert.equal(await page.locator('#playerMemberForm').isVisible(),role==='admin');
+  if(role==='player')assert.match(await page.locator('[data-auth-panel]').textContent(),/선수 회원/);
+  if(role==='admin'){
+   await page.waitForFunction(()=>!document.querySelector('#savePlayerMember').disabled);
+   assert.equal(await page.locator('#playerMemberSelect option').count(),2);
+   await page.selectOption('#playerMemberSelect','2');await page.locator('#savePlayerMember').click();await page.waitForFunction(()=>document.querySelector('#playerMemberStatus').textContent.includes('저장했습니다'));assert.deepEqual(saved,{user_id:2});
+   await page.waitForFunction(()=>!document.querySelector('#savePlayerMember').disabled);
+   await page.selectOption('#playerMemberSelect','');await page.locator('#savePlayerMember').click();await page.waitForFunction(()=>document.querySelector('#playerMemberStatus').textContent.includes('해제했습니다'));assert.deepEqual(saved,{user_id:null});
+   await page.goto('http://wgh.test/players.html');await page.waitForSelector('html.wgh-admin');await page.locator('[data-wgh-create=player]').click();
+   await page.waitForFunction(()=>!document.querySelector('#registerMember').disabled);
+   assert.equal(await page.locator('#registerMember option').count(),2);
+   await page.fill('#registerPlayerName','연결 신규 선수');await page.fill('#registerNumber','30');await page.selectOption('#registerPosition','ALA');await page.selectOption('#registerMember','2');
+   await page.locator('dialog [type=submit]').click();await page.waitForFunction(()=>!document.querySelector('dialog[open]'));assert.equal(saved.member_user_id,2);
+  }else{assert.equal(adminReads,0);assert.equal((await page.content()).includes('member@example.test'),false);}
+  assert.deepEqual(errors,[]);console.log(role+': private member choices, registration linking, existing link/unlink and player role display OK');await context.close();
+ }
 }

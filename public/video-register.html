@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We Go High | 영상 등록·관리</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/video.css">
+<link rel="stylesheet" href="/auth.css">
+<script src="/auth.js"></script>
+<script src="/navigation.js" defer></script>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="team-logo">
+      <div class="logo-circle"><img src="images/wgh-logo.png" alt="We Go High 로고" class="wgh-logo"></div>
+      <h1>We Go High</h1>
+      <p>WOMEN'S FUTSAL CLUB</p>
+    </div>
+    <nav class="side-menu">
+<a href="/index.html" class="menu-item"><span class="menu-icon">⌂</span><span>홈</span></a>
+<a href="/matches.html" class="menu-item"><span class="menu-icon">▣</span><span>경기 기록</span></a>
+<a href="/players.html" class="menu-item"><span class="menu-icon">♙</span><span>선수 정보</span></a>
+<a href="/schedules.html" class="menu-item"><span class="menu-icon">▦</span><span>다음 경기</span></a>
+<a href="/index.html#team" class="menu-item"><span class="menu-icon">♧</span><span>팀 소개</span></a>
+<a href="/video.html" class="menu-item active" aria-current="page"><span class="menu-icon">▶</span><span>경기 영상</span></a>
+</nav>
+<div class="wgh-auth-panel" data-auth-panel aria-live="polite"></div>
+    <div class="sidebar-message"><span>We</span><span>Go</span><span>High ♡</span><small>WOMEN'S<br>FUTSAL CLUB</small></div>
+  </aside>
+  <main class="main-content">
+    <div class="video-page">
+      <header class="video-page-header">
+        <span class="video-page-label">WGH VIDEO MANAGEMENT</span>
+        <h2>영상 등록·관리</h2>
+        <p>경기 영상 등록, 경기 연결과 AI 분석 결과를 관리합니다.</p>
+        <a href="/video.html" class="video-primary-button video-management-link">← 경기 영상 보기</a>
+      </header>
+      <div data-admin-only>
+
+      <section class="video-panel" aria-labelledby="uploadTitle" data-admin-only>
+        <h3 id="uploadTitle">📤 경기 영상 등록 및 AI 분석</h3>
+       
+<div class="video-upload-area">
+
+  <p class="video-muted">
+    유튜브에 업로드한 경기 영상을 WGH 홈페이지에 등록하세요.
+  </p>
+
+  <!-- 유튜브 경기 영상 등록 폼 -->
+  <form id="youtubeRegisterForm">
+
+    <!-- 영상 제목 -->
+    <div class="video-form-group">
+      <label for="videoTitle">영상 제목 *</label>
+      <input
+        type="text"
+        id="videoTitle"
+        placeholder="예: WGH vs 은평FC 친선경기"
+        maxlength="200"
+        required
+      >
+    </div>
+
+    <!-- 유튜브 링크 -->
+    <div class="video-form-group">
+      <label for="youtubeUrl">유튜브 영상 링크 *</label>
+      <input
+        type="url"
+        id="youtubeUrl"
+        placeholder="https://youtu.be/..."
+        required
+      >
+    </div>
+
+    <div class="video-form-group">
+      <label for="videoMatchSelect">연결할 경기 (선택)</label>
+      <select id="videoMatchSelect"><option value="">경기 목록을 불러오는 중…</option></select>
+    </div>
+    <!-- 경기 날짜 -->
+    <div class="video-form-group">
+      <label for="videoMatchDate">경기 날짜 *</label>
+      <input
+        type="date"
+        id="videoMatchDate"
+        required
+      >
+    </div>
+
+    <!-- 등록 버튼 -->
+    <button
+      type="submit"
+      id="videoRegisterBtn"
+      class="video-primary-button"
+    >
+      ＋ 영상 등록
+    </button>
+
+    <!-- 등록 결과 안내 -->
+    <p id="videoRegisterMessage" role="status" aria-live="polite"></p>
+
+  </form>
+
+  <p class="video-note">
+    영상 원본은 유튜브에 보관하고,
+    WGH에서는 영상 정보만 MySQL에 저장합니다.
+  </p>
+
+</div>
+
+      </section>
+
+      <section class="video-panel" aria-labelledby="videoLinkTitle" data-admin-only>
+        <h3 id="videoLinkTitle">나중에 경기 영상 연결·해제</h3>
+        <p class="video-muted">영상이나 경기 등록 때 연결하지 못했거나, 기존 연결을 변경·해제할 때 사용하세요.</p>
+        <form id="videoLinkForm">
+          <div class="video-form-group"><label for="linkVideoSelect">기존 등록 영상</label><select id="linkVideoSelect" required><option value="">영상을 선택하세요</option></select></div>
+          <div class="video-form-group"><label for="linkMatchSelect">연결할 경기</label><select id="linkMatchSelect"><option value="">연결 안 함 (연결 해제)</option></select></div>
+          <button id="saveVideoMatch" class="video-primary-button" type="submit" disabled>경기 연결 저장</button>
+          <button id="unlinkVideoMatch" class="video-primary-button" type="button" disabled>연결 해제</button>
+          <button id="deleteRegisteredVideo" class="video-primary-button video-delete-button" type="button" disabled>홈페이지 영상 삭제</button>
+          <p class="video-note">영상 삭제는 홈페이지 등록 정보와 해당 영상의 분석 자료만 삭제합니다. 경기 결과·선수 기록·YouTube 원본은 유지됩니다.</p>
+          <p id="videoLinkStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="video-panel" aria-labelledby="analysisTitle">
+        <h3 id="analysisTitle">📊 경기별 AI 분석 결과 목록</h3>
+        <div id="analysisList" class="video-list"><p class="video-empty">아직 완료된 경기 분석이 없습니다.<br>분석이 완료되면 날짜별 경기와 피드백이 이곳에 표시됩니다.</p></div>
+      </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="/video-register.js"></script>
+</body></html>

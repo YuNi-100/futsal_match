@@ -35,6 +35,8 @@ def session_cookie():
 
 
 def current_user(request):
+    if not request.cookies.get('wgh_session') and not request.cookies.get('__Host-wgh_session'):
+        return None
     token = request.cookies.get(session_cookie())
     if not token:
         return None
@@ -45,8 +47,17 @@ def current_user(request):
 
 
 def require_admin_for_request(request: Request):
+    path=request.url.path.rstrip('/')
+    video_read = request.method in ('GET','HEAD') and (path=='/api/youtube-videos' or path.startswith('/api/youtube-videos/') or path=='/api/videos' or path.startswith('/api/videos/'))
+    if video_read:
+        user=current_user(request)
+        if not user:raise HTTPException(401,'경기 영상은 로그인 후 볼 수 있습니다.')
+        if user.get('consent_required',False): raise HTTPException(403,'내 페이지에서 최초 이용 동의를 완료해 주세요.')
+        request.state.wgh_user=user
+        return
     protected = request.url.path.startswith('/api') and (
         request.method not in ('GET', 'HEAD', 'OPTIONS')
+        or request.url.path.startswith('/api/admin/')
         or request.url.path in ('/api/ai/test', '/api/db-test')
     )
     if not protected:
@@ -54,8 +65,10 @@ def require_admin_for_request(request: Request):
     user = current_user(request)
     if not user:
         raise HTTPException(401, 'Google 로그인이 필요합니다.')
+    if user.get('consent_required',False): raise HTTPException(403,'내 페이지에서 최초 이용 동의를 완료해 주세요.')
     if user['role'] != 'admin':
         raise HTTPException(403, '승인된 관리자만 사용할 수 있습니다.')
+    request.state.wgh_user=user
     check_csrf(request, user)
 
 
@@ -144,7 +157,7 @@ def callback(request: Request):
 def me(request: Request):
     user = current_user(request)
     return JSONResponse({'user': None if not user else {
-        'user_id': user['user_id'], 'name': user['name'], 'role': user['role']
+        'user_id': user['user_id'], 'name': user['name'], 'role': user['role'], 'player_id': user.get('player_id'), 'consent_required': bool(user.get('consent_required',False))
     }, 'csrf_token': user['csrf_token'] if user else None}, headers={'Cache-Control': 'no-store'})
 
 
@@ -157,3 +170,13 @@ def logout(request: Request):
     response = JSONResponse({'success': True}, headers={'Cache-Control': 'no-store'})
     response.delete_cookie(session_cookie(), path='/', secure=settings()[3], httponly=True, samesite='lax')
     return response
+
+
+def video_login_page():
+    return """<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>로그인 안내 | WGH</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css">
+    <link rel="stylesheet" href="/match-detail.css"><script src="/auth.js"></script></head><body>
+    <main class="match-detail-page"><section class="detail-panel"><h2>경기 영상은 로그인 후 볼 수 있어요</h2>
+    <p class="detail-muted">일반 회원과 선수 회원 모두 시청할 수 있습니다. Google 계정으로 로그인해 주세요.</p>
+    <div class="wgh-auth-panel" data-auth-panel></div><a class="detail-back" href="/index.html">홈으로 돌아가기</a>
+    </section></main></body></html>"""

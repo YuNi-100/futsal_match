@@ -10,3 +10,6 @@
 #playerMatchesTable { min-width:570px; }
 .player-record-link { color:#3478f6; text-decoration:underline; text-underline-offset:3px; }
 .player-record-link:focus-visible { outline:2px solid #3478f6; outline-offset:3px; }
+
+#playerMemberSelect { width:100%; padding:12px; border:1px solid #d7dfea; border-radius:8px; font:inherit; }
+#playerMemberStatus { margin-top:12px; }

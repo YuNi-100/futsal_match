@@ -1,0 +1,85 @@
+
+    .video-page { max-width: 1100px; margin: 0 auto; padding: 50px 30px; }
+    .video-page-label { color: #3478f6; font-size: 12px; font-weight: 800; letter-spacing: 2px; }
+    .video-page-header { margin-bottom: 26px; }
+    .video-page-header h2 { margin: 10px 0; font-size: 30px; }
+    .video-page-header p, .video-muted { color: #7b8491; font-size: 14px; line-height: 1.7; }
+    .video-panel { background: #fff; border-radius: 20px; padding: 26px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(31,46,70,.06); }
+    .video-panel h3 { font-size: 20px; margin-bottom: 17px; }
+    .video-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e7ebf0; padding-bottom: 12px; }
+    .video-tab { padding: 12px 18px; border-radius: 10px; background: #f0f3f8; color: #5c6675; font-weight: 800; font-size: 14px; }
+    .video-tab.active { background: #3478f6; color: #fff; }
+    .video-player { width: 100%; aspect-ratio: 16 / 9; background: #121923; border-radius: 14px; display: block; }
+    .video-player-placeholder { display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 9; border-radius: 14px; background: #121923; color: #dce7ff; text-align: center; padding: 20px; }
+    .video-list-heading { margin: 22px 0 12px; font-size: 17px; }
+    .video-list { display: flex; flex-direction: column; gap: 9px; }
+    .video-list-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; background: #f7f9fc; padding: 15px; border: 1px solid #e6ebf2; border-radius: 11px; color: #202b3b; font-size: 14px; }
+    .video-list-item:hover, .video-list-item.selected { border-color: #3478f6; background: #edf4ff; }
+    .video-empty { background: #f7f9fc; padding: 24px; text-align: center; color: #8993a0; border-radius: 12px; font-size: 14px; }
+    .video-upload-area { padding: 30px; text-align: center; border: 2px dashed #c9d9f8; border-radius: 14px; background: #f8faff; }
+    .video-primary-button { display: inline-block; margin-top: 14px; padding: 12px 20px; border-radius: 10px; background: #3478f6; color: white; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .video-primary-button:disabled { opacity: .45; cursor: not-allowed; }
+    .video-file-name { margin-top: 12px; color: #3478f6; overflow-wrap: anywhere; font-size: 13px; }
+    .video-actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .video-note { margin-top: 14px; font-size: 12px; color: #7b8491; line-height: 1.7; }
+    .video-analysis-card { padding: 16px; border-radius: 12px; background: #f7f9fc; }
+    .video-analysis-card h4 { margin-bottom: 8px; }
+    .video-analysis-card p { font-size: 13px; line-height: 1.7; color: #6d7888; }
+    [hidden] { display: none !important; }
+    @media (max-width: 550px) { .video-page { padding: 30px 15px; } .video-panel { padding: 18px; } .video-page-header h2 { font-size: 25px; } .video-tab { padding: 10px; font-size: 12px; flex: 1; } }
+  
+  
+/* =========================================
+   WGH 유튜브 영상 등록 폼
+   ========================================= */
+
+#youtubeRegisterForm {
+    max-width: 500px;
+    margin: 20px auto 0;
+    text-align: left;
+}
+
+.video-form-group {
+    margin-bottom: 16px;
+}
+
+.video-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #202b3b;
+}
+
+.video-form-group input, .video-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #d7dfea;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 14px;
+    color: #202b3b;
+}
+
+.video-form-group input:focus, .video-form-group select:focus {
+    outline: none;
+    border-color: #3478f6;
+}
+
+#videoRegisterBtn {
+    width: 100%;
+}
+
+#videoRegisterMessage {
+    margin-top: 12px;
+    font-size: 13px;
+    text-align: center;
+}
+
+  
+  
+.video-management-link { margin:0 0 20px; }
+
+.video-primary-button.video-delete-button { background:#bd3545; }
+.video-primary-button.video-delete-button:disabled { background:#bd3545; }

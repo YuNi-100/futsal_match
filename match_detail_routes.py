@@ -1,12 +1,13 @@
 """Public, read-only match details using existing WGH tables."""
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Request
+import auth
 
 
 def create_match_detail_router(get_db_connection):
     router = APIRouter()
 
     @router.get('/api/matches/{match_id}')
-    def get_match_detail(match_id: int = Path(gt=0)):
+    def get_match_detail(request: Request, match_id: int = Path(gt=0)):
         connection = None
         try:
             connection = get_db_connection()
@@ -25,10 +26,15 @@ def create_match_detail_router(get_db_connection):
                     JOIN futsal_player p ON p.player_id=mp.player_id
                     WHERE mp.match_id=%s ORDER BY p.back_number,p.player_id''', (match_id,))
                 match['players'] = list(cursor.fetchall())
-                # Only explicit match_id links. Never guess based on date or title.
-                cursor.execute('''SELECT video_id,title,youtube_id FROM futsal_video
-                    WHERE match_id=%s AND user_id=%s ORDER BY created_at,video_id''', (match_id,1))
-                match['videos'] = list(cursor.fetchall())
+                member=auth.current_user(request)
+                member=member if member and not member.get('consent_required',False) else None
+                match['video_login_required']=member is None
+                match['videos']=[]
+                if member:
+                    # Only explicit match_id links. Never guess based on date or title.
+                    cursor.execute('''SELECT video_id,title,youtube_id FROM futsal_video
+                        WHERE match_id=%s AND user_id=%s ORDER BY created_at,video_id''', (match_id,1))
+                    match['videos'] = list(cursor.fetchall())
             return {'success': True, 'data': match}
         except HTTPException:
             raise

@@ -50,23 +50,28 @@
       if (!scorers.length) el('detailScorers').textContent = '등록된 득점 선수 기록이 없습니다.';
       scorers.forEach((player,index) => {
         if (index) el('detailScorers').append(' · ');
-        const name = document.createElement(match.videos.length ? 'a' : 'span');
+        const name = document.createElement(match.videos.length || match.video_login_required ? 'a' : 'span');
         name.textContent = player.player_name;
-        if (match.videos.length) {
+        if (match.videos.length || match.video_login_required) {
           name.className = 'player-record-link';
           name.href = '/video.html?match_id=' + encodeURIComponent(id);
           name.setAttribute('aria-label', player.player_name + ' 득점 경기 영상 보기');
         }
         el('detailScorers').append(name, ` ${player.goals}골`);
       });
-      if (scorers.length && !match.videos.length) {
+      if (scorers.length && !match.videos.length && !match.video_login_required) {
         const note = document.createElement('span');
         note.className = 'detail-muted';
         note.textContent = ' (경기 영상 미등록)';
         el('detailScorers').append(note);
       }
       const videoButton = el('matchVideoLink');
-      if (match.videos.length) {
+      if (match.video_login_required) {
+        videoButton.href='/video.html?match_id='+encodeURIComponent(id);
+        videoButton.textContent='로그인하고 경기 영상 보기 →';
+        videoButton.hidden=false;
+        el('videoStatus').textContent='경기 영상은 회원 로그인 후 볼 수 있습니다.';
+      } else if (match.videos.length) {
         videoButton.href = '/video.html?match_id=' + encodeURIComponent(id);
         videoButton.hidden = false;
         el('videoStatus').textContent = `연결된 경기 영상 ${match.videos.length}개`;

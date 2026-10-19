@@ -40,10 +40,15 @@ const root='C:/workspace/futsal_match/public';
    assert.match(await page.locator('#detailScorers').textContent(),/테스트 선수 2골/);
    assert.equal(await page.locator('#detailPlayers tr').count(),1);
    await page.locator('#matchVideoLink').click();
-   await page.waitForSelector('.video-list-item');
    assert.equal(new URL(page.url()).searchParams.get('match_id'),'6');
-   assert.equal(await page.locator('.video-list-item').count(),1);
-   assert.match(await page.locator('#fullPlayer').getAttribute('src'),/abcdefghijk/);
+   if(role==='guest') {
+     await page.waitForFunction(()=>document.querySelector('main')?.textContent.includes('로그인 후'));
+     assert.equal(await page.locator('iframe').count(),0);
+   }else{
+     await page.waitForSelector('.video-list-item');
+     assert.equal(await page.locator('.video-list-item').count(),1);
+     assert.match(await page.locator('#fullPlayer').getAttribute('src'),/abcdefghijk/);
+   }
    videos=[];
    await page.goto('http://wgh.test/match.html?match_id=6');
    await page.waitForSelector('#matchDetail:not([hidden])');
