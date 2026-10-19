@@ -26,3 +26,15 @@
 
 .player-record-link { color:#3478f6; text-decoration:underline; text-underline-offset:3px; }
 .player-record-link:focus-visible { outline:2px solid #3478f6; outline-offset:3px; }
+
+/* Upcoming schedule page only. Existing home and input styles stay unchanged. */
+.schedule-page-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.schedule-page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.schedule-page-date { color:#3478f6; font-weight:700; }
+.schedule-page-badge { border-radius:20px; background:#edf4ff; color:#3478f6; padding:6px 10px; font-size:12px; white-space:nowrap; }
+.schedule-page-meta { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.schedule-page-meta dt { font-size:13px; color:#7b8491; margin-bottom:7px; }
+.schedule-page-meta dd { overflow-wrap:anywhere; font-weight:600; }
+.schedule-page-memo { border-top:1px solid #e7edf3; margin-top:18px; padding-top:16px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+.schedule-page-card h3 { overflow-wrap:anywhere; }
+@media(max-width:600px) { .schedule-page-meta { grid-template-columns:1fr; } }

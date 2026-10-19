@@ -37,7 +37,7 @@ const root=path.resolve(__dirname,'..','public');
   await page.setViewportSize({width:390,height:844});
   assert.equal(await page.locator('#allMatchList .match-card').count(),7);
   await page.goto('http://wgh.test/');
-  await page.locator('.side-menu a[href="matches.html"]').click();
+  await page.locator('.side-menu a[href="/matches.html"]').click();
   await page.waitForSelector('#allMatchList .match-card');
   empty=true;
   await page.reload();

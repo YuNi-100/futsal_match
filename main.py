@@ -1334,8 +1334,17 @@ app.include_router(video_match_link_router)
 
 app.include_router(auth_router)
 
+class RevalidatingStaticFiles(StaticFiles):
+    """Revalidate page assets so navigation changes do not leave old menus cached."""
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        if path in ("", ".") or path.lower().endswith((".html", ".js", ".css")):
+            response.headers["Cache-Control"] = "no-cache, max-age=0, must-revalidate"
+        return response
+
+
 app.mount(
     "/",
-    StaticFiles(directory="public", html=True),
+    RevalidatingStaticFiles(directory="public", html=True),
     name="static"
 )

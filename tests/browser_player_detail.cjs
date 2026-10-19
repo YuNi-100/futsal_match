@@ -30,7 +30,7 @@ const root=path.resolve(__dirname,'..','public');
   assert.equal(new URL(page.url()).searchParams.get('player_id'),'7');
   assert.equal(await page.locator('#playerName').textContent(),'정선수');
   assert.equal(await page.locator('#goals').textContent(),'3');
-  assert.match(await page.locator('.side-menu .active').textContent(),/선수 기록/);
+  assert.match(await page.locator('.side-menu .active').textContent(),/선수 정보/);
   assert.equal(await page.locator('#playerMatches tr').count(),2);
   assert.equal(await page.locator('#playerMatches a[href^="/video.html"]').count(),1);
   assert.equal(await page.locator('#playerBack').getAttribute('href'),'/match.html?match_id=6');
