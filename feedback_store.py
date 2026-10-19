@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from fastapi import HTTPException
 import video_repository as repository
+from database import is_postgres, assert_postgres_writes
 
 
 @contextmanager
@@ -13,7 +14,9 @@ def analysis_connection():
     try:
         with connection.cursor() as cursor:
             cursor.execute('SELECT DATABASE() AS db_name')
-            if cursor.fetchone()['db_name'] != 'futsaldb_test':
+            db_name=cursor.fetchone()['db_name']
+            if is_postgres(connection):assert_postgres_writes(connection,'analysis')
+            elif db_name != 'futsaldb_test':
                 raise HTTPException(503, '현재 분석 저장은 테스트 DB에서만 사용할 수 있습니다.')
             cursor.execute('SELECT GET_LOCK(%s, 0) AS acquired', ('wgh_test_video_feedback',))
             locked = cursor.fetchone()['acquired'] == 1
@@ -102,7 +105,9 @@ def get_saved(connection, analysis_id):
 def update_review(connection, analysis_id, payload, actor_id):
     with connection.cursor() as cursor:
         cursor.execute('SELECT DATABASE() AS db_name')
-        if cursor.fetchone()['db_name'] != 'futsaldb_test':
+        db_name=cursor.fetchone()['db_name']
+        if is_postgres(connection):assert_postgres_writes(connection,'analysis')
+        elif db_name != 'futsaldb_test':
             raise HTTPException(503, '현재 검수 저장은 테스트 DB에서만 사용할 수 있습니다.')
         cursor.execute('''SELECT a.analysis_id,a.feedback FROM video_analysis a
                           JOIN futsal_video v ON v.video_id=a.video_id

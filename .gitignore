@@ -10,3 +10,8 @@ uploads/
 legacy_node/
 # YouTube automatic registration processing history
 .wgh-sync/
+
+# Private deployment credentials and migration data
+.env.supabase
+.env.production
+postgres-export*/

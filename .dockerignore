@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+!.env.supabase.example
+.venv
+.venv-1
+.git
+__pycache__
+.wgh-sync
+uploads
+legacy_node
+node_modules
+postgres-export*

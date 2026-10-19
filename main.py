@@ -31,18 +31,8 @@ app = FastAPI(
 # =====================================================
 
 def get_db_connection():
-
-    connection = pymysql.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        port=int(os.getenv("DB_PORT", "3306")),
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
-    return connection
+    from database import connect
+    return connect()
 
 
 # =====================================================
@@ -982,7 +972,10 @@ from fastapi import UploadFile, File
 from fastapi.responses import FileResponse
 
 # 영상 저장 폴더 생성
-VIDEO_DIR = Path("uploads/videos")
+APP_ROOT = Path(__file__).resolve().parent
+# Vercel filesystem is read-only outside /tmp. Current UI stores YouTube links in PostgreSQL.
+VIDEO_DIR = Path("/tmp/wgh/uploads/videos") if os.getenv("VERCEL")=="1" else APP_ROOT / "uploads/videos"
+STATIC_DIR = APP_ROOT / ("wgh_web" if os.getenv("VERCEL")=="1" else "public")
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
 # 업로드 영상 정보 저장 파일
@@ -1482,7 +1475,7 @@ class RevalidatingStaticFiles(StaticFiles):
 
 app.mount(
     "/",
-    RevalidatingStaticFiles(directory="public", html=True),
+    RevalidatingStaticFiles(directory=str(STATIC_DIR), html=True),
     name="static"
 )
 

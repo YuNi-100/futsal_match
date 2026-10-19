@@ -1,0 +1,9 @@
+[tool.vercel]
+entrypoint = "main:app"
+
+[tool.vercel.scripts]
+build = "python build_vercel.py"
+
+[tool.vercel.fastapi.static]
+cdn = false
+exclude = false

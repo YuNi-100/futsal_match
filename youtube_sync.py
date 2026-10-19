@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 
 from dotenv import load_dotenv
 import pymysql
+from database import engine, is_postgres, assert_postgres_writes
 import video_repository as repository
 
 CHANNEL_ID = 'UCmz846rJsnMWyimoMhgyEow'
@@ -197,7 +198,7 @@ def exclusive_run(path):
 
 def import_rows(rows, state_path=STATE_PATH):
     # The original database cannot be written by this development-stage worker.
-    if os.getenv('DB_NAME') != TEST_DATABASE:
+    if engine()=='mysql' and os.getenv('DB_NAME') != TEST_DATABASE:
         raise ValueError('현재 단계에서는 DB_NAME=futsaldb_test일 때만 등록할 수 있습니다.')
     seen = load_seen(state_path)
     eligible = [row for row in rows if not row['skip_reason'] and row['youtube_id'] not in seen]
@@ -208,7 +209,9 @@ def import_rows(rows, state_path=STATE_PATH):
     try:
         with connection.cursor() as cursor:
             cursor.execute('SELECT DATABASE() AS db_name')
-            if cursor.fetchone()['db_name'] != TEST_DATABASE:
+            db_name=cursor.fetchone()['db_name']
+            if is_postgres(connection):assert_postgres_writes(connection,'sync')
+            elif db_name != TEST_DATABASE:
                 raise ValueError('실제 연결 DB가 futsaldb_test가 아닙니다.')
         for row in eligible:
             video_id = row['youtube_id']
@@ -256,7 +259,7 @@ def main(argv=None):
             rows = fetch_feed()
             print(json.dumps(dict(mode='preview', channel_id=CHANNEL_ID, videos=rows), ensure_ascii=False, indent=2))
             return 0
-        if os.getenv('DB_NAME') != TEST_DATABASE:
+        if engine()=='mysql' and os.getenv('DB_NAME') != TEST_DATABASE:
             raise ValueError('현재 단계에서는 DB_NAME=futsaldb_test일 때만 등록할 수 있습니다.')
         with exclusive_run(STATE_PATH.with_suffix('.lock')):
             while True:

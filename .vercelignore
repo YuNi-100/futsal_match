@@ -1,0 +1,17 @@
+.env
+.env.*
+.venv/
+.venv-1/
+.vscode/
+.git/
+__pycache__/
+.wgh-sync/
+uploads/
+legacy_node/
+node_modules/
+tests/
+migrations/
+postgres-export*/
+main_backup.py
+public/*_backup*
+public/style_backup*.css
