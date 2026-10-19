@@ -1473,6 +1473,15 @@ class RevalidatingStaticFiles(StaticFiles):
         return response
 
 
+@app.api_route('/_wgh_pages/{page_name}',methods=['GET','HEAD'],include_in_schema=False)
+async def protected_web_page(page_name: str,request: Request):
+    if page_name not in ('video.html','video-register.html','feedback-review.html','feedback.html','video_backup.html'):
+        raise HTTPException(404,'페이지를 찾을 수 없습니다.')
+    # The build keeps the real templates outside Vercel's public CDN directory.
+    files=RevalidatingStaticFiles(directory=str(STATIC_DIR),html=True)
+    return await files.get_response(page_name,request.scope)
+
+
 app.mount(
     "/",
     RevalidatingStaticFiles(directory=str(STATIC_DIR), html=True),

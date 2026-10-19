@@ -18,7 +18,7 @@
    - 기존 Git 연동을 끊거나 기존 프로젝트를 삭제하지 않음.
 5. 배포 후 /api/matches, /auth/me, 로그인·권한·CRUD·영상/게시분석 조회, 정적 보호 경로 확인.
    - Preview는 검증 전 WGH_ALLOW_ANALYSIS_WRITES=false, WGH_ALLOW_SYNC_WRITES=false 권장.
-   - 실제 빌드에서는 public을 wgh_web으로 이름 변경하여 FastAPI를 통해 정적 화면 제공. 로컬 public은 유지.
+   - 실제 빌드에서는 public을 wgh_web으로 복사하여 원본 경로를 유지. 공개 자산은 기존 public에서도 수집 가능. 보호 HTML의 CDN 사본은 비밀정보 없는 이동 안내만 제공하고 실제 내용은 /_wgh_pages 경로에서 FastAPI 권한 검사 후 제공. 로컬 public은 유지.
    - 서버리스 읽기 전용 파일시스템에 대응하여 legacy 업로드 경로는 /tmp 사용. /tmp는 영속 저장소가 아니며 현재 영상 UI는 YouTube 링크/PostgreSQL을 사용.
    - AI 분석 API는 유료이며 자동 실행하지 않음. 현재 maxDuration=300으로 준비했으며 실제 Vercel 플랜/Fluid Compute 설정과 시간제한을 확인해야 함.
 6. 수·토 18시 자동등록은 현재 로컬 Codex 작업. Vercel 배포만으로 서버 예약이 자동 이전되지 않음.
@@ -27,3 +27,5 @@
 변경 파일: main.py, build_vercel.py, pyproject.toml, vercel.json, .python-version, .vercelignore.
 검증: 118 unit tests 중 112 통과/6 선택 DB 테스트 제외. 별도 사본에서 VERCEL=1 빌드 및 홈/정적파일/비회원 관리자 페이지 401/영상 API 401 확인.
 공식 안내: https://vercel.com/docs/frameworks/backend/fastapi
+
+빌드 오류 수정: Vercel은 Build Command 실행 전에 public 자산을 수집하므로 public 경로를 이동하면 ENOENT 발생. 이제 경로를 보존하며 권한 보호는 별도 서버 경로에서 수행. 사본 빌드에서 사전 수집한 전체 파일 존재, 오류 로고 내용 일치, guest 401/member 403/admin 200 확인.
