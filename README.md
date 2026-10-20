@@ -163,16 +163,30 @@
 
 현재 Supabase PostgreSQL의 `wgh` 스키마를 사용합니다. 아래는 핵심 관계를 추린 ERD이며 전체 17개 테이블과 제약조건은 [운영 스키마 SQL](migrations/postgresql/001_wgh_schema.sql)을 기준으로 합니다.
 
+관계 설명과 연결선을 구분하기 쉽도록 두 도표를 가로 방향으로 배치했습니다. 두 도표에 반복되는 이름은 같은 테이블입니다.
+
+### 경기·선수 기록 관계
+
 ```mermaid
 erDiagram
-    app_user ||--o{ futsal_match : creates
-    app_user ||--o{ futsal_video : registers
-    futsal_player ||--o{ match_player : participates
-    futsal_match ||--o{ match_player : records
-    futsal_match o|--o{ futsal_video : links
-    futsal_video ||--o{ video_analysis : analyses
-    video_analysis ||--o{ video_event : scenes
+    direction LR
+    app_user ||--o{ futsal_match : 등록
+    futsal_match ||--o{ match_player : 기록
+    futsal_player ||--o{ match_player : 참가
 ```
+
+### 영상·AI 분석 관계
+
+```mermaid
+erDiagram
+    direction LR
+    app_user ||--o{ futsal_video : 등록
+    futsal_match o|--o{ futsal_video : 연결
+    futsal_video ||--o{ video_analysis : 분석
+    video_analysis ||--o{ video_event : 장면
+```
+
+### 주요 테이블
 
 | 테이블 | 주요 키·필드 | 역할 |
 | --- | --- | --- |
