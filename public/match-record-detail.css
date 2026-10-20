@@ -97,3 +97,8 @@
   #matchDetail .detail-table th,#matchDetail .detail-table td { padding:12px 3px; }
   #matchDetail .detail-table th { font-size:12px; }
 }
+
+/* Scorers supplement the full player records above. */
+#matchDetail .match-scorers-summary { padding:16px 0; }
+#matchDetail .match-scorers-summary h3 { font-size:14px; margin-bottom:6px; color:#66758a; }
+#matchDetail .match-scorers-summary .detail-text { font-size:13px; }
