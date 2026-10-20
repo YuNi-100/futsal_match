@@ -117,9 +117,9 @@ PostgreSQL 선택 시 연결 실패해도 MySQL로 자동 우회하지 않음. �
 
 ## 주요 변경 파일
 
-- database.py: 두 엔진 연결, 기존 정적 SQL의 한정된 PostgreSQL 변환, RETURNING, 충돌 오류 호환.
-- main.py / video_repository.py: 중앙 DB 연결 사용.
-- feedback_store.py / youtube_sync.py: PostgreSQL 검수/분석/동기화 쓰기 확인.
+- src/db/database.py: 두 엔진 연결, 기존 정적 SQL의 한정된 PostgreSQL 변환, RETURNING, 충돌 오류 호환.
+- main.py / src/db/video_repository.py: 중앙 DB 연결 사용.
+- src/db/feedback_store.py / youtube_sync.py: PostgreSQL 검수/분석/동기화 쓰기 확인.
 - postgres_migrate.py: 읽기 전용 MySQL export / 새 PostgreSQL 스키마 import / 전체 행 verify.
 - migrations/postgresql/001_wgh_schema.sql: 17개 테이블, 제약조건, 인덱스, RLS, 역할 수정 시각 트리거.
 - requirements.txt / requirements-postgres-dev.txt: psycopg 드라이버, 선택적 SQL 파서.

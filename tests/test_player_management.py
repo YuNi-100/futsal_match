@@ -4,8 +4,8 @@ from unittest.mock import MagicMock,patch
 from fastapi import FastAPI,Depends
 from fastapi.testclient import TestClient
 import pymysql
-import auth
-from player_management import create_player_management_router
+from src.auth import auth
+from src.api.player_management import create_player_management_router
 class Tests(unittest.TestCase):
  def setUp(self):
   self.db=MagicMock();self.cur=self.db.cursor.return_value.__enter__.return_value

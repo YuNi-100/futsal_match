@@ -2,10 +2,10 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, StrictBool
-import auth
+from src.auth import auth
 import pymysql
 from fastapi.routing import APIRoute
-import auth_store as store
+from src.auth import auth_store as store
 
 class SafeAccountRoute(APIRoute):
     def get_route_handler(self):

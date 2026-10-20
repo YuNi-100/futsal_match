@@ -4,8 +4,8 @@ import uuid
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.testclient import TestClient
-import auth
-import video_match_link as links
+from src.auth import auth
+from src.api import video_match_link as links
 
 
 class VideoLinkTests(unittest.TestCase):
@@ -51,8 +51,8 @@ class VideoLinkTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
 class VideoLinkDatabaseTests(unittest.TestCase):
     def test_create_link_change_unlink_and_preserve_existing_rows(self):
-        from video_repository import connect
-        import youtube_videos
+        from src.db.video_repository import connect
+        from src.api import youtube_videos
         real=connect()
         class RollbackOnly:
             def cursor(self):return real.cursor()

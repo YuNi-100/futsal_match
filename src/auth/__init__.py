@@ -1,0 +1,1 @@
+"""WGH auth package."""

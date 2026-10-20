@@ -4,7 +4,7 @@ from typing import Literal
 import pymysql
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from auth import require_admin_for_request
+from src.auth.auth import require_admin_for_request
 
 class PlayerUpdate(BaseModel):
     model_config=ConfigDict(extra='forbid')

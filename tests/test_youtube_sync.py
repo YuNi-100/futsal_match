@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 import pymysql
-import youtube_sync as sync
+from src.cli import youtube_sync as sync
 
 
 def row(video_id='abcdefghijk', title='은평 2026-10-19 친선 경기'):

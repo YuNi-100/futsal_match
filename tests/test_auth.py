@@ -5,8 +5,8 @@ from urllib.parse import urlsplit, parse_qs
 
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-import auth
-import auth_store
+from src.auth import auth
+from src.auth import auth_store
 
 ENV = {'GOOGLE_CLIENT_ID': 'test-client', 'GOOGLE_CLIENT_SECRET': 'test-secret',
        'GOOGLE_REDIRECT_URI': 'http://localhost:8000/auth/google/callback'}
@@ -142,7 +142,7 @@ class StoreTests(unittest.TestCase):
 class ExistingRouteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import main
+        from src import app as main
         cls.main = main
 
     def test_all_existing_mutation_and_diagnostic_routes_denied_before_side_effects(self):
@@ -182,7 +182,7 @@ if __name__ == '__main__':
 
 class MemberVideoAccessTests(unittest.TestCase):
     def test_guest_video_pages_and_apis_blocked(self):
-        import main
+        from src import app as main
         client=TestClient(main.app)
         with patch.object(auth,'current_user',return_value=None):
             for path in ['/video.html','/video_backup.html','/feedback.html']:
@@ -195,7 +195,7 @@ class MemberVideoAccessTests(unittest.TestCase):
             self.assertEqual(client.get('/api').status_code,200)
 
     def test_general_player_and_admin_members_can_read_video(self):
-        import main,video_repository
+        from src import app as main; from src.db import video_repository
         client=TestClient(main.app)
         for role in ['user','player','admin']:
             with patch.object(auth,'current_user',return_value={'user_id':1,'role':role,'csrf_token':'csrf'}),patch.object(main,'load_videos',return_value=[]),patch.object(video_repository,'connect'),patch.object(video_repository,'list_videos',return_value=[]):

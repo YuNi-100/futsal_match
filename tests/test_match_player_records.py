@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from pydantic import ValidationError
 from fastapi import HTTPException
-from match_player_records import MatchPlayerRecord, save_match_players
+from src.services.match_player_records import MatchPlayerRecord, save_match_players
 
 
 class ValidationTests(unittest.TestCase):
@@ -26,8 +26,8 @@ class ValidationTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
 class TestDatabaseFlow(unittest.TestCase):
     def test_registration_edit_reload_aggregate_preservation_and_rollback(self):
-        import main
-        from video_repository import connect
+        from src import app as main
+        from src.db.video_repository import connect
         real=connect()
         class RollbackOnlyConnection:
             def cursor(self): return real.cursor()

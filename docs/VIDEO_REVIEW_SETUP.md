@@ -18,7 +18,7 @@
 
 ## 변경 파일
 
-- `feedback_store.py`, `youtube_feedback.py`: 검수 저장·게시와 공개 가능한 게시본만 반환하는 API.
+- `src/db/feedback_store.py`, `src/api/youtube_feedback.py`: 검수 저장·게시와 공개 가능한 게시본만 반환하는 API.
 - `main.py`: 관리자 검수 페이지 보호 및 기존 분석 화면 주소 이동.
 - `public/video-register.html`, `video-register.js`, `video-analysis-form.js`: 등록·분석 분리와 목록의 검수 페이지 연결.
 - `public/feedback-review.html`, `feedback-review.js`, `feedback-review.css`: 간결한 검수 화면.

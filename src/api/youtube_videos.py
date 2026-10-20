@@ -8,7 +8,7 @@ import pymysql
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-import video_repository as repository
+from src.db import video_repository as repository
 
 router = APIRouter(prefix='/api/youtube-videos', tags=['YouTube 경기 영상'])
 CURRENT_USER_ID = 1  # 기존 main.py와 동일한 임시 사용자. 공개 배포 전 인증으로 교체 필요.

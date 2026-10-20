@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock,patch
 from fastapi import HTTPException
 from pydantic import ValidationError
-from video_match_link import attach_video_to_new_match
+from src.api.video_match_link import attach_video_to_new_match
 
 
 class MatchVideoCreationTests(unittest.TestCase):
@@ -25,7 +25,7 @@ class MatchVideoCreationTests(unittest.TestCase):
             self.assertFalse(any(call.args[0].startswith('UPDATE') for call in cursor.execute.call_args_list))
 
     def test_match_creation_rolls_back_on_video_conflict(self):
-        import main
+        from src import app as main
         db=MagicMock();cursor=db.cursor.return_value.__enter__.return_value
         cursor.lastrowid=99;cursor.fetchone.return_value={'video_id':7,'match_id':6}
         body=main.MatchCreate(match_date='2026-10-19',opponent='temporary',our_score=1,opponent_score=0,video_id=7)
@@ -33,7 +33,7 @@ class MatchVideoCreationTests(unittest.TestCase):
         db.rollback.assert_called_once();db.commit.assert_not_called()
 
     def test_success_commits_match_and_link_once(self):
-        import main
+        from src import app as main
         db=MagicMock();cursor=db.cursor.return_value.__enter__.return_value
         cursor.lastrowid=99;cursor.fetchone.return_value={'video_id':7,'match_id':None}
         body=main.MatchCreate(match_date='2026-10-19',opponent='temporary',our_score=1,opponent_score=0,video_id=7)
@@ -42,6 +42,6 @@ class MatchVideoCreationTests(unittest.TestCase):
         db.commit.assert_called_once();db.rollback.assert_not_called()
 
     def test_invalid_video_identifiers_are_rejected(self):
-        import main
+        from src import app as main
         for value in [0,-1,1.5,True]:
             with self.assertRaises(ValidationError):main.MatchCreate(match_date='2026-10-19',opponent='temporary',our_score=1,opponent_score=0,video_id=value)

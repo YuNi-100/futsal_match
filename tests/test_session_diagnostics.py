@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import auth
+from src.auth import auth
 
 
 class SessionDiagnosticsTests(unittest.TestCase):

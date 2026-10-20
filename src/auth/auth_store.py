@@ -3,7 +3,7 @@ import hashlib
 import secrets
 from contextlib import contextmanager
 from fastapi import HTTPException
-from video_repository import connect
+from src.db.video_repository import connect
 
 
 def digest(value):

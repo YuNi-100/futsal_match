@@ -3,8 +3,8 @@ from contextlib import contextmanager
 import json
 from datetime import datetime, timezone
 from fastapi import HTTPException
-import video_repository as repository
-from database import is_postgres, assert_postgres_writes
+from src.db import video_repository as repository
+from src.db.database import is_postgres, assert_postgres_writes
 
 
 @contextmanager

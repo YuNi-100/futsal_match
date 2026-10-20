@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-import auth
+from src.auth import auth
 
 
 class VideoPageSplitTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import main
+        from src import app as main
         cls.client=TestClient(main.app)
 
     def test_anonymous_registration_page_has_no_management_html(self):

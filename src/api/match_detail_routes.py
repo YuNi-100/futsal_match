@@ -1,6 +1,6 @@
 """Public, read-only match details using existing WGH tables."""
 from fastapi import APIRouter, HTTPException, Path, Request
-import auth
+from src.auth import auth
 
 
 def create_match_detail_router(get_db_connection):

@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field, field_validator
 import pymysql
-import video_repository as repository
+from src.db import video_repository as repository
 
 router=APIRouter(prefix='/api/youtube-videos',tags=['경기 영상 연결'])
 

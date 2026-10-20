@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.id_token import verify_oauth2_token
-import auth_store as store
+from src.auth import auth_store as store
 
 router = APIRouter(prefix='/auth', tags=['로그인'])
 

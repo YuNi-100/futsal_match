@@ -80,13 +80,13 @@
 
 ### 홈과 팀 브랜딩
 
-![초기 홈 화면: WGH 로고·손글씨·메인 사진·통계](docs/images/planning/home-original.png)
+![초기 홈 화면: WGH 로고·손글씨·메인 사진·통계](images/planning/home-original.png)
 
 기존 팀 이미지·색감을 유지하고 상단 메뉴로 개편했습니다. 홈 배치는 메인 이미지 → 통계 → 최근 경기 → 다음 경기·공지 → 선수 카드입니다.
 
 ### 최근 경기 · 다음 경기
 
-![초기 최근 경기 카드와 다음 경기·공지](docs/images/planning/matches-schedule-original.png)
+![초기 최근 경기 카드와 다음 경기·공지](images/planning/matches-schedule-original.png)
 
 홈의 흰 경기 카드 디자인은 유지합니다. 별도 경기 목록은 10개 단위이며, 다음 경기 전용 화면은 가장 가까운 일정만 큰 카드로 표시합니다.
 
@@ -94,21 +94,21 @@
 
 | 경기 기록 등록 — 초기 화면 | 일정 등록 — 초기 화면 |
 | --- | --- |
-| ![경기 결과 입력 팝업](docs/images/planning/match-form-original.png) | ![일정과 24시간 입력 팝업](docs/images/planning/schedule-form-original.png) |
+| ![경기 결과 입력 팝업](images/planning/match-form-original.png) | ![일정과 24시간 입력 팝업](images/planning/schedule-form-original.png) |
 
 경기 기록은 날짜·상대팀·점수·메모·참가 선수 기록·영상 연결을 관리합니다. 시작·종료 시간은 일정 등록에서 입력하며 두 입력 흐름을 구분합니다.
 
 ### 선수 정보
 
-![초기 선수 카드: 원형 등번호와 누적 기록](docs/images/planning/players-original.png)
+![초기 선수 카드: 원형 등번호와 누적 기록](images/planning/players-original.png)
 
 현재는 원형 등번호 대신 파랑·검정 줄무늬 유니폼에 등번호·이름을 표시하며 선수 상세와 경기·영상 기록으로 연결합니다.
 
 ### DB 설계의 변화
 
-![초기 DB 설계 자료 — 현재 운영 스키마가 아님](docs/images/planning/erd-original.png)
+![초기 DB 설계 자료 — 현재 운영 스키마가 아님](images/planning/erd-original.png)
 
-이 이미지는 선수·경기를 독립 관리하던 **초기 설계 자료**입니다. 현재 관계는 아래와 같으며 실제 스키마는 [PostgreSQL SQL](migrations/postgresql/001_wgh_schema.sql)을 기준으로 합니다.
+이 이미지는 선수·경기를 독립 관리하던 **초기 설계 자료**입니다. 현재 관계는 아래와 같으며 실제 스키마는 [PostgreSQL SQL](../migrations/postgresql/001_wgh_schema.sql)을 기준으로 합니다.
 
 ```mermaid
 erDiagram

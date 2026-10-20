@@ -4,7 +4,7 @@ import pymysql
 from pymysql.cursors import DictCursor
 
 
-from database import connect
+from src.db.database import connect
 
 
 def find_match(connection, match_id, user_id):

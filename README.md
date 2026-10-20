@@ -255,7 +255,9 @@ DB 접속 정보와 AI 키는 서버에서만 사용합니다. Supabase Data API
 | 배포 | Vercel·uv·build_vercel.py | 의존성 고정·FastAPI 배포 |
 | 검증 | unittest·Playwright 브라우저 스크립트 | 서버·화면 검증 |
 
-파일 역할은 [PROJECT_FILES.md](PROJECT_FILES.md), 정리 후보는 [FILE_CLEANUP_REVIEW.md](FILE_CLEANUP_REVIEW.md)를 참고합니다.
+Python 구현은 `src/`의 기능별 패키지에, 설명 문서는 `docs/`에 정리했습니다. 루트의 `main.py`와 CLI 연결 파일은 기존 실행 명령·Vercel·Docker 설정을 유지합니다.
+
+파일 역할은 [PROJECT_FILES.md](docs/PROJECT_FILES.md), 정리 후보는 [FILE_CLEANUP_REVIEW.md](docs/FILE_CLEANUP_REVIEW.md)를 참고합니다.
 
 <a id="section-07"></a>
 
@@ -300,8 +302,8 @@ AI 분석에는 서버의 `GEMINI_API_KEY`와 사용할 `GEMINI_FEEDBACK_MODEL` 
 
 완성한 MySQL 테스트 DB를 기준으로 Supabase PostgreSQL 이전과 데이터 대조를 수행했습니다. 이전 스냅샷은 17개 테이블·영속 데이터 70개 행이며, 로그인 세션은 재사용하지 않았습니다. 이 숫자는 현재 운영 데이터 개수를 뜻하지 않습니다. MySQL 원본과 백업은 보존합니다.
 
-- [Supabase 이전 절차](SUPABASE_MIGRATION.md): 내보내기·스키마·검증. 기존 운영 DB에 초기 이전을 반복 실행하지 않습니다.
-- [Vercel 배포](VERCEL_DEPLOYMENT.md): FastAPI, 저장소 루트, `python build_vercel.py` 사용.
+- [Supabase 이전 절차](docs/SUPABASE_MIGRATION.md): 내보내기·스키마·검증. 기존 운영 DB에 초기 이전을 반복 실행하지 않습니다.
+- [Vercel 배포](docs/VERCEL_DEPLOYMENT.md): FastAPI, 저장소 루트, `python build_vercel.py` 사용.
 - 운영 Google 콜백: `https://futsal-match-theta.vercel.app/auth/google/callback`
 - Vercel Production에 DB 설정과 Google 인증 정보를 별도 등록합니다. 운영 AI 실행에는 해당 AI 키·모델 설정도 필요합니다.
 - 환경변수 변경은 새 배포에 반영합니다. 로컬 `.env` 변경만으로 Vercel 설정이 바뀌지 않습니다.
@@ -365,7 +367,7 @@ psql --host=TARGET_HOST --port=5432 --username=TARGET_USER --dbname=TARGET_DB --
 .\.venv\Scripts\python.exe postgres_migrate.py verify --directory C:\wgh-private-backups\mysql-final-export
 ```
 
-도구는 체크섬·행 수·전체 행 비교 후 커밋하고, 일회성 세션·OAuth 상태는 제외합니다. 현재 운영은 이전 완료 상태이며 위 명령을 이번 문서 수정에서 실행하지 않았습니다. 상세는 [SUPABASE_MIGRATION.md](SUPABASE_MIGRATION.md)를 참고합니다.
+도구는 체크섬·행 수·전체 행 비교 후 커밋하고, 일회성 세션·OAuth 상태는 제외합니다. 현재 운영은 이전 완료 상태이며 위 명령을 이번 문서 수정에서 실행하지 않았습니다. 상세는 [SUPABASE_MIGRATION.md](docs/SUPABASE_MIGRATION.md)를 참고합니다.
 
 <a id="section-09"></a>
 
@@ -465,6 +467,6 @@ PC·태블릿·모바일 **크기별 브라우저 검증**을 진행했으며 �
 
 클라우드 예약 검색·삭제 이력 영속화, 실제 하이라이트 제작, 배포본 실기기 전체 점검은 남은 작업입니다. Notion 원본 온라인 수정은 편집 접근 권한 확보가 필요합니다.
 
-[로그인·권한](AUTH_SETUP.md) · [관리자 관리](ADMIN_RECORD_MANAGEMENT.md) · [디자인](DESIGN_REFRESH.md) · [AI 검수](VIDEO_REVIEW_SETUP.md) · [YouTube 검색](YOUTUBE_SYNC.md) · [Supabase 이전](SUPABASE_MIGRATION.md) · [Vercel 배포](VERCEL_DEPLOYMENT.md)
+[로그인·권한](docs/AUTH_SETUP.md) · [관리자 관리](docs/ADMIN_RECORD_MANAGEMENT.md) · [디자인](docs/DESIGN_REFRESH.md) · [AI 검수](docs/VIDEO_REVIEW_SETUP.md) · [YouTube 검색](docs/YOUTUBE_SYNC.md) · [Supabase 이전](docs/SUPABASE_MIGRATION.md) · [Vercel 배포](docs/VERCEL_DEPLOYMENT.md)
 
 위 단계별 문서에 과거 MySQL 상태·배포 전 설명이 남아 있다면 현재 구성·완료 상태는 이 README와 실제 환경을 기준으로 확인합니다.

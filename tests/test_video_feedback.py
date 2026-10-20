@@ -3,9 +3,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-import auth
-import feedback_store as store
-import youtube_feedback as feedback
+from src.auth import auth
+from src.db import feedback_store as store
+from src.api import youtube_feedback as feedback
 
 
 class FeedbackTests(unittest.TestCase):

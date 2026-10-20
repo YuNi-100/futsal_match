@@ -10,8 +10,8 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Path, Request
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-import video_repository as repository
-import feedback_store
+from src.db import video_repository as repository
+from src.db import feedback_store
 
 router = APIRouter(prefix="/api/youtube-videos", tags=["Gemini 영상 피드백"])
 history_router = APIRouter(prefix='/api/admin/video-analyses', tags=['관리자 영상 분석 결과'])

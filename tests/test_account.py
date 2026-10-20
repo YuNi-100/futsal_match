@@ -3,8 +3,8 @@ import unittest
 from unittest.mock import patch,MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import account_routes as account
-import auth
+from src.api import account_routes as account
+from src.auth import auth
 
 USER={'user_id':9,'name':'회원','role':'user','csrf_token':'csrf','consent_required':False}
 ADMIN={**USER,'user_id':1,'role':'admin'}

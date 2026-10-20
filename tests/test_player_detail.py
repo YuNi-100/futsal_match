@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from player_detail_routes import create_player_detail_router
+from src.api.player_detail_routes import create_player_detail_router
 
 
 class PlayerDetailTests(unittest.TestCase):
@@ -47,7 +47,7 @@ class PlayerDetailTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
 class PlayerDetailDatabaseTests(unittest.TestCase):
     def test_actual_totals_and_matches(self):
-        from video_repository import connect
+        from src.db.video_repository import connect
         db=connect()
         try:
             with db.cursor() as cur:
@@ -71,7 +71,7 @@ class PlayerDetailDatabaseTests(unittest.TestCase):
 
 class PlayerRegistrationTests(unittest.TestCase):
     def test_invalid_fields_and_duplicate_number(self):
-        import main
+        from src import app as main
         import pymysql
         from pydantic import ValidationError
         from fastapi import HTTPException
@@ -88,8 +88,8 @@ class PlayerRegistrationTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
 class PlayerRegistrationDatabaseTests(unittest.TestCase):
     def test_register_list_duplicate_and_rollback(self):
-        import main
-        from video_repository import connect
+        from src import app as main
+        from src.db.video_repository import connect
         from fastapi import HTTPException
         real=connect()
         class RollbackOnly:
@@ -119,7 +119,7 @@ class PlayerRegistrationDatabaseTests(unittest.TestCase):
 
 class MembershipAccessTests(unittest.TestCase):
     def test_member_admin_endpoints_and_csrf(self):
-        import main,auth
+        from src import app as main; from src.auth import auth
         from fastapi.testclient import TestClient
         client=TestClient(main.app)
         for user,code in [(None,401),({'user_id':2,'role':'user','csrf_token':'csrf'},403),({'user_id':2,'role':'player','csrf_token':'csrf'},403)]:
@@ -135,10 +135,10 @@ class MembershipAccessTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WGH_TEST_PLAYER_DB')=='1','Explicit test DB opt-in required')
 class MembershipDatabaseTests(unittest.TestCase):
     def test_link_create_duplicate_move_role_and_rollback(self):
-        import main,auth_store,uuid
+        from src import app as main; from src.auth import auth_store; import uuid
         from types import SimpleNamespace
         from fastapi import HTTPException
-        from video_repository import connect
+        from src.db.video_repository import connect
         real=connect()
         class RollbackOnly:
             def cursor(self):return real.cursor()

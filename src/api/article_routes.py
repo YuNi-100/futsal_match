@@ -2,7 +2,7 @@
 from typing import Literal
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, ConfigDict
-from article_generation import ArticleError, build_facts, generate_article
+from src.services.article_generation import ArticleError, build_facts, generate_article
 
 class ArticleRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")

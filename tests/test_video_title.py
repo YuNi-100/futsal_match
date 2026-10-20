@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 import pymysql
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-import auth
-import video_match_link as videos
+from src.auth import auth
+from src.api import video_match_link as videos
 
 
 class VideoTitleTests(unittest.TestCase):

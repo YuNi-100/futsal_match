@@ -4,9 +4,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-import auth
-import feedback_store as store
-import youtube_feedback as feedback
+from src.auth import auth
+from src.db import feedback_store as store
+from src.api import youtube_feedback as feedback
 
 
 def original():
@@ -95,7 +95,7 @@ class ReviewRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code,503);self.assertNotIn('private database detail',response.text);self.db.rollback.assert_called_once()
 
     def test_review_page_and_management_order(self):
-        import main
+        from src import app as main
         client=TestClient(main.app)
         response=client.get('/video-register.html');self.assertEqual(response.status_code,200)
         titles=['id="uploadTitle"','id="analysisRunTitle"','id="analysisTitle"','id="videoLinkTitle"']

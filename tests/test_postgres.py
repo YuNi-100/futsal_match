@@ -4,8 +4,8 @@ from pathlib import Path
 import re
 import unittest
 from unittest.mock import MagicMock, patch
-import database
-import postgres_migrate as migrate
+from src.db import database
+from src.cli import postgres_migrate as migrate
 
 
 class PostgresSQLTests(unittest.TestCase):
@@ -54,8 +54,8 @@ class PostgresSQLTests(unittest.TestCase):
     def test_existing_static_sql_parses_as_postgres(self):
         try:from pglast import parse_sql
         except ImportError:self.skipTest('Optional pglast parser not installed')
-        root=Path(database.__file__).parent;checked=0
-        for path in root.glob('*.py'):
+        root=Path(__file__).resolve().parents[1] / 'src';checked=0
+        for path in root.rglob('*.py'):
             if path.name in ('main_backup.py','database.py','postgres_migrate.py'):continue
             for node in ast.walk(ast.parse(path.read_text(encoding='utf-8-sig'))):
                 if not isinstance(node,ast.Call) or not isinstance(node.func,ast.Attribute) or node.func.attr not in ('execute','executemany') or not node.args:continue
