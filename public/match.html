@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>경기 상세 | We Go High</title>
-<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/match-detail.css">
+<link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/match-detail.css"><link rel="stylesheet" href="/match-record-detail.css">
 <script src="/auth.js"></script><script src="/match-detail.js" defer></script>
 <script src="/navigation.js" defer></script>
 </head><body><div class="app-container"><aside class="sidebar">
@@ -27,16 +27,16 @@
 <a class="detail-back" href="/matches.html">← 전체 경기 기록으로</a>
 <p class="detail-label">WGH MATCH RECORD</p><h2 id="matchTitle" class="detail-heading">경기 상세</h2>
 <p id="detailStatus" class="detail-panel" role="status">경기 기록을 불러오는 중입니다…</p>
-<div id="matchDetail" hidden>
-<section class="detail-panel" aria-label="경기 결과">
-<div class="detail-scoreboard"><strong>WGH</strong><span id="detailScore"></span><strong id="detailOpponent"></strong></div>
-<span id="detailResult"></span>
-<dl class="detail-meta"><div><dt>경기 날짜</dt><dd id="detailDate"></dd></div><div><dt>경기 시간</dt><dd id="detailTime"></dd></div><div><dt>장소</dt><dd id="detailLocation"></dd></div></dl>
+<div id="matchDetail" class="match-record" hidden>
+<section class="detail-panel match-summary" aria-label="경기 결과">
+<div class="match-score-surface"><div class="match-pitch" aria-hidden="true"><span></span><span></span></div>
+<div class="detail-scoreboard"><strong>WGH</strong><span id="detailScore"></span><strong id="detailOpponent"></strong></div></div>
+<dl class="detail-meta"><div><dt>경기 날짜</dt><dd id="detailDate"></dd></div><div><dt>장소</dt><dd id="detailLocation"></dd></div><div><dt>경기 결과</dt><dd><span id="detailResult"></span></dd></div></dl>
 </section>
-<section class="detail-panel"><h3>경기 메모</h3><p id="detailMemo" class="detail-text"></p></section>
-<section class="detail-panel"><h3>득점 선수</h3><p id="detailScorers" class="detail-text"></p></section>
+<section class="detail-panel"><h3>득점 기록</h3><p id="detailScorers" class="detail-text"></p></section>
 <section class="detail-panel"><h3>참가 선수 기록</h3><p id="playersEmpty" class="detail-muted" hidden>등록된 참가 선수 기록이 없습니다.</p>
 <div class="detail-table-wrap"><table id="playersTable" class="detail-table"><thead><tr><th scope="col">등번호</th><th scope="col">선수 이름</th><th scope="col">포지션</th><th scope="col">득점</th><th scope="col">도움</th></tr></thead><tbody id="detailPlayers"></tbody></table></div></section>
+<section class="detail-panel"><h3>경기 메모</h3><p id="detailMemo" class="detail-text"></p></section>
 <section class="detail-panel"><h3>경기 영상</h3><p id="videoStatus" class="detail-muted"></p>
 <a id="matchVideoLink" class="detail-video-button" hidden>해당 경기 영상 보기 →</a>
 <button id="noMatchVideo" class="detail-video-button" type="button" disabled hidden>등록된 경기 영상 없음</button>

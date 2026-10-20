@@ -3,17 +3,18 @@
 .detail-label { color:#3478f6; font-size:12px; font-weight:800; letter-spacing:2px; }
 .detail-heading { margin:12px 0 24px; font-size:30px; overflow-wrap:anywhere; }
 .detail-panel { background:#fff; border-radius:20px; padding:26px; margin-bottom:20px; box-shadow:0 8px 30px rgba(31,46,70,.06); }
-.detail-scoreboard { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:24px; padding:12px 0; font-size:22px; text-align:center; }
-.detail-scoreboard strong { max-width:100%; overflow-wrap:anywhere; }
-#detailScore { font-size:42px; font-weight:800; }
+.detail-scoreboard { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:24px; padding:12px 0; font-size:22px; text-align:center; }
+.detail-scoreboard strong { min-width:0; max-width:100%; overflow-wrap:anywhere; line-height:1.4; }
+#detailScore { font-size:42px; font-weight:800; line-height:1.2; white-space:nowrap; font-variant-numeric:tabular-nums; }
 #detailResult { display:block; width:max-content; margin:12px auto 0; padding:8px 16px; border-radius:20px; background:#eef3f8; font-weight:700; }
 #detailResult[data-result="win"] { background:#eaf3ff; color:#3478f6; }
 #detailResult[data-result="lose"] { background:#fff0f2; color:#ed5275; }
-.detail-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-top:26px; border-top:1px solid #eef3f8; padding-top:22px; }
+.detail-meta { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin:26px 0 0; border-top:1px solid #eef3f8; padding-top:22px; }
 .detail-meta dt { font-size:13px; color:#7b8491; margin-bottom:8px; }
-.detail-meta dd { font-weight:700; overflow-wrap:anywhere; }
+.detail-meta dd { margin:0; font-weight:700; overflow-wrap:anywhere; line-height:1.6; }
 .detail-panel h3 { margin-bottom:16px; font-size:19px; }
-.detail-text { white-space:pre-wrap; line-height:1.8; overflow-wrap:anywhere; }
+#matchDetail .detail-panel h3 { margin:0 0 16px; text-align:left; }
+.detail-text { margin:0; white-space:pre-wrap; line-height:1.8; overflow-wrap:anywhere; text-align:left; }
 .detail-muted { color:#7b8491; line-height:1.8; }
 .detail-table-wrap { overflow-x:auto; }
 .detail-table { width:100%; border-collapse:collapse; text-align:left; }
@@ -75,3 +76,9 @@
 
 .schedule-page-actions .edit-schedule-button:hover{color:#3478f6;background:#edf4ff}
 .schedule-page-actions .delete-schedule-button:hover{color:#ef4444;background:#fff0f0}
+
+/* Match detail alignment on narrow screens. */
+@media(max-width:600px) {
+  .detail-scoreboard { gap:12px; font-size:16px; }
+  #detailScore { font-size:32px; }
+}

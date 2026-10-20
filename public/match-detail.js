@@ -30,8 +30,6 @@
       el('detailResult').textContent = resultLabel[match.result] || '결과 미등록';
       el('detailResult').dataset.result = match.result;
       el('detailLocation').textContent = match.location || '장소 미등록';
-      el('detailTime').textContent = match.start_time || match.end_time
-        ? `${match.start_time || '미등록'} ~ ${match.end_time || '미등록'}` : '시간 미등록';
       el('detailMemo').textContent = match.memo || '등록된 메모가 없습니다.';
       const players = el('detailPlayers');
       players.replaceChildren();
