@@ -97,7 +97,8 @@ window.WGHAuthReady.then(identity => {
       const result = await response.json();
       if (!result.success || !Array.isArray(result.data)) throw new Error('목록 형식 오류');
       const videos = linkedMatchId === null ? result.data
-        : result.data.filter(video => String(video.match_id) === linkedMatchId);
+        : result.data.filter(video => String(video.match_id) === linkedMatchId)
+            .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'ko', { numeric: true, sensitivity: 'base' }) || Number(a.video_id) - Number(b.video_id));
       window.dispatchEvent(new CustomEvent('wgh-view-video-catalog',{detail:{videos}}));
       if (!videos.some(video => video.video_id === selectedVideoId)) {
         clearPlayer();
