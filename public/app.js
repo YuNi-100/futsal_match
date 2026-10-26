@@ -752,13 +752,8 @@ displayMatches.forEach(function (match) {
         // 경기 날짜
         // ---------------------------------------------
 
-        const date =
-            new Date(match.match_date);
-
-
         const formattedDate =
-            `${String(date.getMonth() + 1).padStart(2, "0")}.` +
-            `${String(date.getDate()).padStart(2, "0")}`;
+            String(match.match_date).slice(0, 10);
 
 
         // ---------------------------------------------
@@ -801,8 +796,10 @@ displayMatches.forEach(function (match) {
 
         card.innerHTML = `
 
-            <div class="match-date">
+            <div class="home-match-league">
                 ${match.league_name ? `<span class="league-badge">[${escapeHtml(match.league_name)}]</span>` : ''}
+            </div>
+            <div class="match-date">
                 ${formattedDate}
             </div>
 
