@@ -29,6 +29,7 @@ button:disabled{cursor:wait}.club-dialog-status:empty{display:none}
  .wgh-home #matchList .match-teams strong,#allMatchList .match-teams strong{min-width:0;font-size:14px;padding:0 10px}
  .wgh-home #matchList .match-teams strong:first-child,#allMatchList .match-teams strong:first-child{text-align:right}
  .wgh-home #matchList .match-teams strong:last-child,#allMatchList .match-teams strong:last-child{text-align:left}
+ .wgh-home #matchList .match-date{justify-content:flex-end}
  .wgh-home #matchList .match-score,#allMatchList .match-score{min-width:0;width:80px}
  .wgh-home #matchList .match-location,#allMatchList .match-location{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
 }
