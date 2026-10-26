@@ -863,6 +863,7 @@ displayMatches.forEach(function (match) {
         detailLink.href = '/match.html?match_id=' + encodeURIComponent(match.match_id);
         detailLink.setAttribute('aria-label', `${match.match_date} ${match.team_name || 'WGH 은평'} 대 ${match.opponent} 경기 상세 보기`);
         card.querySelector('.match-actions').replaceWith(window.WGHRecordActions('match',match,async()=>{await loadMatches();await loadPlayers();}));
+        card.querySelector('.match-location').title=match.location||'장소 미정';
         card.appendChild(detailLink);
         matchList.appendChild(card);
 

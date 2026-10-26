@@ -105,6 +105,44 @@
   }
 
   document.addEventListener('click', async event => {
+    const manager = event.target.closest('[data-wgh-league-settings]');
+    if (manager) {
+      if (!document.documentElement.classList.contains('wgh-admin') || document.querySelector('.club-dialog[open],.wgh-register-dialog[open]')) return;
+      const view = dialogShell(manager,'리그 관리','경기에 사용하지 않는 리그를 삭제할 수 있습니다. 사용 중인 리그는 경기 수정에서 먼저 다른 리그나 미지정으로 변경해 주세요.');
+      view.save.remove();
+      view.form.querySelector('.cancel-button').textContent = '닫기';
+      const list = el('div',undefined,'club-league-manager'); view.form.prepend(list);
+      const load = async () => {
+        const leagues = await api('/api/admin/leagues');
+        if (!view.dialog.isConnected) return;
+        list.replaceChildren();
+        if (!leagues.length) list.append(el('p','등록된 리그가 없습니다.','club-dialog-note'));
+        for (const league of leagues) {
+          const row = el('div',undefined,'club-league-row'); row.dataset.leagueId = league.league_id;
+          const information = el('div');
+          information.append(el('strong',league.name),el('small',`연결된 경기 ${league.match_count}건${league.is_active?'':' · 사용 중지'}`));
+          const remove = el('button','삭제','club-league-delete'); remove.type = 'button'; remove.disabled = Number(league.match_count)>0;
+          if (remove.disabled) remove.title = '경기에서 리그를 변경하거나 해제한 뒤 삭제할 수 있습니다.';
+          remove.addEventListener('click',async () => {
+            if (view.busy || remove.disabled || !confirm(`‘${league.name}’ 리그를 삭제하시겠습니까?\n경기·선수·영상 기록은 삭제하지 않습니다.`)) return;
+            view.busy = true; remove.disabled = true; view.status.textContent = '리그를 삭제하는 중입니다…';
+            try {
+              await send('/api/leagues/'+encodeURIComponent(league.league_id),'DELETE');
+              window.dispatchEvent(new CustomEvent('wgh-leagues-changed',{detail:{deletedLeagueId:league.league_id}}));
+              await load(); view.status.textContent = '리그를 삭제했습니다.';
+            } catch (error) {
+              view.status.textContent = error.message;
+              try { await load(); } catch (_) { /* Keep the original failure visible. */ }
+            } finally { view.busy = false; if (remove.isConnected) remove.disabled = Number(league.match_count)>0; }
+          });
+          row.append(information,remove); list.append(row);
+        }
+      };
+      view.form.addEventListener('submit',event=>event.preventDefault());
+      view.status.textContent = '리그를 불러오는 중입니다…';
+      try { await load(); view.status.textContent = ''; } catch (error) { view.status.textContent = error.message; }
+      return;
+    }
     const trigger = event.target.closest('[data-wgh-team-settings]');
     if (!trigger || !document.documentElement.classList.contains('wgh-admin') || document.querySelector('.club-dialog[open],.wgh-register-dialog[open]')) return;
     const view = dialogShell(trigger,'팀명 변경','경기 화면에 표시할 우리 팀 이름입니다. 기존 경기 기록과 영상 제목은 유지됩니다.');
