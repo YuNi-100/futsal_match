@@ -73,6 +73,7 @@
         const team=node('strong',null,match.team_name||'WGH 은평');team.dataset.teamName='';
         teams.append(team,node('span','match-score',`${match.our_score} : ${match.opponent_score}`),node('strong',null,match.opponent));
         const location = node('div','match-location','📍 ' + (match.location || '장소 미정'));
+        location.title=match.location||'장소 미정';
         const resultLabels = {win:'승',draw:'무',lose:'패'};
         const resultClass = Object.hasOwn(resultLabels,match.result) ? match.result : '';
         const badge = node('div','match-result ' + resultClass,resultLabels[match.result] || '미등록');
@@ -117,6 +118,12 @@
   }
   window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='match')load();});
   window.addEventListener('wgh-club-changed',load);
-  window.addEventListener('wgh-leagues-changed',refreshFilters);
+  window.addEventListener('wgh-leagues-changed',event=>{
+    if(event.detail?.deletedLeagueId!=null&&filterValue()===String(event.detail.deletedLeagueId)){
+      const url=new URL(location.href);url.searchParams.delete('league');url.searchParams.delete('page');
+      history.replaceState(null,'',url.pathname+url.search);render();
+    }
+    refreshFilters();
+  });
   load();
 })();

@@ -90,6 +90,30 @@ def create_club_router(get_db_connection):
             return {'league_id':league['league_id'],'name':league['name'],'created':created}
         return execute(add,write=True)
 
+    @router.get('/api/admin/leagues')
+    def get_managed_leagues():
+        def read(cursor):
+            cursor.execute('''SELECT l.league_id,l.name,l.is_active,count(m.match_id) AS match_count
+                FROM league l LEFT JOIN futsal_match m ON m.league_id=l.league_id
+                GROUP BY l.league_id,l.name,l.is_active ORDER BY lower(l.name),l.league_id''')
+            return list(cursor.fetchall())
+        return execute(read)
+
+    @router.delete('/api/leagues/{league_id}')
+    def delete_league(league_id: int=Path(gt=0)):
+        def remove(cursor):
+            # Assigning a league takes FOR SHARE on the same row. Holding this lock
+            # prevents a new assignment between the usage check and deletion.
+            cursor.execute('SELECT league_id FROM league WHERE league_id=%s FOR UPDATE',(league_id,))
+            if cursor.fetchone() is None:
+                raise HTTPException(404,'이미 삭제되었거나 존재하지 않는 리그입니다.')
+            cursor.execute('SELECT count(*) AS match_count FROM futsal_match WHERE league_id=%s',(league_id,))
+            if cursor.fetchone()['match_count']:
+                raise HTTPException(409,'경기에 사용 중인 리그입니다. 경기 수정에서 다른 리그나 리그 미지정으로 변경한 뒤 삭제해 주세요.')
+            cursor.execute('DELETE FROM league WHERE league_id=%s',(league_id,))
+            return {'league_id':league_id}
+        return execute(remove,write=True)
+
     @router.patch('/api/matches/{match_id}/league')
     def update_match_league(body: MatchLeagueChange,match_id: int=Path(gt=0)):
         return execute(lambda cursor:change_match_league(cursor,match_id,body.league_id,body.expected_league_id),write=True)

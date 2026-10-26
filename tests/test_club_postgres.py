@@ -199,3 +199,37 @@ class ClubPostgresTests(unittest.TestCase):
         self.change(self.league_b)
         self.request('PUT',f'/api/matches/{self.match_id}',payload,expected=409)
         self.assertEqual(self.request('GET',f'/api/matches/{self.match_id}')['memo'],original['memo'])
+
+    def test_delete_unused_league_only_deletes_its_definition(self):
+        created=self.request('POST','/api/leagues',{'name':'잘못 추가한 리그 검증'})
+        league_id=created['league_id']
+        managed=self.request('GET','/api/admin/leagues')
+        self.assertEqual(next(row['match_count'] for row in managed if row['league_id']==league_id),0)
+        self.request('DELETE',f'/api/leagues/{league_id}')
+        self.assertIsNone(self.db.execute('SELECT league_id FROM league WHERE league_id=%s',(league_id,)).fetchone())
+        self.request('DELETE',f'/api/leagues/{league_id}',expected=404)
+        self.request('DELETE','/api/leagues/0',expected=422)
+
+    def test_delete_used_league_and_unauthorized_deletion_are_blocked(self):
+        self.change(self.league_a)
+        self.request('DELETE',f'/api/leagues/{self.league_a}',expected=409)
+        self.assertEqual(self.db.execute('SELECT league_id FROM futsal_match WHERE match_id=%s',(self.match_id,)).fetchone()['league_id'],self.league_a)
+        self.request('DELETE',f'/api/leagues/{self.league_a}',headers={},expected=403)
+        with TestClient(self.main.app) as client:
+            self.request('GET','/api/admin/leagues',client=client,expected=401)
+            self.request('DELETE',f'/api/leagues/{self.league_a}',client=client,expected=401)
+            client.cookies.set('wgh_session',self.member_token)
+            self.request('GET','/api/admin/leagues',client=client,expected=403)
+            self.request('DELETE',f'/api/leagues/{self.league_a}',client=client,headers={'X-CSRF-Token':self.member_csrf},expected=403)
+
+    def test_concurrent_deletion_and_assignment_preserves_references(self):
+        league_id=self.request('POST','/api/leagues',{'name':'동시 삭제 검증 리그'})['league_id']
+        def action(kind):
+            with TestClient(self.main.app) as client:
+                client.cookies.set('wgh_session',self.admin_token)
+                headers={'X-CSRF-Token':self.csrf}
+                if kind=='delete':return client.delete(f'/api/leagues/{league_id}',headers=headers).status_code
+                return client.patch(f'/api/matches/{self.match_id}/league',headers=headers,json={'league_id':league_id,'expected_league_id':None}).status_code
+        with ThreadPoolExecutor(max_workers=2) as pool:deleted,assigned=list(pool.map(action,['delete','assign']))
+        self.assertIn((deleted,assigned),[(200,404),(409,200)])
+        self.assertEqual(self.db.execute('SELECT count(*) AS n FROM futsal_match m LEFT JOIN league l ON l.league_id=m.league_id WHERE m.league_id IS NOT NULL AND l.league_id IS NULL').fetchone()['n'],0)
