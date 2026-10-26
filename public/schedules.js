@@ -44,7 +44,9 @@
           }
           const item=node('details','schedule-compact-item');
           const summary=node('summary','schedule-compact-summary');
-          summary.append(node('span','schedule-compact-date',schedule.match_date),node('strong','schedule-compact-opponent',`WGH vs ${schedule.opponent}`),node('span','schedule-compact-location',schedule.location||'장소 미정'));
+          const opponent=node('strong','schedule-compact-opponent');
+          const ownTeam=node('span',null,window.WGHClub.teamName);ownTeam.dataset.teamName='';opponent.append(ownTeam,` vs ${schedule.opponent}`);
+          summary.append(node('span','schedule-compact-date',schedule.match_date),opponent,node('span','schedule-compact-location',schedule.location||'장소 미정'));
           const content=node('div','schedule-compact-content');
           const meta=node('dl','schedule-page-meta');
           for(const [label,value] of [['시간',`${time(schedule.start_time)} ~ ${time(schedule.end_time)}`],['메모',schedule.memo||'등록된 메모가 없습니다.']]){
@@ -57,7 +59,7 @@
         const header=node('div','schedule-page-header');
         const date=node('p','schedule-page-date',schedule.match_date);
         header.append(date,node('span','schedule-page-badge',index===0?'가장 가까운 경기':'예정 경기'));
-        card.append(header,node('h3',null,`WGH vs ${schedule.opponent}`));
+        const title=node('h3');const ownTeam=node('span',null,window.WGHClub.teamName);ownTeam.dataset.teamName='';title.append(ownTeam,` vs ${schedule.opponent}`);card.append(header,title);
         const meta=node('dl','schedule-page-meta');
         for(const [label,value]of [['시간',`${time(schedule.start_time)} ~ ${time(schedule.end_time)}`],['장소',schedule.location||'장소 미정']]){
           const group=node('div');group.append(node('dt',null,label),node('dd',null,value));meta.append(group);
@@ -71,5 +73,6 @@
     }catch(error){status.textContent=error.message;}
   }
   window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='schedule')load();});
-  load();
+  window.addEventListener('wgh-club-changed',load);
+  window.WGHClub.ready.then(load);
 })();

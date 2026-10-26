@@ -146,7 +146,7 @@ def get_players():
 # =====================================================
 
 @app.get("/api/matches")
-def get_matches():
+def get_matches(league_id: int | None = None,unassigned: bool = False):
 
     try:
         connection = get_db_connection()
@@ -154,20 +154,22 @@ def get_matches():
         try:
             with connection.cursor() as cursor:
 
-                # 기존 경기 기록을 날짜 최신순으로 조회
+                if league_id is not None and unassigned:
+                    raise HTTPException(422,'리그와 미지정 필터를 동시에 선택할 수 없습니다.')
+                if league_id is not None and league_id <= 0:
+                    raise HTTPException(422,'리그를 확인해 주세요.')
+                where = ' WHERE m.league_id=%s' if league_id is not None else (' WHERE m.league_id IS NULL' if unassigned else '')
+                params = (league_id,) if league_id is not None else ()
+                # LEFT JOIN preserves all historical, unassigned matches.
                 cursor.execute("""
                     SELECT
-                        match_id,
-                        DATE_FORMAT(match_date, '%Y-%m-%d') AS match_date,
-                        opponent,
-                        our_score,
-                        opponent_score,
-                        location,
-                        result,
-                        memo
-                    FROM futsal_match
-                    ORDER BY match_date DESC
-                """)
+                        m.match_id,
+                        DATE_FORMAT(m.match_date, '%Y-%m-%d') AS match_date,
+                        m.opponent,m.our_score,m.opponent_score,m.location,m.result,m.memo,
+                        m.league_id,l.name AS league_name,
+                        (SELECT team_name FROM club_settings WHERE settings_id=1) AS team_name
+                    FROM futsal_match m LEFT JOIN league l ON l.league_id=m.league_id
+                """ + where + ' ORDER BY m.match_date DESC,m.match_id DESC', params)
 
                 matches = cursor.fetchall()
 
@@ -179,6 +181,8 @@ def get_matches():
         finally:
             connection.close()
 
+    except HTTPException:
+        raise
     except Exception as error:
 
         print("경기 기록 조회 실패:", error)
@@ -200,7 +204,7 @@ from typing import Optional
 from src.services.match_player_records import MatchPlayerRecord, save_match_players, read_match_players
 
 from typing import Literal
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 
 from src.auth.auth_store import set_player_member
@@ -302,6 +306,8 @@ def update_player_member(player_id: int, body: PlayerMemberLink, request: Reques
 
 # 경기 기록 등록 시 전달받을 데이터 형식
 class MatchCreate(BaseModel):
+    league_id: Optional[int] = Field(default=None,gt=0,strict=True)
+    league_name: Optional[str] = Field(default=None,min_length=1,max_length=100)
     video_id: Optional[int] = Field(default=None, gt=0, strict=True)
     players: Optional[list[MatchPlayerRecord]] = Field(default=None, max_length=500)
     match_date: date                  # 경기 날짜 (필수)
@@ -310,6 +316,21 @@ class MatchCreate(BaseModel):
     opponent_score: int = Field(ge=0) # 상대팀 점수 (0 이상)
     location: Optional[str] = None    # 경기 장소 (선택)
     memo: Optional[str] = None        # 메모 (선택)
+
+    @field_validator('league_name',mode='before')
+    @classmethod
+    def clean_league_name(cls,value):
+        return value.strip() if isinstance(value,str) else value
+
+    @model_validator(mode='after')
+    def one_league_selection(self):
+        if self.league_id is not None and self.league_name is not None:
+            raise ValueError('리그 선택과 직접 추가 중 하나만 사용해 주세요.')
+        return self
+
+
+class MatchUpdate(MatchCreate):
+    expected_league_id: Optional[int] = Field(default=None,gt=0,strict=True)
 
 
 @app.get("/api/matches/{match_id}/players")
@@ -352,6 +373,8 @@ def create_match(match: MatchCreate):
 
         with connection.cursor() as cursor:
 
+            from src.services.club_leagues import new_match_league
+            selected_league_id = new_match_league(cursor,match.league_id,match.league_name)
             # MySQL에 경기 기록 저장
             sql = """
                 INSERT INTO futsal_match (
@@ -362,9 +385,10 @@ def create_match(match: MatchCreate):
                     opponent_score,
                     location,
                     result,
-                    memo
+                    memo,
+                    league_id
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
             cursor.execute(sql, (
@@ -375,7 +399,8 @@ def create_match(match: MatchCreate):
                 match.opponent_score,
                 match.location,
                 result,
-                match.memo
+                match.memo,
+                selected_league_id
             ))
 
             new_match_id = cursor.lastrowid
@@ -390,6 +415,7 @@ def create_match(match: MatchCreate):
             "message": "경기 기록이 등록되었습니다.",
             "data": {
                 "match_id": new_match_id,
+                "league_id": selected_league_id,
                 "match_date": str(match.match_date),
                 "opponent": match.opponent,
                 "our_score": match.our_score,
@@ -427,7 +453,12 @@ def create_match(match: MatchCreate):
 # =====================================================
 
 @app.put("/api/matches/{match_id}")
-def update_match(match_id: int, match: MatchCreate):
+def update_match(match_id: int, match: MatchUpdate):
+
+    league_change='league_id' in match.model_fields_set
+    expected_supplied='expected_league_id' in match.model_fields_set
+    if 'league_name' in match.model_fields_set or league_change!=expected_supplied:
+        raise HTTPException(422,'리그 선택과 기존 리그 정보를 확인해 주세요.')
 
     # 승패 자동 계산
     if match.our_score > match.opponent_score:
@@ -447,6 +478,10 @@ def update_match(match_id: int, match: MatchCreate):
             cursor.execute("SELECT match_id FROM futsal_match WHERE match_id=%s AND user_id=%s FOR UPDATE", (match_id, 1))
             if cursor.fetchone() is None:
                 raise HTTPException(404, "수정할 경기 기록이 없습니다.")
+
+            if league_change:
+                from src.services.club_leagues import change_match_league
+                change_match_league(cursor,match_id,match.league_id,match.expected_league_id)
 
             # 기존 경기 기록 수정
             cursor.execute("""
@@ -473,7 +508,11 @@ def update_match(match_id: int, match: MatchCreate):
                 1
             ))
 
-            save_match_players(cursor, match_id, match.players)
+            if match.players is not None:
+                # Unchanged selections preserve the existing participation row IDs too.
+                incoming=sorted((record.model_dump() for record in match.players),key=lambda row:row['player_id'])
+                if incoming!=read_match_players(cursor,match_id):
+                    save_match_players(cursor, match_id, match.players)
 
         connection.commit()
 
@@ -1438,6 +1477,9 @@ app.include_router(auth_router)
 
 from src.api.player_management import create_player_management_router
 app.include_router(create_player_management_router(get_db_connection))
+
+from src.api.club_routes import create_club_router
+app.include_router(create_club_router(get_db_connection))
 
 class RevalidatingStaticFiles(StaticFiles):
     """Revalidate page assets so navigation changes do not leave old menus cached."""

@@ -21,9 +21,12 @@
       const match = result.data;
       document.getElementById('matchRecordActions')?.remove();
       const actions=window.WGHRecordActions('match',match,()=>{location.href='/matches.html';});actions.id='matchRecordActions';el('matchDetail').prepend(actions);
-      document.title = `WGH vs ${match.opponent} | 경기 기록`;
-      el('matchTitle').textContent = `WGH vs ${match.opponent}`;
+      const teamName=match.team_name||'WGH 은평';
+      document.title = `${teamName} vs ${match.opponent} | 경기 기록`;
+      el('matchTitle').textContent = `${teamName} vs ${match.opponent}`;
+      el('detailTeamName').textContent=teamName;
       el('detailDate').textContent = match.match_date;
+      if(match.league_name){const badge=document.createElement('span');badge.className='league-badge';badge.textContent=`[${match.league_name}]`;el('detailDate').prepend(badge);}
       el('detailOpponent').textContent = match.opponent;
       el('detailScore').textContent = `${match.our_score} : ${match.opponent_score}`;
       const resultLabel = {win:'승리',draw:'무승부',lose:'패배'};
@@ -86,5 +89,6 @@
     }
   }
   window.addEventListener('wgh-record-created',event=>{if(event.detail.kind==='match')load();});
+  window.addEventListener('wgh-club-changed',load);
   load();
 })();

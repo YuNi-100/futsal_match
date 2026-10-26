@@ -468,8 +468,8 @@ const response = await fetch(url, {
 // + 경기 기록 추가 버튼
 // ---------------------------------------------------------
 
-// Home and match list use the same creation dialog in navigation.js.
-// The existing match modal below remains available for editing.
+// Home, match list and detail use the shared creation/edit dialog in navigation.js.
+// The original match modal supplies the shared form template.
 
 
 // ---------------------------------------------------------
@@ -802,13 +802,14 @@ displayMatches.forEach(function (match) {
         card.innerHTML = `
 
             <div class="match-date">
+                ${match.league_name ? `<span class="league-badge">[${escapeHtml(match.league_name)}]</span>` : ''}
                 ${formattedDate}
             </div>
 
 
             <div class="match-teams">
 
-                <strong>WGH</strong>
+                <strong data-team-name>${escapeHtml(match.team_name || 'WGH 은평')}</strong>
 
                 <span class="match-score">
                     ${match.our_score}
@@ -860,7 +861,8 @@ displayMatches.forEach(function (match) {
         const detailLink = document.createElement('a');
         detailLink.className = 'match-detail-link';
         detailLink.href = '/match.html?match_id=' + encodeURIComponent(match.match_id);
-        detailLink.setAttribute('aria-label', `${match.match_date} WGH 대 ${match.opponent} 경기 상세 보기`);
+        detailLink.setAttribute('aria-label', `${match.match_date} ${match.team_name || 'WGH 은평'} 대 ${match.opponent} 경기 상세 보기`);
+        card.querySelector('.match-actions').replaceWith(window.WGHRecordActions('match',match,async()=>{await loadMatches();await loadPlayers();}));
         card.appendChild(detailLink);
         matchList.appendChild(card);
 
@@ -1339,7 +1341,8 @@ function renderUpcomingSchedules() {
         heading.append(date, time);
         const opponent = document.createElement("div");
         opponent.className = "additional-schedule-opponent";
-        opponent.textContent = `WGH  VS  ${schedule.opponent}`;
+        const ownTeam=document.createElement('span');ownTeam.dataset.teamName='';ownTeam.textContent=window.WGHClub.teamName;
+        opponent.append(ownTeam,`  VS  ${schedule.opponent}`);
 // =========================================================
 // 추가 경기 일정 - 장소 / 메모 / 수정 버튼
 // =========================================================
@@ -1726,3 +1729,4 @@ window.addEventListener('wgh-record-created', event => {
     if (event.detail.kind === 'player') loadPlayers();
     if (event.detail.kind === 'match') { loadMatches(); loadPlayers(); }
 });
+window.addEventListener('wgh-club-changed',()=>{loadMatches();loadNextMatch();});

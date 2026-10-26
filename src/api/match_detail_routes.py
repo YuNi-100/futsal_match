@@ -12,12 +12,15 @@ def create_match_detail_router(get_db_connection):
         try:
             connection = get_db_connection()
             with connection.cursor() as cursor:
-                cursor.execute('''SELECT match_id,
-                    DATE_FORMAT(match_date,'%%Y-%%m-%%d') AS match_date,
-                    opponent,our_score,opponent_score,result,location,memo,
-                    TIME_FORMAT(start_time,'%%H:%%i') AS start_time,
-                    TIME_FORMAT(end_time,'%%H:%%i') AS end_time
-                    FROM futsal_match WHERE match_id=%s''', (match_id,))
+                cursor.execute('''SELECT m.match_id,
+                    DATE_FORMAT(m.match_date,'%%Y-%%m-%%d') AS match_date,
+                    m.opponent,m.our_score,m.opponent_score,m.result,m.location,m.memo,
+                    m.league_id,l.name AS league_name,
+                    (SELECT team_name FROM club_settings WHERE settings_id=1) AS team_name,
+                    TIME_FORMAT(m.start_time,'%%H:%%i') AS start_time,
+                    TIME_FORMAT(m.end_time,'%%H:%%i') AS end_time
+                    FROM futsal_match m LEFT JOIN league l ON l.league_id=m.league_id
+                    WHERE m.match_id=%s''', (match_id,))
                 match = cursor.fetchone()
                 if match is None:
                     raise HTTPException(404, '경기 기록을 찾을 수 없습니다.')

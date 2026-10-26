@@ -143,7 +143,7 @@ youtubeRegisterForm.addEventListener('submit', async function (event) {
 function fillMatchOptions(select,emptyLabel) {
   select.replaceChildren(new Option(emptyLabel,''));
   for (const match of matchChoices) {
-    select.add(new Option(`${match.match_date} · WGH vs ${match.opponent} (${match.our_score}:${match.opponent_score})`,String(match.match_id)));
+    select.add(new Option(`${match.match_date} · ${match.team_name||'WGH 은평'} vs ${match.opponent} (${match.our_score}:${match.opponent_score})`,String(match.match_id)));
   }
 }
 function showSelectedVideoMatch() {
