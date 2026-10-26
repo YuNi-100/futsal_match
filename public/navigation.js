@@ -62,8 +62,6 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     const utility=document.createElement('div');utility.className='wgh-header-utility';
     const utilityInner=document.createElement('div');utilityInner.className='wgh-header-inner';
     const description=document.createElement('span');description.className='wgh-header-tagline';description.textContent='WOMEN’S FUTSAL CLUB · WE GO HIGH';utilityInner.append(description);
-    const teamSettings=document.createElement('button');teamSettings.type='button';teamSettings.className='club-team-settings';teamSettings.dataset.adminOnly='';teamSettings.dataset.wghTeamSettings='';teamSettings.textContent='팀명 변경';utilityInner.append(teamSettings);
-    const leagueSettings=document.createElement('button');leagueSettings.type='button';leagueSettings.className='club-team-settings';leagueSettings.dataset.adminOnly='';leagueSettings.dataset.wghLeagueSettings='';leagueSettings.textContent='리그 관리';utilityInner.append(leagueSettings);
     const authPanel=sidebar.querySelector('[data-auth-panel]');if(authPanel)utilityInner.append(authPanel);utility.append(utilityInner);
     const bar=document.createElement('div');bar.className='wgh-header-main';
     const home=document.createElement('a');home.href='/index.html';home.className='wgh-brand-home';home.setAttribute('aria-label','WGH 홈');

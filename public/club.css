@@ -22,23 +22,39 @@
 button:disabled{cursor:wait}.club-dialog-status:empty{display:none}
 @media(max-width:700px){.club-dialog{padding:22px 18px}.club-team-settings{font-size:10px;padding:5px}.wgh-header-inner{flex-wrap:wrap}.match-card .match-date{gap:5px}.league-badge{font-size:11px}.league-filter-row{gap:9px}}
 
-/* Give the venue its own useful width rather than empty space around the teams. */
+/* Layout specified by the owner: league, full date, divided teams, venue, result, actions. */
+.wgh-home #matchList .match-score{border-left:1px solid #dfe5eb;border-right:1px solid #dfe5eb;line-height:28px}
 @media(min-width:1001px){
- .wgh-home #matchList .match-card,#allMatchList .match-card{grid-template-columns:150px minmax(260px,1fr) minmax(220px,1fr) 44px 80px;gap:14px;padding-left:22px;padding-right:22px}
- .wgh-home #matchList .match-teams,#allMatchList .match-teams{display:grid;grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr);gap:0;width:100%}
- .wgh-home #matchList .match-teams strong,#allMatchList .match-teams strong{min-width:0;font-size:14px;padding:0 10px}
- .wgh-home #matchList .match-teams strong:first-child,#allMatchList .match-teams strong:first-child{text-align:right}
- .wgh-home #matchList .match-teams strong:last-child,#allMatchList .match-teams strong:last-child{text-align:left}
- .wgh-home #matchList .match-date{justify-content:flex-end}
- .wgh-home #matchList .match-score,#allMatchList .match-score{min-width:0;width:80px}
- .wgh-home #matchList .match-location,#allMatchList .match-location{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+ .wgh-home #matchList .match-card{grid-template-columns:90px 114px 280px minmax(0,1fr) 230px 44px 80px;gap:14px;padding-left:22px;padding-right:22px}
+ .wgh-home #matchList .home-match-league{grid-column:1;grid-row:1;min-width:0}
+ .wgh-home #matchList .match-date{grid-column:2;grid-row:1;justify-content:center;white-space:nowrap}
+ .wgh-home #matchList .match-teams{grid-column:3;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr);gap:0;width:100%}
+ .wgh-home #matchList .match-teams strong{min-width:0;font-size:14px;padding:0 10px}
+ .wgh-home #matchList .match-teams strong:first-child{text-align:right}
+ .wgh-home #matchList .match-teams strong:last-child{text-align:left}
+ .wgh-home #matchList .match-score{min-width:0;width:80px}
+ .wgh-home #matchList .match-location{grid-column:5;grid-row:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+ .wgh-home #matchList .match-result{grid-column:6;grid-row:1}
+ .wgh-home #matchList .match-actions{grid-column:7;grid-row:1}
+ #allMatchList .match-location{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+@media(min-width:1001px) and (max-width:1199px){.wgh-home #matchList .match-card{grid-template-columns:70px 100px 240px minmax(0,1fr) 200px 44px 72px;gap:10px}}
 @media(min-width:701px) and (max-width:1000px){
- .wgh-home #matchList .match-card{grid-template-columns:130px minmax(0,1fr) 44px;gap:10px}
- .wgh-home #matchList .match-date{grid-column:1;grid-row:1}
- .wgh-home #matchList .match-teams{grid-column:2;grid-row:1}
- .wgh-home #matchList .match-result{grid-column:3;grid-row:1}
- .wgh-home #matchList .match-location{grid-column:2/4;grid-row:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- .wgh-home #matchList .match-actions{grid-column:2/4;grid-row:3}
+ .wgh-home #matchList .match-card{grid-template-columns:90px 114px minmax(0,1fr) 44px;gap:10px}
+ .wgh-home #matchList .home-match-league{grid-column:1;grid-row:1}
+ .wgh-home #matchList .match-date{grid-column:2;grid-row:1;justify-content:center;white-space:nowrap}
+ .wgh-home #matchList .match-teams{grid-column:3;grid-row:1}
+ .wgh-home #matchList .match-result{grid-column:4;grid-row:1}
+ .wgh-home #matchList .match-location{grid-column:3/5;grid-row:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+ .wgh-home #matchList .match-actions{grid-column:3/5;grid-row:3}
 }
-@media(max-width:700px){.wgh-home #matchList .match-location{grid-column:1/-1;grid-row:3;white-space:normal}.wgh-home #matchList .match-actions{grid-column:1/-1;grid-row:4}}
+@media(max-width:700px){
+ .wgh-home #matchList .home-match-league{grid-column:1;grid-row:1}
+ .wgh-home #matchList .match-date{grid-column:2;grid-row:1;justify-content:flex-end;white-space:nowrap}
+ .wgh-home #matchList .match-teams{grid-column:1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:0;width:100%}
+ .wgh-home #matchList .match-teams strong{min-width:0;font-size:13px;padding:0 5px}
+ .wgh-home #matchList .match-score{min-width:0;width:64px;font-size:20px}
+ .wgh-home #matchList .match-result{grid-column:2;grid-row:2}
+ .wgh-home #matchList .match-location{grid-column:1/-1;grid-row:3;white-space:normal}
+ .wgh-home #matchList .match-actions{grid-column:1/-1;grid-row:4}
+}

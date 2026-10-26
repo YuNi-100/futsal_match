@@ -9,6 +9,12 @@
       panel.replaceChildren();
       const label = document.createElement('span');
       label.textContent = identity.user ? `${identity.user.name} · ${identity.user.role === 'admin' ? '관리자' : identity.user.role === 'player' ? '선수 회원' : '일반 회원'}` : '공개 기록은 로그인 없이 볼 수 있어요.';
+      if (identity.user?.role === 'admin') {
+        const teamSettings = document.createElement('button');
+        teamSettings.type = 'button'; teamSettings.className = 'club-team-settings';
+        teamSettings.dataset.adminOnly = ''; teamSettings.dataset.wghTeamSettings = '';
+        teamSettings.textContent = '팀명 변경'; panel.append(teamSettings);
+      }
       panel.append(label);
       if (identity.user) {
         const button = document.createElement('button');

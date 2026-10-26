@@ -16,6 +16,7 @@
   const app=data.application;$('applicationState').textContent=app?`${states[app.status]} · ${app.requested_at}${app.review_note?' · 처리 사유: '+app.review_note:''}`:'신청 후 기존 관리자의 승인을 받아야 합니다.';
   $('applicationForm').hidden=app?.status==='pending';
   $('managementPanel').hidden=needsConsent||data.role!=='admin';
+  $('clubManagementPanel').hidden=needsConsent||data.role!=='admin';
   if(!needsConsent&&data.role==='admin')await management();
  }
  async function management(){
