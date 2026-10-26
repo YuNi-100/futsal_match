@@ -62,6 +62,7 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     const utility=document.createElement('div');utility.className='wgh-header-utility';
     const utilityInner=document.createElement('div');utilityInner.className='wgh-header-inner';
     const description=document.createElement('span');description.className='wgh-header-tagline';description.textContent='WOMEN’S FUTSAL CLUB · WE GO HIGH';utilityInner.append(description);
+    const teamSettings=document.createElement('button');teamSettings.type='button';teamSettings.className='club-team-settings';teamSettings.dataset.adminOnly='';teamSettings.dataset.wghTeamSettings='';teamSettings.textContent='팀명 변경';utilityInner.append(teamSettings);
     const authPanel=sidebar.querySelector('[data-auth-panel]');if(authPanel)utilityInner.append(authPanel);utility.append(utilityInner);
     const bar=document.createElement('div');bar.className='wgh-header-main';
     const home=document.createElement('a');home.href='/index.html';home.className='wgh-brand-home';home.setAttribute('aria-label','WGH 홈');
@@ -81,6 +82,8 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
   let busy=false;
   const field=(id,label,type='text',extra='')=>`<div class="form-group"><label for="${id}">${label}</label><input id="${id}" name="${id}" type="${type}" ${extra}></div>`;
   const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+  const matchFields=record=>JSON.stringify([String(record.match_date||'').slice(0,10),String(record.opponent||'').trim(),Number(record.our_score),Number(record.opponent_score),String(record.location||'').trim(),String(record.memo||'')]);
+  const playerRecords=records=>JSON.stringify(records.map(record=>({player_id:Number(record.player_id),goals:Number(record.goals||0),assists:Number(record.assists||0)})).sort((a,b)=>a.player_id-b.player_id));
 
   async function homeMatchMarkup() {
     let source = document.querySelector('#matchModal .modal-content');
@@ -111,14 +114,21 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     if(!trigger||!document.documentElement.classList.contains('wgh-admin')||busy)return;
     const kind=trigger.dataset.wghCreate;
     if(!['player','match','schedule'].includes(kind))return;
-    if(document.querySelector('.wgh-register-dialog[open]'))return;
-    const editing=trigger.dataset.recordEdit?JSON.parse(trigger.dataset.recordEdit):(kind==='schedule'&&trigger.dataset.scheduleEdit?JSON.parse(trigger.dataset.scheduleEdit):null);
+    if(document.querySelector('.wgh-register-dialog[open],.club-dialog[open]'))return;
+    let editing=trigger.dataset.recordEdit?JSON.parse(trigger.dataset.recordEdit):(kind==='schedule'&&trigger.dataset.scheduleEdit?JSON.parse(trigger.dataset.scheduleEdit):null);
     const title=editing?{schedule:'다음 일정 수정',match:'경기 기록 수정',player:'선수 정보 수정'}[kind]:{player:'선수 등록',match:'경기 기록 추가',schedule:'다음 일정 추가'}[kind];
     const dialog=document.createElement('dialog');dialog.className='wgh-register-dialog'+(kind==='match'?' wgh-match-dialog':'');dialog.setAttribute('aria-labelledby','registrationTitle');
     let fields='';
     if(kind==='match') {
       busy=true;
-      try { dialog.innerHTML=await homeMatchMarkup(); }
+      try {
+        if(editing){
+          const response=await fetch('/api/matches/'+encodeURIComponent(editing.match_id));const result=await response.json();
+          if(!response.ok||!result.success)throw new Error('기존 경기 정보를 불러오지 못했습니다. 다시 열어 주세요.');
+          editing=result.data;
+        }
+        dialog.innerHTML=await homeMatchMarkup();
+      }
       catch(error) { alert(error.message); return; }
       finally { busy=false; }
     } else if(kind==='player'){
@@ -133,14 +143,16 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     }
     if(kind!=='match') dialog.innerHTML=`<div class="wgh-register-header"><h2 id="registrationTitle">${title}</h2><button type="button" data-register-close aria-label="닫기">×</button></div><form>${fields}<p class="wgh-register-status" role="status"></p><div class="modal-actions"><button type="button" class="cancel-button" data-register-close>취소</button><button type="submit" class="save-match-button">저장</button></div></form>`;
     document.body.append(dialog);
+    dialog.querySelectorAll('[data-team-name]').forEach(element=>{element.textContent=window.WGHClub.teamName;});
     const form=dialog.querySelector('form');form.reset();const status=dialog.querySelector('[role=status]');const submit=form.querySelector('[type=submit]');
     const get=id=>dialog.querySelector('#'+id);
-    let saving=false,playersReady=kind!=='match',membersReady=kind!=='player'||Boolean(editing);
+    let saving=false,stale=false,playersReady=kind!=='match',membersReady=kind!=='player'||Boolean(editing);
     const close=()=>{if(!saving)dialog.close();};
     dialog.querySelectorAll('[data-register-close]').forEach(button=>button.addEventListener('click',close));
     dialog.addEventListener('cancel',e=>{if(saving)e.preventDefault();});
     dialog.addEventListener('close',()=>{dialog.remove();trigger.focus();},{once:true});
     dialog.showModal();
+    const leaguePicker=kind==='match'?window.WGHClub.mountLeaguePicker(form,form.firstElementChild,{current:editing,atomicNewMatch:!editing}):null;
     if(kind!=='player')get('registerDate').value=today();
     if(editing&&kind==='schedule'){
       for(const [id,key] of [['registerDate','match_date'],['registerOpponent','opponent'],['registerLocation','location'],['registerMemo','memo']])get(id).value=editing[key]||'';
@@ -172,9 +184,8 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
         if(!dialog.isConnected)return;
         let saved=[];
         if(editing){
-          const recordsResponse=await fetch('/api/matches/'+encodeURIComponent(editing.match_id)+'/players');const records=await recordsResponse.json();
-          if(!recordsResponse.ok||!records.success||!Array.isArray(records.data))throw new Error('기존 선수 기록을 불러오지 못했습니다. 저장하지 말고 다시 열어 주세요.');
-          saved=records.data;
+          if(!Array.isArray(editing.players))throw new Error('기존 선수 기록을 불러오지 못했습니다. 저장하지 말고 다시 열어 주세요.');
+          saved=editing.players;
           const ids=new Set(result.data.map(player=>Number(player.player_id)));
           if(saved.some(record=>!ids.has(Number(record.player_id))))throw new Error('선수 정보가 변경되었습니다. 창을 닫고 다시 열어 주세요.');
         }
@@ -198,6 +209,7 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
         }
         get('registerPlayerStatus').textContent=result.data.length?'':'등록된 선수가 없습니다.';
         get('registerPlayerStatus').hidden=result.data.length>0;
+        await leaguePicker.ready;
         if(!editing)await window.WGHLoadMatchVideoOptions(get('registerVideo'),()=>dialog.isConnected);
         if(!dialog.isConnected)return;
         playersReady=true;submit.disabled=false;
@@ -215,9 +227,9 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
       }catch(error){if(dialog.isConnected)status.textContent=error.message;}
     }
     form.addEventListener('submit',async event=>{
-      event.preventDefault();if(saving||!playersReady||!membersReady)return;
+      event.preventDefault();if(saving||stale||!playersReady||!membersReady||leaguePicker?.busy)return;
       if(!document.documentElement.classList.contains('wgh-admin')){status.textContent='관리자 로그인을 확인해 주세요.';return;}
-      let payload,url;
+      let payload,url,method=editing?'PUT':'POST';
       if(kind==='player'){
         payload={player_name:get('registerPlayerName').value.trim(),back_number:Number(get('registerNumber').value),position:get('registerPosition').value,joined_at:get('registerJoined').value||null,member_user_id:get('registerMember').value?Number(get('registerMember').value):null};url=editing?'/api/players/'+encodeURIComponent(editing.player_id):'/api/players';
         if(editing)delete payload.member_user_id;
@@ -231,19 +243,44 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
           if(!pattern.test(start)||!pattern.test(end)||end<=start){status.textContent='시작·종료 시간을 24시간 형식으로 확인해 주세요. 종료 시간은 시작 시간보다 늦어야 합니다.';return;}
           Object.assign(payload,{start_time:start,end_time:end});url=editing?'/api/schedules/'+encodeURIComponent(editing.schedule_id):'/api/schedules';
         }else{
-          if(!editing)payload.video_id=get('registerVideo').value?Number(get('registerVideo').value):null;
+          let leagueSelection;
+          try{leagueSelection=leaguePicker.value();}catch(error){status.textContent=error.message;return;}
+          if(!editing){
+            Object.assign(payload,leagueSelection);
+            payload.video_id=get('registerVideo').value?Number(get('registerVideo').value):null;
+          }
           Object.assign(payload,{our_score:Number(get('registerOurScore').value),opponent_score:Number(get('registerTheirScore').value),players:[...get('registerPlayers').children].filter(row=>row.querySelector('[type=checkbox]')?.checked).map(row=>({player_id:Number(row.querySelector('[type=checkbox]').value),goals:Number(row.querySelector('[data-record=goals]').value),assists:Number(row.querySelector('[data-record=assists]').value)}))});url=editing?'/api/matches/'+encodeURIComponent(editing.match_id):'/api/matches';
+          if(editing){
+            // Preserve stored NULLs/spacing when these inputs were not actually edited.
+            if(payload.location===String(editing.location||'').trim())payload.location=editing.location??null;
+            if(payload.memo===String(editing.memo||''))payload.memo=editing.memo??null;
+            if(payload.opponent===String(editing.opponent||'').trim())payload.opponent=editing.opponent;
+            const fieldsChanged=matchFields(payload)!==matchFields(editing);
+            const playersChanged=playerRecords(payload.players)!==playerRecords(editing.players);
+            const leagueChanged=leagueSelection.league_id!==(editing.league_id??null);
+            if(!fieldsChanged&&!playersChanged){
+              if(!leagueChanged){dialog.close();return;}
+              // Same form and one Save button; metadata-only edits still use the safe endpoint.
+              url+='/league';method='PATCH';
+              payload={league_id:leagueSelection.league_id,expected_league_id:editing.league_id??null};
+            }else{
+              if(!playersChanged)delete payload.players;
+              // Mixed edits are committed together; never issue two partially successful saves.
+              if(leagueChanged)Object.assign(payload,{league_id:leagueSelection.league_id,expected_league_id:editing.league_id??null});
+            }
+          }
         }
       }
       saving=true;busy=true;submit.disabled=true;status.textContent='저장 중입니다…';
       try{
-        const response=await fetch(url,{method:editing?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();
+        const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();
+        if(response.status===409&&kind==='match'&&editing&&typeof result.detail==='string'&&result.detail.includes('다른 창'))stale=true;
         if(!response.ok||result.success===false)throw new Error(typeof result.detail==='string'?result.detail:'입력값을 확인해 주세요.');
         window.dispatchEvent(new CustomEvent('wgh-record-created',{detail:{kind,data:result.data}}));
         if(kind==='player')window.dispatchEvent(new Event('wgh-membership-changed'));
         saving=false;dialog.close();
       }catch(error){status.textContent=error.message;}
-      finally{saving=false;busy=false;if(dialog.isConnected)submit.disabled=false;}
+      finally{saving=false;busy=false;if(dialog.isConnected)submit.disabled=stale;}
     });
   });
 })();
@@ -290,5 +327,6 @@ window.WGHRecordActions=(kind,record,afterDelete)=>{
       if(afterDelete)await afterDelete();
     }catch(error){alert(error.message);}finally{remove.disabled=false;}
   });
-  bar.append(edit,remove);return bar;
+  bar.append(edit);
+  bar.append(remove);return bar;
 };
