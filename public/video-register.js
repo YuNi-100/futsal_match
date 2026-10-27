@@ -289,10 +289,10 @@ async function loadSavedAnalyses() {
       const formatTime=value=>Number.isInteger(value)?String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0'):'미상';
       const rawDate=String(item.analyzed_at||'');
       const dateLabel=rawDate?rawDate.replace('T',' ').replace(/(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/,''):'날짜 미상';
-      const detail=document.createElement('small');detail.style.display='block';detail.textContent='분석 #'+item.analysis_id+' · '+dateLabel+' · '+formatTime(item.start_seconds)+'–'+formatTime(item.end_seconds);
-      const state=document.createElement('span');state.textContent=item.published?'게시됨 · 검수·수정':'검수 전 · 결과 보기';
+      const detail=document.createElement('small');detail.style.display='block';detail.textContent=dateLabel+' · '+formatTime(item.start_seconds)+'–'+formatTime(item.end_seconds);
+      const state=document.createElement('span');state.style.fontSize='12px';state.textContent=item.published?'게시됨 · 검수·수정':'검수 전 · 결과 보기';
       link.append(title,detail);row.append(link,state);
-      const remove=document.createElement('button');remove.type='button';remove.textContent='삭제';remove.setAttribute('aria-label',item.title+' 분석 #'+item.analysis_id+' 삭제');
+      const remove=document.createElement('button');remove.type='button';remove.textContent='삭제';remove.style.cssText='font-size:12px;background:transparent;border:0;box-shadow:none;padding:4px 0;min-height:0;color:inherit;cursor:pointer';remove.setAttribute('aria-label',item.title+' 분석 #'+item.analysis_id+' 삭제');
       remove.addEventListener('click',async()=>{
         const warning=item.published?'\n홈페이지에 공개된 이 분석의 피드백도 삭제됩니다. 이전에 게시한 다른 분석이 있으면 그 분석이 표시될 수 있습니다.':'';
         if(!confirm('‘'+item.title+'’ 분석 #'+item.analysis_id+'을 삭제할까요?\n'+detail.textContent+warning+'\n\n선택한 분석 결과와 코멘트만 삭제합니다. 등록 영상·경기·선수 기록·YouTube 원본은 유지됩니다.\n삭제 후 복구할 수 없습니다.'))return;
