@@ -100,7 +100,7 @@
       for(const match of matches)if(match.league_id!=null)options.set(String(match.league_id),match.league_name||'기존 리그');
       const current=filterValue();
       if(current&&current!=='unassigned'&&!options.has(current))options.set(current,'선택한 리그');
-      filter.replaceChildren(new Option('전체 리그',''),new Option('리그 미지정','unassigned'));
+      filter.replaceChildren(new Option('전체',''),new Option('미지정','unassigned'));
       for(const [id,name] of options)filter.add(new Option(name,id));
       filter.value=current;filter.disabled=false;
     }catch(_){filter.disabled=true;}
