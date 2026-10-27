@@ -67,7 +67,8 @@
       for (const match of shown.slice((page-1)*pageSize,page*pageSize)) {
         const card = node('article','match-card');
         const date = node('div','match-date');
-        if(match.league_name)date.append(node('span','league-badge',`[${match.league_name}]`));
+        const league=node('div','record-match-league');
+        if(match.league_name)league.append(node('span','league-badge',`[${match.league_name}]`));
         date.append(node('span',null,match.match_date));
         const teams = node('div','match-teams');
         const team=node('strong',null,match.team_name||'WGH 은평');team.dataset.teamName='';
@@ -80,7 +81,7 @@
         const link = node('a','match-detail-link');
         link.href = '/match.html?match_id=' + encodeURIComponent(match.match_id);
         link.setAttribute('aria-label',`${match.match_date} ${match.team_name||'WGH 은평'} 대 ${match.opponent} 경기 상세 보기`);
-        card.append(date,teams,location,badge,link,window.WGHRecordActions('match',match,load));
+        card.append(league,date,teams,location,badge,link,window.WGHRecordActions('match',match,load));
         list.append(card);
       }
       status.hidden = true;
@@ -127,3 +128,4 @@
   });
   load();
 })();
+

@@ -1453,6 +1453,8 @@ def analyze_match_video(video_id: str):
 # 신규 유튜브 영상 API: 기존 영상/경기 API는 유지
 from src.api.youtube_videos import router as youtube_video_router
 app.include_router(youtube_video_router)
+from src.api.tv import router as tv_router
+app.include_router(tv_router)
 
 from src.api.article_routes import create_article_router
 app.include_router(create_article_router(get_db_connection))
@@ -1538,3 +1540,4 @@ async def private_api_cache(request: Request, call_next):
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control']='no-store'
     return response
+

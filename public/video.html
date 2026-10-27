@@ -10,6 +10,7 @@
 <script src="/auth.js"></script><script src="/club.js"></script>
 <script src="/navigation.js" defer></script>
 <link rel="stylesheet" href="/club.css">
+<link rel="stylesheet" href="/tv-browser.css">
 </head>
 <body class="wgh-tv">
 <div class="app-container">
@@ -46,13 +47,14 @@
           <button type="button" id="analysisTab" class="video-tab" role="tab" aria-selected="false" aria-controls="analysisPanel">분석 결과</button>
           <button type="button" id="highlightTab" class="video-tab" role="tab" aria-selected="false" aria-controls="highlightPanel">하이라이트</button>
         </div>
-        <div id="fullPanel" role="tabpanel" aria-labelledby="fullTab">
+        <form id="tvSearchForm" class="tv-search" role="search"><label for="tvSearch">영상 검색</label><input id="tvSearch" type="search" maxlength="200" placeholder="상대팀·대회명 등 영상 제목 검색"><button type="submit">검색</button><button type="button" id="tvReload">다시 불러오기</button><small id="tvSearchStatus" role="status"></small></form>
+<div id="fullPanel" role="tabpanel" aria-labelledby="fullTab">
           <div id="fullPlaceholder" class="video-player-placeholder">영상을 선택하면 이곳에서 재생할 수 있어요.</div>
 <div id="tvPlaybackPanel" hidden><div class="tv-playback-heading"><strong id="tvNowPlaying"></strong><button id="tvClosePlayer" type="button">플레이어 닫기</button></div><iframe id="fullPlayer" class="video-player" title="WGH 전체 경기 유튜브 영상" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen hidden></iframe></div>
-          <h3 class="video-list-heading">전체 경기 영상</h3>
-          <div id="fullVideoList" class="video-list"><p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p></div>
+          <section id="tvComments" class="tv-comments" hidden><h3>회원 댓글</h3><form id="tvCommentForm"><label for="tvCommentContent">댓글</label><textarea id="tvCommentContent" maxlength="1000" required placeholder="영상에 대한 이야기를 남겨 주세요."></textarea><label for="tvCommentTime">장면 시간 (선택)</label><input id="tvCommentTime" placeholder="03:25" inputmode="numeric"><button id="tvCommentSubmit" type="submit">등록</button></form><p id="tvCommentStatus" role="status"></p><button id="tvCommentReload" type="button">댓글 다시 불러오기</button><div id="tvCommentList"></div><button id="tvCommentMore" type="button" hidden>더 보기</button></section><h3 class="video-list-heading">전체 경기 영상</h3>
+          <div id="fullVideoList" class="video-list"><p class="video-empty">아직 등록된 전체 경기 영상이 없습니다.</p></div><nav id="fullPages" class="tv-pages" aria-label="경기 영상 페이지"></nav>
         </div>
-        <div id="analysisPanel" role="tabpanel" aria-labelledby="analysisTab" hidden><div class="published-analysis-toolbar"><label for="analysisVideoSelect">경기 영상</label><select id="analysisVideoSelect"><option value="">영상을 선택하세요</option></select></div><iframe id="analysisPlayer" class="published-player" title="분석 결과 경기 영상" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe><p id="publishedStatus" role="status">영상을 선택하면 검수 완료된 결과를 볼 수 있습니다.</p><p id="publishedSummary"></p><div id="publishedComments" class="published-comments"></div></div>
+        <div id="analysisPanel" role="tabpanel" aria-labelledby="analysisTab" hidden><iframe id="analysisPlayer" class="published-player" title="분석 결과 경기 영상" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe><p id="publishedStatus" role="status">영상을 선택하면 분석 결과를 확인할 수 있습니다.</p><p id="publishedSummary"></p><div id="publishedComments" class="published-comments"></div><h3>게시된 분석 영상</h3><div id="analysisVideoList" class="video-list"></div><nav id="analysisPages" class="tv-pages" aria-label="분석 결과 페이지"></nav></div>
         <div id="highlightPanel" role="tabpanel" aria-labelledby="highlightTab" hidden>
           <div id="highlightPlaceholder" class="video-player-placeholder">▶<br>아래 목록에서 AI 하이라이트를 선택하세요.</div>
           <video id="highlightPlayer" class="video-player" controls playsinline preload="metadata" hidden></video>
@@ -65,6 +67,7 @@
     </div>
   </main>
 </div>
-  <script src="/video.js"></script><script src="/video-published.js"></script>
+  <script src="/tv-browser.js"></script>
 </body>
 </html>
+

@@ -55,6 +55,9 @@ def require_admin_for_request(request: Request):
         if user.get('consent_required',False): raise HTTPException(403,'내 페이지에서 최초 이용 동의를 완료해 주세요.')
         request.state.wgh_user=user
         return
+    if path.startswith('/api/tv/'):
+        # This isolated router enforces member login and CSRF on every endpoint.
+        return
     protected = request.url.path.startswith('/api') and (
         request.method not in ('GET', 'HEAD', 'OPTIONS')
         or request.url.path.startswith('/api/admin/')
@@ -195,3 +198,4 @@ def video_login_page():
     <p class="detail-muted">일반 회원과 선수 회원 모두 시청할 수 있습니다. Google 계정으로 로그인해 주세요.</p>
     <div class="wgh-auth-panel" data-auth-panel></div><a class="detail-back" href="/index.html">홈으로 돌아가기</a>
     </section></main></body></html>"""
+
