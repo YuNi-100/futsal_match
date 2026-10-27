@@ -32,6 +32,29 @@ class ReviewUpdate(BaseModel):
     publish: bool = False
 
 
+class AnalysisDelete(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    revision: int = Field(ge=0, strict=True)
+    published: bool = Field(strict=True)
+
+
+@history_router.delete('/{analysis_id}')
+def delete_video_analysis(payload: AnalysisDelete, analysis_id: int = Path(gt=0)):
+    connection = None
+    try:
+        connection = repository.connect()
+        result = feedback_store.delete_saved(connection, analysis_id, payload.revision, payload.published)
+        return {'success': True, 'data': result}
+    except HTTPException:
+        if connection: connection.rollback()
+        raise
+    except Exception:
+        if connection: connection.rollback()
+        raise HTTPException(503, '분석 결과를 삭제하지 못했습니다. 목록을 새로고침해 확인해 주세요.') from None
+    finally:
+        if connection: connection.close()
+
+
 @history_router.patch('/{analysis_id}/review')
 def save_review(payload: ReviewUpdate, request: Request, analysis_id: int = Path(gt=0)):
     connection = None
@@ -274,4 +297,5 @@ def get_video_analysis(analysis_id: int = Path(gt=0)):
         return {'success': True, 'data': result}
     finally:
         connection.close()
+
 

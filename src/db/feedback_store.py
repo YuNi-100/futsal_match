@@ -89,8 +89,33 @@ def list_saved(connection, video_id=None):
             review = (result or {}).get('review', {})
             row['published'] = bool(review.get('publication'))
             row['review_revision'] = review.get('revision', 0)
+            row['start_seconds'] = (result or {}).get('start_seconds')
+            row['end_seconds'] = (result or {}).get('end_seconds')
             row.pop('feedback', None)
         return rows
+
+
+def delete_saved(connection, analysis_id, revision, published):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT DATABASE() AS db_name')
+        db_name = cursor.fetchone()['db_name']
+        if is_postgres(connection):
+            assert_postgres_writes(connection, 'analysis')
+        elif db_name != 'futsaldb_test':
+            raise HTTPException(503, '현재 분석 삭제는 테스트 DB에서만 사용할 수 있습니다.')
+        cursor.execute('''SELECT a.analysis_id,a.feedback FROM video_analysis a
+                          JOIN futsal_video v ON v.video_id=a.video_id
+                          WHERE a.analysis_id=%s AND v.user_id=1 FOR UPDATE''', (analysis_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(404, '삭제할 분석 결과를 찾을 수 없습니다.')
+        review = (decode(row) or {}).get('review', {})
+        if revision != review.get('revision', 0) or published != bool(review.get('publication')):
+            raise HTTPException(409, '분석 상태가 변경되었습니다. 목록을 새로고침한 후 다시 확인해 주세요.')
+        cursor.execute('DELETE FROM video_event WHERE analysis_id=%s', (analysis_id,))
+        cursor.execute('DELETE FROM video_analysis WHERE analysis_id=%s', (analysis_id,))
+    connection.commit()
+    return {'analysis_id': analysis_id}
 
 
 def get_saved(connection, analysis_id):
@@ -153,3 +178,4 @@ def published_for_video(connection, video_id):
                     'summary': publication['summary'], 'scenes': publication['scenes'],
                     'published_at': publication['published_at'], 'ai_generated': True}
     return None
+

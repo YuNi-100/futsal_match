@@ -282,11 +282,30 @@ async function loadSavedAnalyses() {
     const result=await response.json();
     if(!response.ok||!result.success||!Array.isArray(result.data))throw Error('저장된 분석 목록을 불러오지 못했습니다.');
     for(const item of result.data) {
-      const link=document.createElement('a');link.className='video-list-item';
+      const row=document.createElement('div');row.className='video-list-item';row.style.flexWrap='wrap';row.style.gap='12px';
+      const link=document.createElement('a');link.style.flex='1 1 240px';link.style.minWidth='0';link.style.overflowWrap='anywhere';
       link.href='/feedback-review.html?analysis_id='+encodeURIComponent(item.analysis_id);
       const title=document.createElement('span');title.textContent=item.title;
+      const formatTime=value=>Number.isInteger(value)?String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0'):'미상';
+      const rawDate=String(item.analyzed_at||'');
+      const dateLabel=rawDate?rawDate.replace('T',' ').replace(/(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/,''):'날짜 미상';
+      const detail=document.createElement('small');detail.style.display='block';detail.textContent='분석 #'+item.analysis_id+' · '+dateLabel+' · '+formatTime(item.start_seconds)+'–'+formatTime(item.end_seconds);
       const state=document.createElement('span');state.textContent=item.published?'게시됨 · 검수·수정':'검수 전 · 결과 보기';
-      link.append(title,state);list.append(link);
+      link.append(title,detail);row.append(link,state);
+      const remove=document.createElement('button');remove.type='button';remove.textContent='삭제';remove.setAttribute('aria-label',item.title+' 분석 #'+item.analysis_id+' 삭제');
+      remove.addEventListener('click',async()=>{
+        const warning=item.published?'\n홈페이지에 공개된 이 분석의 피드백도 삭제됩니다. 이전에 게시한 다른 분석이 있으면 그 분석이 표시될 수 있습니다.':'';
+        if(!confirm('‘'+item.title+'’ 분석 #'+item.analysis_id+'을 삭제할까요?\n'+detail.textContent+warning+'\n\n선택한 분석 결과와 코멘트만 삭제합니다. 등록 영상·경기·선수 기록·YouTube 원본은 유지됩니다.\n삭제 후 복구할 수 없습니다.'))return;
+        remove.disabled=true;
+        try{
+          const response=await fetch('/api/admin/video-analyses/'+encodeURIComponent(item.analysis_id),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:item.review_revision,published:item.published})});
+          const body=await response.json();
+          if(!response.ok||!body.success)throw Error(typeof body.detail==='string'?body.detail:'분석 결과를 삭제하지 못했습니다.');
+          row.remove();
+          if(!list.children.length){const empty=document.createElement('p');empty.className='video-empty';empty.textContent='아직 저장된 분석이 없습니다.';list.append(empty);}
+        }catch(error){alert(error.message);remove.disabled=false;}
+      });
+      row.append(remove);list.append(row);
     }
     if(!result.data.length){const empty=document.createElement('p');empty.className='video-empty';empty.textContent='아직 저장된 분석이 없습니다.';list.append(empty);}
   }catch(error){const message=document.createElement('p');message.textContent=error.message;list.append(message);}
@@ -294,3 +313,4 @@ async function loadSavedAnalyses() {
 loadSavedAnalyses();
 
 });
+
