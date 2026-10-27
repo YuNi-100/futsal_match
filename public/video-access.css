@@ -1,1 +1,11 @@
 .account-page .video-access-summary{font-weight:600;color:#365b8c}.account-page #videoMemberList .account-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.account-page #videoMemberList small{color:#6e819a;overflow-wrap:anywhere}.account-page #videoMemberList button{margin-left:auto}.account-page .account-group>summary{cursor:pointer;font-size:18px;font-weight:700;padding:5px 0}.account-page .account-group[open]>summary{margin-bottom:14px}.account-page .account-group .account-panel{box-shadow:none;padding:12px 0;margin:0;border-radius:0}.account-page #videoMemberMessage{color:#b34343}
+
+/* Compact typography for My Page only; keep the page heading and layout. */
+.account-page .account-panel{font-size:14px;line-height:1.7}
+.account-page .account-panel h3,.account-page .account-group>summary{font-size:16px}
+.account-page .account-panel h4,.account-page .account-panel details>summary{font-size:14px}
+.account-page .account-panel p,.account-page .account-panel label,.account-page .account-panel dl,.account-page .account-row strong{font-size:14px}
+.account-page #videoMemberList small,.account-page #consentInfo,.account-page #historyList p{font-size:12px}
+.account-page .account-panel button,.account-page .account-button{font-size:13px;line-height:1.5;padding:7px 12px;min-height:36px}
+.account-page .account-panel textarea,.account-page .account-panel input[type=text]{font-size:14px}
+.account-page #accountStatus{font-size:14px}
