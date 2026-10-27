@@ -17,9 +17,9 @@ window.WGHAuthReady.then(identity=>{
  function filtered(){const q=state.query.toLocaleLowerCase('ko').replace(/\s+/g,'');return state.catalog.filter(v=>(state.tab!=='analysis'||v.has_published_analysis)&&(!q||String(v.title||'').toLocaleLowerCase('ko').replace(/\s+/g,'').includes(q)));}
  function render(){
   const list=el(state.tab==='analysis'?'analysisVideoList':'fullVideoList'),nav=el(state.tab==='analysis'?'analysisPages':'fullPages');list.replaceChildren();nav.replaceChildren();
-  const rows=filtered(),pages=Math.max(1,Math.ceil(rows.length/10));state.page=Math.max(1,Math.min(state.page,pages));el('tvSearchStatus').textContent=rows.length+'개 영상';
+  const rows=filtered(),pages=Math.max(1,Math.ceil(rows.length/9));state.page=Math.max(1,Math.min(state.page,pages));el('tvSearchStatus').textContent=rows.length+'개 영상';
   if(!rows.length)list.append(node('p',state.query?'검색 결과가 없습니다.':state.tab==='analysis'?'아직 게시된 분석 결과가 없습니다.':'등록된 경기 영상이 없습니다.','video-empty'));
-  for(const v of rows.slice((state.page-1)*10,state.page*10)){
+  for(const v of rows.slice((state.page-1)*9,state.page*9)){
    const button=node('button',undefined,'video-list-item wgh-tv-card');button.type='button';button.setAttribute('aria-label',(v.title||'경기 영상')+' 선택');if(state.selected?.video_id===v.video_id)button.classList.add('selected');
    const thumb=node('span',undefined,'tv-card-thumbnail');if(/^[A-Za-z0-9_-]{11}$/.test(v.youtube_id)){const img=node('img');img.src='https://i.ytimg.com/vi/'+v.youtube_id+'/hqdefault.jpg';img.alt='';img.loading='lazy';img.width=480;img.height=270;img.addEventListener('error',()=>{img.hidden=true;});thumb.append(img);}thumb.append(node('span','▶','tv-card-play'));
    const copy=node('span',undefined,'tv-card-copy');copy.append(node('strong',v.title||'제목 없는 경기','tv-card-title'),node('span',v.match_date||'날짜 미등록','tv-card-meta'));button.append(thumb,copy);button.addEventListener('click',()=>select(v,true));list.append(button);
