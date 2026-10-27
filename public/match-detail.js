@@ -70,10 +70,10 @@
       }
       const videoButton = el('matchVideoLink');
       if (match.video_login_required) {
-        videoButton.href='/video.html?match_id='+encodeURIComponent(id);
-        videoButton.textContent='로그인하고 경기 영상 보기 →';
+        videoButton.href=match.video_approval_required?'/account.html':'/video.html?match_id='+encodeURIComponent(id);
+        videoButton.textContent=match.video_approval_required?'영상 승인 상태 확인 →':'로그인하고 경기 영상 보기 →';
         videoButton.hidden=false;
-        el('videoStatus').textContent='경기 영상은 회원 로그인 후 볼 수 있습니다.';
+        el('videoStatus').textContent=match.video_approval_required?'관리자 승인 후 경기 영상을 볼 수 있습니다.':'경기 영상은 로그인 및 관리자 승인 후 볼 수 있습니다.';
       } else if (match.videos.length) {
         videoButton.href = '/video.html?match_id=' + encodeURIComponent(id);
         videoButton.hidden = false;

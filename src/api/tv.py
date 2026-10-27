@@ -12,6 +12,8 @@ def member(request: Request):
         raise HTTPException(401, '로그인이 필요합니다.')
     if user.get('consent_required', False):
         raise HTTPException(403, '내 페이지에서 이용 동의를 완료해 주세요.')
+    if not auth.video_allowed(user):
+        raise HTTPException(403, '관리자 승인 후 영상과 댓글을 이용할 수 있습니다.')
     auth.check_csrf(request, user)
     request.state.wgh_user = user
     return user

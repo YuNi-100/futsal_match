@@ -46,6 +46,11 @@ def current_user(request):
         raise HTTPException(503, '로그인 저장소를 사용할 수 없습니다.') from None
 
 
+def video_allowed(user):
+    return bool(user and not user.get('consent_required', False) and
+                (user.get('role') == 'admin' or user.get('video_approved', False)))
+
+
 def require_admin_for_request(request: Request):
     path=request.url.path.rstrip('/')
     video_read = request.method in ('GET','HEAD') and (path=='/api/youtube-videos' or path.startswith('/api/youtube-videos/') or path=='/api/videos' or path.startswith('/api/videos/'))
@@ -53,6 +58,7 @@ def require_admin_for_request(request: Request):
         user=current_user(request)
         if not user:raise HTTPException(401,'경기 영상은 로그인 후 볼 수 있습니다.')
         if user.get('consent_required',False): raise HTTPException(403,'내 페이지에서 최초 이용 동의를 완료해 주세요.')
+        if not video_allowed(user): raise HTTPException(403,'관리자 승인 후 영상을 이용할 수 있습니다. 내 페이지에서 승인 상태를 확인해 주세요.')
         request.state.wgh_user=user
         return
     if path.startswith('/api/tv/'):
@@ -160,7 +166,7 @@ def callback(request: Request):
 def me(request: Request):
     user = current_user(request)
     return JSONResponse({'user': None if not user else {
-        'user_id': user['user_id'], 'name': user['name'], 'role': user['role'], 'player_id': user.get('player_id'), 'consent_required': bool(user.get('consent_required',False))
+        'user_id': user['user_id'], 'name': user['name'], 'role': user['role'], 'player_id': user.get('player_id'), 'consent_required': bool(user.get('consent_required',False)), 'video_approved': video_allowed(user)
     }, 'csrf_token': user['csrf_token'] if user else None}, headers={'Cache-Control': 'no-store'})
 
 
@@ -195,7 +201,11 @@ def video_login_page():
     <title>로그인 안내 | WGH</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/auth.css">
     <link rel="stylesheet" href="/match-detail.css"><script src="/auth.js"></script></head><body>
     <main class="match-detail-page"><section class="detail-panel"><h2>경기 영상은 로그인 후 볼 수 있어요</h2>
-    <p class="detail-muted">일반 회원과 선수 회원 모두 시청할 수 있습니다. Google 계정으로 로그인해 주세요.</p>
+    <p class="detail-muted">Google 계정으로 로그인하고 이용 동의와 관리자의 영상 열람 승인을 완료해 주세요.</p>
     <div class="wgh-auth-panel" data-auth-panel></div><a class="detail-back" href="/index.html">홈으로 돌아가기</a>
     </section></main></body></html>"""
 
+
+
+def video_approval_page():
+    return """<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>영상 승인 대기 | WGH</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/match-detail.css"><main class="match-detail-page"><section class="detail-panel"><h2>관리자 승인 후 이용할 수 있습니다</h2><p>가입은 완료되었습니다. 관리자가 영상 열람을 승인하면 경기 영상·분석 결과·댓글을 이용할 수 있습니다.</p><a href="/account.html">내 페이지에서 승인 상태 확인</a> · <a href="/index.html">홈으로 돌아가기</a></section></main></html>"""

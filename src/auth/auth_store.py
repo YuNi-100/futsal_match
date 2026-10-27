@@ -72,11 +72,13 @@ def get_session(token):
         # Read role on every request so revocation takes effect immediately.
         cur.execute('''SELECT u.user_id,u.name,s.csrf_token,
             CASE WHEN r.role='admin' THEN 'admin' WHEN pa.player_id IS NOT NULL THEN 'player' ELSE 'user' END AS role,
-            pa.player_id, (c.user_id IS NULL) AS consent_required FROM wgh_login_session s
+            pa.player_id, (c.user_id IS NULL) AS consent_required,
+            COALESCE(va.approved, false) AS video_approved FROM wgh_login_session s
             JOIN app_user u ON u.user_id=s.user_id
             LEFT JOIN wgh_user_role r ON r.user_id=u.user_id
             LEFT JOIN wgh_player_account pa ON pa.user_id=u.user_id
             LEFT JOIN wgh_account_consent c ON c.user_id=u.user_id
+            LEFT JOIN wgh_video_access va ON va.user_id=u.user_id
             WHERE s.token_hash=%s AND s.expires_at>UTC_TIMESTAMP()''', (digest(token),))
         return cur.fetchone()
 

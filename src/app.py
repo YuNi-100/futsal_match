@@ -1455,6 +1455,8 @@ from src.api.youtube_videos import router as youtube_video_router
 app.include_router(youtube_video_router)
 from src.api.tv import router as tv_router
 app.include_router(tv_router)
+from src.api.video_access import router as video_access_router
+app.include_router(video_access_router)
 
 from src.api.article_routes import create_article_router
 app.include_router(create_article_router(get_db_connection))
@@ -1486,7 +1488,7 @@ app.include_router(create_club_router(get_db_connection))
 class RevalidatingStaticFiles(StaticFiles):
     """Revalidate page assets so navigation changes do not leave old menus cached."""
     async def get_response(self, path, scope):
-        from src.auth.auth import current_user, video_login_page
+        from src.auth.auth import current_user, video_login_page, video_allowed, video_approval_page
         if Path(path).name.lower()=='feedback.html':
             analysis_id=Request(scope).query_params.get('analysis_id','')
             destination='/feedback-review.html?analysis_id='+analysis_id if analysis_id.isdigit() else '/video-register.html#analysisRunTitle'
@@ -1507,6 +1509,8 @@ class RevalidatingStaticFiles(StaticFiles):
                 user=current_user(Request(scope))
                 if not user or user.get('consent_required',False):
                     return HTMLResponse(video_login_page(),headers={'Cache-Control':'no-store'})
+                if not video_allowed(user):
+                    return HTMLResponse(video_approval_page(),status_code=403,headers={'Cache-Control':'no-store'})
             except HTTPException:
                 return HTMLResponse(video_login_page(),status_code=503,headers={'Cache-Control':'no-store'})
         response = await super().get_response(path, scope)

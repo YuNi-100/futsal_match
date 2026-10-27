@@ -1,5 +1,5 @@
 """Public, read-only match details using existing WGH tables."""
-from fastapi import APIRouter, HTTPException, Path, Request
+from fastapi import APIRouter, HTTPException, Path, Request, Response
 from src.auth import auth
 
 
@@ -7,7 +7,8 @@ def create_match_detail_router(get_db_connection):
     router = APIRouter()
 
     @router.get('/api/matches/{match_id}')
-    def get_match_detail(request: Request, match_id: int = Path(gt=0)):
+    def get_match_detail(request: Request, response: Response, match_id: int = Path(gt=0)):
+        response.headers['Cache-Control'] = 'no-store'
         connection = None
         try:
             connection = get_db_connection()
@@ -30,7 +31,8 @@ def create_match_detail_router(get_db_connection):
                     WHERE mp.match_id=%s ORDER BY p.back_number,p.player_id''', (match_id,))
                 match['players'] = list(cursor.fetchall())
                 member=auth.current_user(request)
-                member=member if member and not member.get('consent_required',False) else None
+                match['video_approval_required']=bool(member and not auth.video_allowed(member))
+                member=member if auth.video_allowed(member) else None
                 match['video_login_required']=member is None
                 match['videos']=[]
                 if member:
