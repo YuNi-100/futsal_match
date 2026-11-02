@@ -5,15 +5,39 @@ window.WGHAuthReady.then(identity=>{
  const time=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  async function api(url,options={}){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{const r=await fetch(url,{...options,signal:controller.signal,cache:'no-store'});const b=await r.json();if(!r.ok||!b.success)throw Error(typeof b.detail==='string'?b.detail:'요청을 처리하지 못했습니다.');return b.data;}finally{clearTimeout(timer);}}
+ // Bind the official API to the existing iframe without changing its layout.
+ let youtube=null,youtubeReady=false;
+ const apiReady=new Promise(resolve=>{
+  if(window.YT?.Player){resolve();return;}
+  const previous=window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady=()=>{try{previous?.();}finally{resolve();}};
+  const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.async=true;document.head.append(script);
+ });
+ function bindYouTube(){
+  apiReady.then(()=>{
+   if(youtube||!el('fullPlayer').getAttribute('src'))return;
+   youtube=new YT.Player('fullPlayer',{events:{onReady:()=>{youtubeReady=true;},onError:()=>{youtubeReady=false;}}});
+  });
+ }
+ el('tvCommentCurrentTime').addEventListener('click',()=>{
+  if(!state.selected||state.tab!=='full')return;
+  const value=youtubeReady?youtube.getCurrentTime():NaN;
+  if(!Number.isFinite(value)||value<0||value>86400){el('tvCommentStatus').textContent='영상이 준비된 후 다시 눌러 주세요. 장면 시간은 직접 입력할 수도 있어요.';return;}
+  el('tvCommentTime').value=time(Math.floor(value));el('tvCommentStatus').textContent='현재 재생 시각을 가져왔습니다.';
+ });
+ function jumpToComment(video,seconds){
+  if(youtubeReady){youtube.seekTo(seconds,true);youtube.playVideo();el('fullPlayer').scrollIntoView({behavior:'smooth',block:'center'});}
+  else play(video,seconds);
+ }
  function player(){return el(state.tab==='analysis'?'analysisPlayer':'fullPlayer');}
  function play(video,seconds=null){
   const p=player();if(!/^[A-Za-z0-9_-]{11}$/.test(video.youtube_id))return;
   const url=new URL('https://www.youtube.com/embed/'+video.youtube_id);url.searchParams.set('playsinline','1');url.searchParams.set('enablejsapi','1');url.searchParams.set('origin',location.origin);
   if(seconds!==null){url.searchParams.set('start',seconds);url.searchParams.set('autoplay','1');}
-  p.src=url.toString();p.hidden=false;
+  if(state.tab==='full'&&youtubeReady){if(seconds===null)youtube.cueVideoById(video.youtube_id);else{youtube.loadVideoById(video.youtube_id,seconds);}}else{p.src=url.toString();if(state.tab==='full')bindYouTube();}p.hidden=false;
   if(seconds!==null)p.scrollIntoView({behavior:'smooth',block:'center'});
  }
- function clearSelection(){state.selected=null;++state.token;++state.commentToken;state.before=null;for(const id of ['fullPlayer','analysisPlayer']){el(id).removeAttribute('src');el(id).hidden=true;}el('tvPlaybackPanel').hidden=true;el('fullPlaceholder').hidden=false;el('publishedSummary').textContent='';el('publishedComments').replaceChildren();el('publishedStatus').textContent='영상을 선택하면 분석 결과를 확인할 수 있습니다.';el('tvComments').hidden=true;el('tvCommentList').replaceChildren();}
+ function clearSelection(){if(youtube){const frame=el('fullPlayer'),copy=frame.cloneNode(false);youtube.destroy();if(!document.getElementById('fullPlayer'))el('tvPlaybackPanel').append(copy);youtube=null;youtubeReady=false;}state.selected=null;++state.token;++state.commentToken;state.before=null;for(const id of ['fullPlayer','analysisPlayer']){el(id).removeAttribute('src');el(id).hidden=true;}el('tvPlaybackPanel').hidden=true;el('fullPlaceholder').hidden=false;el('publishedSummary').textContent='';el('publishedComments').replaceChildren();el('publishedStatus').textContent='영상을 선택하면 분석 결과를 확인할 수 있습니다.';el('tvComments').hidden=true;el('tvCommentList').replaceChildren();}
  function filtered(){const q=state.query.toLocaleLowerCase('ko').replace(/\s+/g,'');return state.catalog.filter(v=>(state.tab!=='analysis'||v.has_published_analysis)&&(!q||String(v.title||'').toLocaleLowerCase('ko').replace(/\s+/g,'').includes(q)));}
  function render(){
   const list=el(state.tab==='analysis'?'analysisVideoList':'fullVideoList'),nav=el(state.tab==='analysis'?'analysisPages':'fullPages');list.replaceChildren();nav.replaceChildren();
@@ -50,10 +74,10 @@ window.WGHAuthReady.then(identity=>{
  }
  function commentRow(item,videoId){
   const row=node('article',undefined,'tv-comment'),head=node('div',undefined,'tv-comment-head');const date=new Date(item.created_at);head.append(node('strong',item.author_name),node('small',Number.isNaN(date.getTime())?'':date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})));
-  if(item.time_seconds!==null){const jump=node('button',time(item.time_seconds));jump.type='button';jump.addEventListener('click',()=>{if(state.selected?.video_id===videoId)play(state.selected,item.time_seconds);});head.append(jump);}
-  const body=node('p',item.content);row.append(head,body);
-  if(item.can_edit){const edit=node('button','수정');edit.type='button';edit.addEventListener('click',()=>{if(row.querySelector('form'))return;const form=node('form'),text=node('textarea');text.maxLength=1000;text.required=true;text.value=item.content;text.setAttribute('aria-label','수정할 댓글');const stamp=node('input');stamp.placeholder='장면 시간 예: 03:25';stamp.value=item.time_seconds===null?'':time(item.time_seconds);stamp.setAttribute('aria-label','장면 시간');const save=node('button','저장');save.type='submit';const cancel=node('button','취소');cancel.type='button';cancel.addEventListener('click',()=>form.remove());form.append(text,stamp,save,cancel);form.addEventListener('submit',async e=>{e.preventDefault();try{const data={...formData(text.value,stamp.value),revision:item.revision};save.disabled=true;await api('/api/tv/videos/'+videoId+'/comments/'+item.comment_id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(state.selected?.video_id===videoId)loadComments(false);}catch(e){alert(e.message);}finally{save.disabled=false;}});row.append(form);});row.append(edit);}
-  if(item.can_delete){const remove=node('button','삭제');remove.type='button';remove.addEventListener('click',async()=>{if(!confirm('이 댓글을 삭제할까요?'))return;remove.disabled=true;try{await api('/api/tv/videos/'+videoId+'/comments/'+item.comment_id,{method:'DELETE'});if(state.selected?.video_id===videoId)loadComments(false);}catch(e){alert(e.message);remove.disabled=false;}});row.append(remove);}
+  if(Number.isInteger(item.time_seconds)&&item.time_seconds>=0){const jump=node('button',time(item.time_seconds)+' 장면 보기');jump.type='button';jump.addEventListener('click',()=>{if(state.selected?.video_id===videoId)jumpToComment(state.selected,item.time_seconds);});head.append(jump);}
+  const body=node('p',item.content),actions=node('div',undefined,'tv-comment-actions');head.append(actions);row.append(head,body);
+  if(item.can_edit){const edit=node('button','수정');edit.type='button';edit.addEventListener('click',()=>{if(row.querySelector('form'))return;const form=node('form'),text=node('textarea');text.maxLength=1000;text.required=true;text.value=item.content;text.setAttribute('aria-label','수정할 댓글');const stamp=node('input');stamp.placeholder='장면 시간 예: 03:25';stamp.value=item.time_seconds===null?'':time(item.time_seconds);stamp.setAttribute('aria-label','장면 시간');const save=node('button','저장');save.type='submit';const cancel=node('button','취소');cancel.type='button';cancel.addEventListener('click',()=>form.remove());form.append(text,stamp,save,cancel);form.addEventListener('submit',async e=>{e.preventDefault();try{const data={...formData(text.value,stamp.value),revision:item.revision};save.disabled=true;await api('/api/tv/videos/'+videoId+'/comments/'+item.comment_id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(state.selected?.video_id===videoId)loadComments(false);}catch(e){alert(e.message);}finally{save.disabled=false;}});row.append(form);});actions.append(edit);}
+  if(item.can_delete){const remove=node('button','삭제');remove.type='button';remove.addEventListener('click',async()=>{if(!confirm('이 댓글을 삭제할까요?'))return;remove.disabled=true;try{await api('/api/tv/videos/'+videoId+'/comments/'+item.comment_id,{method:'DELETE'});if(state.selected?.video_id===videoId)loadComments(false);}catch(e){alert(e.message);remove.disabled=false;}});actions.append(remove);}
   el('tvCommentList').append(row);
  }
  el('tvCommentForm').addEventListener('submit',async e=>{e.preventDefault();if(!state.selected)return;const id=state.selected.video_id,content=el('tvCommentContent'),stamp=el('tvCommentTime'),submit=el('tvCommentSubmit');try{const data=formData(content.value,stamp.value);submit.disabled=true;await api('/api/tv/videos/'+id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(state.selected?.video_id===id){content.value='';stamp.value='';loadComments(false);}}catch(e){el('tvCommentStatus').textContent=e.message;}finally{submit.disabled=false;}});
