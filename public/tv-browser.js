@@ -1,7 +1,7 @@
 window.WGHAuthReady.then(identity=>{
  if(!identity.user||identity.user.consent_required)return;
  const el=id=>document.getElementById(id),params=new URLSearchParams(location.search);
- const state={catalog:[],tab:'full',query:'',page:1,selected:null,token:0,commentToken:0,before:null,loading:false};
+ const state={catalog:[],tab:'full',query:'',type:'',page:1,selected:null,token:0,commentToken:0,before:null,loading:false};
  const time=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  async function api(url,options={}){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{const r=await fetch(url,{...options,signal:controller.signal,cache:'no-store'});const b=await r.json();if(!r.ok||!b.success)throw Error(typeof b.detail==='string'?b.detail:'요청을 처리하지 못했습니다.');return b.data;}finally{clearTimeout(timer);}}
@@ -38,7 +38,7 @@ window.WGHAuthReady.then(identity=>{
   if(seconds!==null)p.scrollIntoView({behavior:'smooth',block:'center'});
  }
  function clearSelection(){if(youtube){const frame=el('fullPlayer'),copy=frame.cloneNode(false);youtube.destroy();if(!document.getElementById('fullPlayer'))el('tvPlaybackPanel').append(copy);youtube=null;youtubeReady=false;}state.selected=null;++state.token;++state.commentToken;state.before=null;for(const id of ['fullPlayer','analysisPlayer']){el(id).removeAttribute('src');el(id).hidden=true;}el('tvPlaybackPanel').hidden=true;el('fullPlaceholder').hidden=false;el('publishedSummary').textContent='';el('publishedComments').replaceChildren();el('publishedStatus').textContent='영상을 선택하면 분석 결과를 확인할 수 있습니다.';el('tvComments').hidden=true;el('tvCommentList').replaceChildren();}
- function filtered(){const q=state.query.toLocaleLowerCase('ko').replace(/\s+/g,'');return state.catalog.filter(v=>(state.tab!=='analysis'||v.has_published_analysis)&&(!q||String(v.title||'').toLocaleLowerCase('ko').replace(/\s+/g,'').includes(q)));}
+ function filtered(){const q=state.query.toLocaleLowerCase('ko').replace(/\s+/g,'');return state.catalog.filter(v=>(state.tab!=='analysis'||v.has_published_analysis)&&(!state.type||String(v.title||'').trimStart().startsWith('['+state.type+']'))&&(!q||String(v.title||'').toLocaleLowerCase('ko').replace(/\s+/g,'').includes(q)));}
  function render(){
   const list=el(state.tab==='analysis'?'analysisVideoList':'fullVideoList'),nav=el(state.tab==='analysis'?'analysisPages':'fullPages');list.replaceChildren();nav.replaceChildren();
   const rows=filtered(),pages=Math.max(1,Math.ceil(rows.length/9));state.page=Math.max(1,Math.min(state.page,pages));el('tvSearchStatus').textContent=rows.length+'개 영상';
@@ -64,6 +64,7 @@ window.WGHAuthReady.then(identity=>{
  for(const t of ['full','analysis','highlight'])el(t+'Tab').addEventListener('click',()=>switchTab(t));el('tvClosePlayer').addEventListener('click',()=>{clearSelection();render();});
  el('tvSearchForm').addEventListener('submit',e=>{e.preventDefault();state.query=el('tvSearch').value.trim();state.page=1;render();});
  el('tvSearch').addEventListener('input',()=>{state.query=el('tvSearch').value.trim();state.page=1;render();});
+ el('tvTypeFilter').addEventListener('change',()=>{state.type=el('tvTypeFilter').value;state.page=1;render();});
  function seconds(value){if(!value.trim())return null;if(!/^\d{1,4}:[0-5]\d$/.test(value.trim()))throw Error('장면 시간은 분:초 형식으로 입력해 주세요.');const [m,s]=value.trim().split(':').map(Number);if(m*60+s>86400)throw Error('장면 시간이 너무 큽니다.');return m*60+s;}
  function formData(content,stamp){const text=content.trim();if(!text||text.length>1000)throw Error('댓글은 1~1000자로 입력해 주세요.');return {content:text,time_seconds:seconds(stamp)};}
  async function loadComments(more){

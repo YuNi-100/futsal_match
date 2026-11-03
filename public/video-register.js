@@ -44,10 +44,20 @@ const videoRegisterBtn =
 const videoRegisterMessage =
     document.getElementById('videoRegisterMessage');
 
+const videoType = document.getElementById('videoType');
+const videoTitle = document.getElementById('videoTitle');
+const knownVideoType = /^\[(친선경기|위리그|정기훈련|자체훈련|플랩|나이트컵|하이매치|기타)\]\s*/;
+function applyVideoType() {
+    if (videoType.value) videoTitle.value = '[' + videoType.value + '] ' + videoTitle.value.replace(knownVideoType, '').trim();
+}
+videoType.addEventListener('change', applyVideoType);
+
 youtubeRegisterForm.addEventListener('submit', async function (event) {
 
     // 폼 제출 시 페이지 새로고침 방지
     event.preventDefault();
+
+    applyVideoType();
 
     // 입력값 가져오기
     const title =
