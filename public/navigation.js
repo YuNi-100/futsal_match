@@ -4,7 +4,7 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
   await window.WGHEnsureVideoPicker();
   if(!isCurrent())return;
   const form=select.closest('form');
-  const picker=new window.WGHVideoPicker(select,{dateInput:form.querySelector('input[type=date]')});
+  const picker=new window.WGHVideoPicker(select,{dateInput:form.querySelector('input[type=date]'),compact:true});
   await picker.load();
 };
 

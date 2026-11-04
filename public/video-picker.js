@@ -1,8 +1,8 @@
 /* Shared, additive video selection. Existing links change only on an explicit save. */
 window.WGHVideoPicker = class {
-  constructor(host,{dateInput=null,matchId=null,onEdit=null}={}) {
+  constructor(host,{dateInput=null,matchId=null,onEdit=null,compact=false}={}) {
     host._videoPicker?.destroy();
-    this.host=host;this.dateInput=dateInput;this.matchId=matchId;this.onEdit=onEdit;
+    this.host=host;this.dateInput=dateInput;this.matchId=matchId;this.onEdit=onEdit;this.compact=compact;
     this.catalog=[];this.matches=[];this.selected=new Set();this.ready=false;this.busy=false;
     this.abort=new AbortController();this.build();
     dateInput?.addEventListener('change',()=>this.render(),{signal:this.abort.signal});
@@ -10,21 +10,33 @@ window.WGHVideoPicker = class {
   node(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
   build(){
     const h=this.host;h.replaceChildren();h.classList.add('wgh-video-picker');h._videoPicker=this;
+    h.classList.toggle('vp-compact',this.compact);
     const tools=this.node('div');tools.className='vp-tools';
     this.search=this.node('input');this.search.type='search';this.search.placeholder='제목·상대팀·날짜 검색';this.search.setAttribute('aria-label','연결할 영상 검색');
     this.search.addEventListener('input',()=>this.render());
     const include=this.node('label');this.include=this.node('input');this.include.type='checkbox';
     this.include.addEventListener('change',()=>this.render());include.append(this.include,this.node('span','다른 경기에 연결된 영상 포함'));
-    this.reload=this.node('button','새로 불러오기');this.reload.type='button';this.reload.addEventListener('click',()=>this.load());
+    this.reload=this.node('button',this.compact?'↻ 새로고침':'새로 불러오기');this.reload.type='button';this.reload.addEventListener('click',()=>this.load());
     tools.append(this.search,include,this.reload);
     this.count=this.node('p');this.count.setAttribute('role','status');
     this.current=this.node('div');this.current.className='vp-current';
     this.list=this.node('div');this.list.className='vp-list';
-    this.all=this.node('button','표시된 영상 모두 선택');this.all.type='button';
+    this.all=this.node('button',this.compact?'전체 선택':'표시된 영상 모두 선택');this.all.type='button';
+    this.all.setAttribute('aria-label','표시된 영상 모두 선택');
     this.all.addEventListener('click',()=>{for(const v of this.visible||[])this.selected.add(Number(v.video_id));this.render();});
     this.clear=this.node('button','선택 취소');this.clear.type='button';this.clear.addEventListener('click',()=>{this.selected.clear();this.render();});
     const actions=this.node('div');actions.className='vp-actions';actions.append(this.all,this.clear);
-    h.append(tools,this.count,this.current,actions,this.list);this.render();
+    if(this.compact){
+      const caption=h.previousElementSibling;
+      if(caption?.matches('span'))caption.hidden=true;
+      const heading=this.node('div');heading.className='vp-heading';
+      const title=this.node('span','연결할 경기 영상 '),hint=this.node('small','(여러 개 선택)');
+      title.append(hint);heading.append(title,this.reload);
+      tools.replaceChildren(this.search,include);
+      const toolbar=this.node('div');toolbar.className='vp-toolbar';toolbar.append(this.count,actions);
+      h.append(heading,tools,this.current,toolbar,this.list);
+    }else h.append(tools,this.count,this.current,actions,this.list);
+    this.render();
   }
   async load(){
     const token=this.token=Symbol();this.ready=false;this.selected.clear();this.render();
