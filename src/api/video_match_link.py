@@ -12,6 +12,60 @@ class VideoMatchLink(BaseModel):
     match_id: Optional[int] = Field(...,gt=0,strict=True)
 
 
+class VideoSelection(BaseModel):
+    video_id: int = Field(gt=0,strict=True)
+    expected_match_id: Optional[int] = Field(...,gt=0,strict=True)
+
+
+class VideoBatchLink(BaseModel):
+    match_id: Optional[int] = Field(...,gt=0,strict=True)
+    videos: list[VideoSelection] = Field(min_length=1,max_length=200)
+
+    @field_validator('videos')
+    @classmethod
+    def unique_videos(cls,values):
+        if len({v.video_id for v in values})!=len(values):
+            raise ValueError('같은 영상을 중복 선택할 수 없습니다.')
+        return values
+
+
+def link_selected_videos(cursor,match_id,selections):
+    """Validate the whole selection before updating; caller owns the transaction."""
+    if len({v.video_id for v in selections})!=len(selections):
+        raise HTTPException(422,'같은 영상을 중복 선택할 수 없습니다.')
+    for item in sorted(selections,key=lambda item:item.video_id):
+        cursor.execute('SELECT video_id,match_id FROM futsal_video WHERE video_id=%s AND user_id=%s FOR UPDATE',(item.video_id,1))
+        stored=cursor.fetchone()
+        if stored is None:raise HTTPException(404,'선택한 경기 영상을 찾을 수 없습니다.')
+        if stored['match_id']!=item.expected_match_id:
+            raise HTTPException(409,'영상 연결 상태가 변경되었습니다. 목록을 새로 불러온 뒤 다시 선택해 주세요.')
+    for item in selections:
+        if item.expected_match_id!=match_id:
+            cursor.execute('UPDATE futsal_video SET match_id=%s WHERE video_id=%s AND user_id=%s',(match_id,item.video_id,1))
+
+
+@router.patch('/match-links')
+def link_video_batch(payload: VideoBatchLink):
+    connection=None
+    try:
+        connection=repository.connect()
+        with connection.cursor() as cursor:
+            if payload.match_id is not None:
+                cursor.execute('SELECT match_id FROM futsal_match WHERE match_id=%s AND user_id=%s FOR UPDATE',(payload.match_id,1))
+                if cursor.fetchone() is None:raise HTTPException(404,'연결할 경기 기록을 찾을 수 없습니다.')
+            link_selected_videos(cursor,payload.match_id,payload.videos)
+        connection.commit()
+        return {'success':True,'data':{'video_ids':[v.video_id for v in payload.videos],'match_id':payload.match_id}}
+    except HTTPException:
+        if connection:connection.rollback()
+        raise
+    except pymysql.MySQLError:
+        if connection:connection.rollback()
+        raise HTTPException(500,'경기 영상 연결을 저장하지 못했습니다.') from None
+    finally:
+        if connection:connection.close()
+
+
 @router.patch('/{video_id}/match')
 def link_video_match(payload: VideoMatchLink,video_id: int=Path(gt=0)):
     connection=None

@@ -304,11 +304,14 @@ def update_player_member(player_id: int, body: PlayerMemberLink, request: Reques
         if connection:connection.close()
 
 
+from src.api.video_match_link import VideoSelection
+
 # 경기 기록 등록 시 전달받을 데이터 형식
 class MatchCreate(BaseModel):
     league_id: Optional[int] = Field(default=None,gt=0,strict=True)
     league_name: Optional[str] = Field(default=None,min_length=1,max_length=100)
     video_id: Optional[int] = Field(default=None, gt=0, strict=True)
+    video_links: list[VideoSelection] = Field(default_factory=list,max_length=200)
     players: Optional[list[MatchPlayerRecord]] = Field(default=None, max_length=500)
     match_date: date                  # 경기 날짜 (필수)
     opponent: str                     # 상대팀 (필수)
@@ -407,6 +410,10 @@ def create_match(match: MatchCreate):
             save_match_players(cursor, new_match_id, match.players)
             from src.api.video_match_link import attach_video_to_new_match
             attach_video_to_new_match(cursor, new_match_id, match.video_id)
+            from src.api.video_match_link import link_selected_videos
+            if match.video_id is not None and any(v.video_id==match.video_id for v in match.video_links):
+                raise HTTPException(422,'같은 영상을 중복 선택할 수 없습니다.')
+            link_selected_videos(cursor,new_match_id,match.video_links)
 
         connection.commit()
 

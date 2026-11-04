@@ -579,12 +579,14 @@ const method = editingMatchId
     ? "PUT"
     : "POST";
 
+if(!editingMatchId && !document.getElementById('matchVideoSelect')._videoPicker.confirmMoves(null))return;
+
 const response = await fetch(url, {
     method: method,
     headers: {
         "Content-Type": "application/json"
     },
-    body: JSON.stringify({...matchData, players: collectMatchPlayers(), ...(!editingMatchId ? {video_id: document.getElementById("matchVideoSelect").value ? Number(document.getElementById("matchVideoSelect").value) : null} : {})})
+    body: JSON.stringify({...matchData, players: collectMatchPlayers(), ...(!editingMatchId ? {video_links: document.getElementById('matchVideoSelect')._videoPicker.links()} : {})})
 });
             
 

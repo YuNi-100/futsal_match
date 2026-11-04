@@ -14,6 +14,26 @@ window.WGHAuthReady.then(identity => {
   let matchChoices=[];
   let matchChoicesReady=false;
   let videoCatalogReady=false;
+  let bulkPicker=null;
+  let bulkBusy=false;
+  const bulkDate=document.createElement('input');bulkDate.type='date';
+  async function refreshBulkPicker(){
+    if(!matchChoicesReady||!videoCatalogReady)return;
+    await window.WGHEnsureVideoPicker();
+    if(!bulkPicker)bulkPicker=new window.WGHVideoPicker(document.getElementById('bulkVideoPicker'),{dateInput:bulkDate,onEdit:video=>{
+      document.getElementById('singleVideoEditor').open=true;
+      document.getElementById('singleIncludeLinked').checked=true;
+      document.getElementById('singleVideoSearch').value=video.title;
+      refreshLinkEditor();document.getElementById('linkVideoSelect').value=String(video.video_id);showSelectedVideoMatch();
+      document.getElementById('singleVideoEditor').scrollIntoView({block:'nearest'});
+    }});
+    const selected=document.getElementById('bulkMatchSelect').value;
+    bulkDate.value=matchChoices.find(m=>String(m.match_id)===selected)?.match_date||'';
+    bulkPicker.matchId=selected?Number(selected):null;
+    bulkPicker.setData(videoCatalog,matchChoices);
+    document.getElementById('bulkVideoSave').disabled=bulkBusy;
+    document.getElementById('bulkVideoUnlink').disabled=bulkBusy;
+  }
   async function loadFullVideos() {
     try {
       const response=await fetch('/api/youtube-videos');
@@ -23,8 +43,12 @@ window.WGHAuthReady.then(identity => {
       window.dispatchEvent(new CustomEvent('wgh-video-catalog',{detail:{videos:videoCatalog}}));
       videoCatalogReady=true;
       refreshLinkEditor();
+      await refreshBulkPicker();
     } catch (error) {
       videoCatalogReady=false;
+      if(bulkPicker){bulkPicker.ready=false;bulkPicker.error='목록 조회에 실패했습니다. 새로 불러와 주세요.';bulkPicker.render();}
+      document.getElementById('bulkVideoSave').disabled=true;
+      document.getElementById('bulkVideoUnlink').disabled=true;
       refreshLinkEditor();
       document.getElementById('videoLinkStatus').textContent=error.message;
     }
@@ -179,7 +203,12 @@ function refreshLinkEditor() {
   const videoSelect=document.getElementById('linkVideoSelect');
   const previous=videoSelect.value;
   videoSelect.replaceChildren(new Option('영상을 선택하세요',''));
-  for (const video of videoCatalog) videoSelect.add(new Option(`${video.match_date} · ${video.title}`,String(video.video_id)));
+  const query=document.getElementById('singleVideoSearch').value.toLocaleLowerCase('ko').replace(/\s+/g,'');
+  const include=document.getElementById('singleIncludeLinked').checked;
+  for (const video of videoCatalog) {
+    if(String(video.video_id)!==previous&&((video.match_id!=null&&!(include&&query))||(query&&!`${video.match_date} ${video.title}`.toLocaleLowerCase('ko').replace(/\s+/g,'').includes(query))))continue;
+    videoSelect.add(new Option(`${video.match_date} · ${video.title}${video.match_id==null?'':' · 연결: '+(bulkPicker?.matchLabel(video.match_id)||'#'+video.match_id)}`,String(video.video_id)));
+  }
   if (videoCatalog.some(item=>String(item.video_id)===previous)) videoSelect.value=previous;
   showSelectedVideoMatch();
 }
@@ -191,7 +220,9 @@ async function loadMatchChoices() {
     matchChoices=result.data;
     matchChoicesReady=true;
     fillMatchOptions(document.getElementById('videoMatchSelect'),'연결 안 함');
+    fillMatchOptions(document.getElementById('bulkMatchSelect'),'경기를 선택하세요');
     refreshLinkEditor();
+    await refreshBulkPicker();
   } catch(error) {
     document.getElementById('videoLinkStatus').textContent=error.message;
     videoRegisterMessage.textContent=error.message;
@@ -201,11 +232,49 @@ document.getElementById('linkVideoSelect').addEventListener('change',()=>{
   showSelectedVideoMatch();
   document.getElementById('videoLinkStatus').textContent='';
 });
+for(const id of ['singleVideoSearch','singleIncludeLinked'])document.getElementById(id).addEventListener(id==='singleVideoSearch'?'input':'change',()=>{
+  document.getElementById('linkVideoSelect').value='';refreshLinkEditor();
+});
+document.getElementById('bulkMatchSelect').addEventListener('change',()=>{
+  const value=document.getElementById('bulkMatchSelect').value;
+  bulkDate.value=matchChoices.find(m=>String(m.match_id)===value)?.match_date||'';
+  bulkPicker?.setMatch(value?Number(value):null);
+  document.getElementById('bulkVideoStatus').textContent='';
+});
+async function saveBulkVideos(unlink){
+  const status=document.getElementById('bulkVideoStatus');
+  if(bulkBusy||videoManagementBusy||!bulkPicker)return;
+  const value=document.getElementById('bulkMatchSelect').value,target=value?Number(value):null;
+  try{
+    const videos=bulkPicker.links();
+    if(!videos.length){status.textContent='연결할 영상을 선택해 주세요.';return;}
+    if(!target){status.textContent='먼저 경기를 선택해 주세요.';return;}
+    if(unlink){
+      if(videos.some(v=>v.expected_match_id!==target)){status.textContent='연결 해제는 현재 경기 연결 영상만 선택해 주세요.';return;}
+      if(!confirm(`${videos.length}개 영상의 경기 연결을 해제할까요? 영상은 삭제되지 않습니다.`))return;
+    }else if(!bulkPicker.confirmMoves(target))return;
+    bulkBusy=true;videoManagementBusy=true;showSelectedVideoMatch();bulkPicker.setBusy(true);document.getElementById('bulkMatchSelect').disabled=true;
+    document.getElementById('bulkVideoSave').disabled=true;document.getElementById('bulkVideoUnlink').disabled=true;
+    const response=await fetch('/api/youtube-videos/match-links',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({match_id:unlink?null:target,videos})});
+    const result=await response.json();
+    if(!response.ok||!result.success)throw Error(typeof result.detail==='string'?result.detail:'영상 연결을 저장하지 못했습니다.');
+    status.textContent=`${videos.length}개 영상의 연결${unlink?'을 해제':'을 저장'}했습니다.`;
+    await loadFullVideos();
+  }catch(error){status.textContent=error.message;}
+  finally{
+    bulkBusy=false;videoManagementBusy=false;showSelectedVideoMatch();bulkPicker.setBusy(false);document.getElementById('bulkMatchSelect').disabled=false;
+    document.getElementById('bulkVideoSave').disabled=!videoCatalogReady;document.getElementById('bulkVideoUnlink').disabled=!videoCatalogReady;
+  }
+}
+document.getElementById('bulkVideoSave').addEventListener('click',()=>saveBulkVideos(false));
+document.getElementById('bulkVideoUnlink').addEventListener('click',()=>saveBulkVideos(true));
 document.getElementById('videoLinkForm').addEventListener('submit',async event=>{
   event.preventDefault();
   const videoId=document.getElementById('linkVideoSelect').value;
   const matchId=document.getElementById('linkMatchSelect').value;
   if (videoManagementBusy || !videoId || !matchChoicesReady || !videoCatalogReady) return;
+  const selected=videoCatalog.find(video=>String(video.video_id)===videoId);
+  if(selected?.match_id!=null&&matchId&&Number(selected.match_id)!==Number(matchId)&&!confirm('이 영상을 다른 경기로 옮길까요?\n기존: '+(bulkPicker?.matchLabel(selected.match_id)||selected.match_id)+'\n새 경기: '+(bulkPicker?.matchLabel(Number(matchId))||matchId)))return;
   const button=document.getElementById('saveVideoMatch');
   const status=document.getElementById('videoLinkStatus');
   videoManagementBusy=true;

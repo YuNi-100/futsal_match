@@ -1,24 +1,21 @@
 /* Optional video choices shared by the existing match creation dialogs. */
 window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
   if (!select) return;
-  select.disabled=true;
-  select.replaceChildren(new Option('영상 목록을 불러오는 중…',''));
-  try {
-    const response=await fetch('/api/youtube-videos');
-    const result=await response.json();
-    if (!response.ok || !result.success || !Array.isArray(result.data)) throw new Error('Video list unavailable');
-    if (!isCurrent()) return;
-    select.replaceChildren(new Option('연결 안 함 (나중에 연결 가능)',''));
-    for (const video of result.data) {
-      const linked=video.match_id!=null;
-      const option=new Option(`${video.match_date} · ${video.title}${linked?' (다른 경기 연결됨)':''}`,String(video.video_id));
-      option.disabled=linked;
-      select.add(option);
-    }
-    select.disabled=false;
-  } catch (_) {
-    if (isCurrent()) select.replaceChildren(new Option('영상 조회 실패 · 연결 없이 등록 후 영상 관리에서 연결하세요',''));
-  }
+  await window.WGHEnsureVideoPicker();
+  if(!isCurrent())return;
+  const form=select.closest('form');
+  const picker=new window.WGHVideoPicker(select,{dateInput:form.querySelector('input[type=date]')});
+  await picker.load();
+};
+
+window.WGHEnsureVideoPicker=()=>{
+  if(window.WGHVideoPicker)return Promise.resolve();
+  if(window.WGHVideoPickerLoading)return window.WGHVideoPickerLoading;
+  window.WGHVideoPickerLoading=new Promise((resolve,reject)=>{
+    const css=document.createElement('link');css.rel='stylesheet';css.href='/video-picker.css';document.head.append(css);
+    const script=document.createElement('script');script.src='/video-picker.js';
+    script.onload=resolve;script.onerror=()=>{window.WGHVideoPickerLoading=null;reject(Error('영상 선택 화면을 불러오지 못했습니다. 다시 열어 주세요.'));};document.head.append(script);
+  });return window.WGHVideoPickerLoading;
 };
 
 /* Shared WGH navigation; preserve URLs and authentication while using a top header. */
@@ -97,6 +94,8 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
     const ids = {matchForm:'sharedMatchForm',matchDate:'registerDate',opponent:'registerOpponent',location:'registerLocation',ourScore:'registerOurScore',opponentScore:'registerTheirScore',memo:'registerMemo',matchPlayerList:'registerPlayers',matchVideoSelect:'registerVideo',modalCloseButton:'sharedMatchClose',cancelButton:'sharedMatchCancel'};
     content.querySelectorAll('[id]').forEach(element=>{if(ids[element.id])element.id=ids[element.id];});
     content.querySelectorAll('label[for]').forEach(label=>{const old=label.htmlFor;if(ids[old])label.htmlFor=ids[old];});
+    content.querySelector('#registerVideo').replaceChildren();
+    content.querySelector('[data-match-video-picker]').hidden=false;
     content.querySelector('h2').id='registrationTitle';
     content.querySelector('#sharedMatchClose').dataset.registerClose='';
     content.querySelector('#sharedMatchCancel').dataset.registerClose='';
@@ -246,7 +245,10 @@ window.WGHLoadMatchVideoOptions = async (select, isCurrent = () => true) => {
           try{leagueSelection=leaguePicker.value();}catch(error){status.textContent=error.message;return;}
           if(!editing){
             Object.assign(payload,leagueSelection);
-            payload.video_id=get('registerVideo').value?Number(get('registerVideo').value):null;
+            const picker=get('registerVideo')._videoPicker;
+            if(!picker?.ready){status.textContent='영상 목록을 먼저 불러와 주세요.';return;}
+            if(!picker.confirmMoves(null))return;
+            payload.video_links=picker.links();
           }
           Object.assign(payload,{our_score:Number(get('registerOurScore').value),opponent_score:Number(get('registerTheirScore').value),players:[...get('registerPlayers').children].filter(row=>row.querySelector('[type=checkbox]')?.checked).map(row=>({player_id:Number(row.querySelector('[type=checkbox]').value),goals:Number(row.querySelector('[data-record=goals]').value),assists:Number(row.querySelector('[data-record=assists]').value)}))});url=editing?'/api/matches/'+encodeURIComponent(editing.match_id):'/api/matches';
           if(editing){

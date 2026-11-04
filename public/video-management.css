@@ -1,0 +1,41 @@
+/* Only the video registration/management page. Playback and other pages keep their layout. */
+.wgh-video-management .video-page{padding:26px 24px;max-width:1120px}
+.wgh-video-management .video-page-header{margin-bottom:16px}
+.wgh-video-management .video-page-label{font-size:10px;letter-spacing:1.4px}
+.wgh-video-management .video-page-header h2{font-size:24px;margin:6px 0}
+.wgh-video-management .video-page-header p{font-size:13px;line-height:1.5;margin:6px 0}
+.wgh-video-management .video-page-header .video-management-link{margin:6px 0 0}
+.wgh-video-management .video-page>div[data-admin-only]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.wgh-video-management .video-panel{min-width:0;padding:18px;margin:0;border-radius:12px;box-shadow:0 3px 14px #1f2e4607}
+.wgh-video-management .video-panel:has(#analysisTitle),.wgh-video-management .video-panel:has(#videoLinkTitle){grid-column:1/-1}
+.wgh-video-management .video-panel h3{font-size:17px;line-height:1.4;margin:0 0 12px}
+.wgh-video-management .video-muted{font-size:12px;line-height:1.5;margin:0 0 12px}
+.wgh-video-management .video-upload-area{padding:0;border:0;background:none;text-align:left}
+.wgh-video-management #youtubeRegisterForm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;max-width:none;margin:0}
+.wgh-video-management #youtubeRegisterForm>.video-form-group:nth-of-type(3){grid-column:1/-1}
+.wgh-video-management #youtubeRegisterForm>#videoRegisterMessage{grid-column:1/-1;margin:0;text-align:left}
+.wgh-video-management #youtubeRegisterForm>#videoRegisterBtn{width:auto;justify-self:start;align-self:end}
+.wgh-video-management .video-form-group{margin:0 0 10px;min-width:0}
+.wgh-video-management #youtubeRegisterForm>.video-form-group{margin:0}
+.wgh-video-management .video-form-group label{font-size:12px;line-height:1.4;margin:0 0 5px}
+.wgh-video-management .video-form-group :is(input:not([type=checkbox]),select){font-size:13px;padding:8px 10px;border-radius:7px;min-height:34px;min-width:0}
+.wgh-video-management .video-form-group input[type=checkbox]{width:16px;height:16px;margin:0;padding:0;flex:0 0 16px}
+.wgh-video-management .video-form-group label:has(input[type=checkbox]){display:flex;align-items:center;gap:7px;font-weight:400;margin:8px 0}
+.wgh-video-management .video-primary-button{font-size:12px;padding:8px 12px;min-height:34px;border-radius:7px;margin-top:8px}
+.wgh-video-management .video-note{font-size:11px;line-height:1.5;margin-top:9px}
+.wgh-video-management .analysis-run-grid{gap:9px 12px}
+.wgh-video-management .analysis-consent{font-size:12px;line-height:1.5;margin:10px 0}
+.wgh-video-management .video-empty{font-size:12px;padding:12px;border-radius:8px}
+.wgh-video-management .video-list-item{font-size:13px;padding:10px;border-radius:8px}
+.wgh-video-management .vp-batch-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.wgh-video-management .vp-batch-actions .video-primary-button{margin:0}
+.wgh-video-management #bulkVideoStatus{font-size:12px;margin:8px 0}
+.wgh-video-management #singleVideoEditor{border-top:1px solid #e0e7ef;margin-top:14px;padding-top:12px}
+.wgh-video-management #singleVideoEditor summary{font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px}
+.wgh-video-management #videoLinkForm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 12px;align-items:start}
+.wgh-video-management #videoLinkForm>.video-form-group{grid-column:1/-1;margin:0}
+.wgh-video-management #videoLinkForm>:is(p,small){grid-column:1/-1;font-size:11px;line-height:1.5}
+.wgh-video-management #videoLinkForm>button{justify-self:start;margin:0}
+.wgh-video-management #singleVideoSearch{max-width:540px}
+@media(max-width:900px){.wgh-video-management .video-page>div[data-admin-only]{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:550px){.wgh-video-management .video-page{padding:20px 14px}.wgh-video-management .video-panel{padding:14px}.wgh-video-management .video-page-header h2{font-size:22px}.wgh-video-management #youtubeRegisterForm{grid-template-columns:minmax(0,1fr)}.wgh-video-management #videoLinkForm{grid-template-columns:minmax(0,1fr)}.wgh-video-management #youtubeRegisterForm>.video-form-group:nth-of-type(3){grid-column:auto}}
