@@ -22,13 +22,78 @@
  async function management(){
   const d=await api('/management');
   for(const id of ['requestList','adminList','historyList'])$(id).replaceChildren();
-  for(const item of d.requests){const row=text('div','');row.className='account-row';row.append(text('strong',`${item.name} · ${item.email} · ${states[item.status]}`),text('p',item.reason));
-   if(item.status==='pending'){const note=document.createElement('input');note.type='text';note.maxLength=1000;note.placeholder='승인 또는 반려 사유';note.setAttribute('aria-label','신청 처리 사유');row.append(note);for(const [decision,label]of [['approved','승인'],['rejected','반려']]){const b=text('button',label);b.onclick=()=>action(b,()=>api(`/requests/${item.request_id}/review`,{decision,note:note.value}));row.append(b);}}
-   else row.append(text('p',item.review_note));$('requestList').append(row);
+  const pending = d.requests.filter(item => item.status === 'pending');
+  $('requestHeading').textContent = `권한 신청 · 대기 ${pending.length}건`;
+  $('adminHeading').textContent = `현재 관리자 · ${d.admins.length}명`;
+  for (const item of pending) {
+   const row = text('div', '');
+   row.className = 'account-row';
+   row.append(text('strong', `${item.name} · ${item.email}`), text('p', item.reason));
+   const note = document.createElement('input');
+   note.type = 'text';
+   note.maxLength = 1000;
+   note.placeholder = '승인 또는 반려 사유';
+   note.setAttribute('aria-label', '신청 처리 사유');
+   row.append(note);
+   for (const [decision, label] of [['approved', '승인'], ['rejected', '반려']]) {
+    const button = text('button', label);
+    button.onclick = () => action(button, () => api(`/requests/${item.request_id}/review`, {decision, note: note.value}));
+    row.append(button);
+   }
+   $('requestList').append(row);
   }
-  if(!d.requests.length)$('requestList').append(text('p','신청 내역이 없습니다.'));
-  for(const item of d.admins){const row=text('div',`${item.name} · ${item.email}`);row.className='account-row';if(d.admins.length>1){const note=document.createElement('input');note.type='text';note.maxLength=1000;note.placeholder='권한 해제 사유';note.setAttribute('aria-label','관리자 권한 해제 사유');const b=text('button','관리자 권한 해제');b.onclick=()=>action(b,()=>api(`/admins/${item.user_id}/revoke`,{note:note.value}));row.append(note,b);}$('adminList').append(row);}
-  for(const h of d.history)$('historyList').append(text('p',`${h.created_at} · ${h.name} · ${states[h.action]||'권한 해제'} · 처리: ${h.actor} · ${h.note}`));
+  if (!pending.length) $('requestList').append(text('p', '대기 중인 권한 신청이 없습니다.'));
+  for (const item of d.admins) {
+   const card = text('div', '');
+   card.className = 'account-admin-card';
+   const header = text('div', '');
+   header.className = 'account-admin-header';
+   const person = text('div', '');
+   person.append(text('strong', item.name), text('small', item.email));
+   header.append(person);
+   card.append(header);
+   if (d.admins.length > 1) {
+    const toggle = text('button', '권한 해제');
+    const form = document.createElement('form');
+    form.id = `revokeAdmin-${item.user_id}`;
+    form.hidden = true;
+    toggle.setAttribute('aria-controls', form.id);
+    toggle.setAttribute('aria-expanded', 'false');
+    const note = document.createElement('input');
+    note.type = 'text';
+    note.required = true;
+    note.maxLength = 1000;
+    note.placeholder = '권한 해제 사유';
+    note.setAttribute('aria-label', '관리자 권한 해제 사유');
+    const confirm = text('button', '권한 해제 확인');
+    toggle.onclick = () => {
+     form.hidden = !form.hidden;
+     toggle.setAttribute('aria-expanded', String(!form.hidden));
+     if (!form.hidden) note.focus();
+    };
+    form.onsubmit = event => {
+     event.preventDefault();
+     action(confirm, () => api(`/admins/${item.user_id}/revoke`, {note: note.value}));
+    };
+    form.append(note, confirm);
+    header.append(toggle);
+    card.append(form);
+   }
+   $('adminList').append(card);
+  }
+  for (const entry of d.history) {
+   const record = text('p', `${entry.created_at} · ${entry.name} · ${states[entry.action] || '권한 해제'} · 처리자 ${entry.actor}`);
+   const reasons = entry.action === 'revoked'
+    ? [['해제 사유', entry.note]]
+    : [['신청 사유', entry.reason], ['처리 사유', entry.note]];
+   for (const [label, value] of reasons) {
+    const line = text('span', '');
+    line.className = 'account-history-reason';
+    line.append(text('strong', label), document.createTextNode(` ${value || '—'}`));
+    record.append(line);
+   }
+   $('historyList').append(record);
+  }
  }
  $('acceptConsent').onclick=e=>action(e.target,async()=>{if(!$('termsConsent').checked||!$('privacyConsent').checked)throw Error('필수 항목에 모두 동의해 주세요.');await api('/consent',{terms:true,privacy:true,version:data.version});});
  $('applicationForm').onsubmit=e=>{e.preventDefault();action(e.submitter,()=>api('/requests',{reason:$('applicationReason').value}));};

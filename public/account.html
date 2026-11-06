@@ -35,5 +35,15 @@
 <section id="videoMemberManagement" class="account-panel" hidden><h3>영상 회원 승인</h3><p>가입 회원의 영상·분석·댓글 이용을 승인하거나 취소합니다. 관리자 권한과는 별개입니다.</p><p id="videoMemberCount"></p><button id="videoMemberReload" type="button">목록 새로고침</button><p id="videoMemberMessage" role="status"></p><div id="videoMemberList"></div></section>
 <details id="clubManagementPanel" class="account-panel account-group" data-admin-only hidden><summary>리그 관리</summary><p>등록된 리그와 연결된 경기 수를 확인하고, 사용하지 않는 리그를 삭제할 수 있습니다.</p><button type="button" data-wgh-league-settings>리그 관리 열기</button></details>
 <section id="applicationPanel" class="account-panel" hidden><h3>관리자 신청</h3><p id="applicationState"></p><form id="applicationForm"><label for="applicationReason">신청 사유</label><textarea id="applicationReason" required maxlength="1000"></textarea><button>관리자 권한 신청</button></form></section>
-<details id="managementPanel" class="account-panel account-group" data-admin-only hidden><summary>관리자 권한 관리</summary><p>처리 사유를 입력한 후 승인·반려할 수 있습니다. 마지막 관리자의 권한은 해제할 수 없습니다.</p><div id="requestList"></div><h3>현재 관리자</h3><div id="adminList"></div><details><summary>최근 처리 이력</summary><div id="historyList"></div></details></details>
+<details id="managementPanel" class="account-panel account-group" data-admin-only hidden><summary>관리자 권한 관리</summary>
+<section class="account-management-section" aria-labelledby="requestHeading">
+  <h3 id="requestHeading">권한 신청</h3>
+  <p>처리 사유를 입력한 후 승인·반려할 수 있습니다.</p>
+  <div id="requestList"></div>
+</section>
+<section class="account-management-section" aria-labelledby="adminHeading">
+  <h3 id="adminHeading">현재 관리자</h3>
+  <p>현재 관리자 권한을 가진 계정입니다. 마지막 관리자의 권한은 해제할 수 없습니다.</p>
+  <div id="adminList"></div>
+</section><details><summary>최근 처리 이력</summary><div id="historyList"></div></details></details>
 </div></main></div></body></html>

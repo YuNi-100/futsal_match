@@ -82,11 +82,28 @@ def apply(body:Application,request:Request):
 def management(request:Request):
     member(request,admin=True)
     with store.transaction() as db,db.cursor() as cur:
-        cur.execute("SELECT r.request_id,r.user_id,u.name,u.email,r.reason,r.status,r.review_note,DATE_FORMAT(r.requested_at,'%Y-%m-%d %H:%i') requested_at FROM wgh_admin_request r JOIN app_user u ON u.user_id=r.user_id ORDER BY r.request_id DESC LIMIT 100")
+        cur.execute("SELECT r.request_id,r.user_id,u.name,u.email,r.reason,r.status,r.review_note,DATE_FORMAT(r.requested_at,'%Y-%m-%d %H:%i') requested_at FROM wgh_admin_request r JOIN app_user u ON u.user_id=r.user_id WHERE r.status='pending' ORDER BY r.request_id DESC")
         requests=cur.fetchall()
         cur.execute("SELECT u.user_id,u.name,u.email FROM wgh_user_role r JOIN app_user u ON u.user_id=r.user_id WHERE r.role='admin'")
         admins=cur.fetchall()
-        cur.execute("SELECT u.name,a.name actor,h.action,h.note,DATE_FORMAT(h.created_at,'%Y-%m-%d %H:%i') created_at FROM wgh_role_history h JOIN app_user u ON u.user_id=h.user_id JOIN app_user a ON a.user_id=h.actor_id ORDER BY h.history_id DESC LIMIT 100")
+        cur.execute("""
+            SELECT u.name, a.name actor, events.action, events.reason, events.note,
+                   DATE_FORMAT(events.created_at,'%Y-%m-%d %H:%i') created_at
+            FROM (
+                SELECT user_id, reviewed_by actor_id, status action, reason, review_note note,
+                       reviewed_at created_at, request_id event_id
+                FROM wgh_admin_request
+                WHERE status IN ('approved', 'rejected')
+                UNION ALL
+                SELECT user_id, actor_id, action, NULL reason, note, created_at, history_id event_id
+                FROM wgh_role_history
+                WHERE action = 'revoked'
+            ) events
+            JOIN app_user u ON u.user_id = events.user_id
+            JOIN app_user a ON a.user_id = events.actor_id
+            ORDER BY events.created_at DESC, events.action, events.event_id DESC
+            LIMIT 100
+        """)
         history=cur.fetchall()
     return response(dict(requests=requests,admins=admins,history=history))
 
