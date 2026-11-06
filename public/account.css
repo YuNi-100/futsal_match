@@ -10,3 +10,9 @@
 .account-admin-header button{margin:0}
 .account-admin-card form{margin-top:12px}
 .account-history-reason{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+
+#historyList > p + p {
+  border-top: 1px solid #d7dfea;
+  margin-top: 8px;
+  padding-top: 8px;
+}
